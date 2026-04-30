@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mint: #56cfe1;
+  --onix: #1e1e24;
+  --g60: #6b7280;
+}
+
+html,
+body {
+  background: #fafafa;
+  color: var(--onix);
+  -webkit-font-smoothing: antialiased;
+}
