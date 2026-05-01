@@ -61,16 +61,16 @@ class BackCover(Section):
         if scale == "a4":
             logo_max_width = 460
             tagline_size = 75
-            handle_size = 18
-            proxima_size = 11
+            handle_size = 9
+            proxima_size = 6
             top_pad = 220
             tagline_margin_top = 64
             handle_margin_bottom = 90
         else:  # mobile
             logo_max_width = 360
             tagline_size = 64
-            handle_size = 20
-            proxima_size = 13
+            handle_size = 10
+            proxima_size = 7
             top_pad = 160
             tagline_margin_top = 56
             handle_margin_bottom = 80
