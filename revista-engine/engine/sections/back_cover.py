@@ -60,17 +60,17 @@ class BackCover(Section):
         # e legível em ambos.
         if scale == "a4":
             logo_max_width = 460
-            tagline_size = 88
-            handle_size = 22
-            proxima_size = 14
+            tagline_size = 75
+            handle_size = 18
+            proxima_size = 11
             top_pad = 220
             tagline_margin_top = 64
             handle_margin_bottom = 90
         else:  # mobile
             logo_max_width = 360
-            tagline_size = 72
-            handle_size = 24
-            proxima_size = 16
+            tagline_size = 64
+            handle_size = 20
+            proxima_size = 13
             top_pad = 160
             tagline_margin_top = 56
             handle_margin_bottom = 80
@@ -140,8 +140,8 @@ class BackCover(Section):
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 12px;
+    align-items: flex-end;
+    gap: 6px;
     margin-bottom: {handle_margin_bottom - 64}px;
   }}
 
