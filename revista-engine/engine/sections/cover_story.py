@@ -1,0 +1,344 @@
+"""
+S04 — Matéria de Capa.
+
+Matéria editorial principal. 2-4 páginas (dinâmico, depende do conteúdo
+— por ora rendemos como 1 página rica com layout editorial; expansão
+multi-página fica para fase posterior).
+
+Inputs (Doc 01 §3 S04):
+- kicker (str, ≤4 palavras)
+- manchete (str)
+- subtitulo (str)
+- foto_principal (str opcional)
+- corpo_blocos (list[dict]) — cada bloco tem `tipo` e payload:
+  - {tipo: "paragrafo", texto: str}
+  - {tipo: "intertitulo", texto: str}
+  - {tipo: "pull_quote", texto: str, autor: str opc.}
+  - {tipo: "dado_box", numero: str, contexto: str, fonte: str}
+  - {tipo: "foto_secundaria", url: str, legenda: str}
+- fontes (list[str]) — OBRIGATÓRIO (Doc 01 regra explícita)
+- mes_referencia (str)
+"""
+
+from __future__ import annotations
+
+from .base import Section
+
+
+class CoverStory(Section):
+    """Matéria de Capa (S04)."""
+
+    type = "cover_story"
+    label = "Matéria de Capa"
+
+    def validate(self, inputs: dict) -> list[str]:
+        errors: list[str] = []
+        if not inputs.get("manchete"):
+            errors.append("Matéria de Capa: 'manchete' é obrigatória")
+        if not inputs.get("corpo_blocos"):
+            errors.append("Matéria de Capa: 'corpo_blocos' precisa ter pelo menos um bloco")
+        fontes = inputs.get("fontes")
+        if not fontes or not isinstance(fontes, list) or not any(fontes):
+            errors.append("Matéria de Capa: 'fontes' é OBRIGATÓRIA — cite ao menos uma")
+        kicker = inputs.get("kicker", "")
+        if kicker and len(kicker.split()) > 5:
+            errors.append("Matéria de Capa: 'kicker' deveria ter até 4 palavras")
+        return errors
+
+    def paginate(self, inputs: dict) -> int:
+        # Por ora 1 página fixa. Multi-página vem com paginação dinâmica.
+        return 1
+
+    def render_a4(self, inputs: dict, theme) -> list[str]:
+        return [self._render(inputs, theme)]
+
+    def render_mobile(self, inputs: dict, theme) -> list[str]:
+        return [self._render(inputs, theme)]
+
+    def _render(self, inputs: dict, theme) -> str:
+        mes = (inputs.get("mes_referencia") or "").strip().upper()
+        kicker = (inputs.get("kicker") or "ESPECIAL DE CAPA").strip().upper()
+        manchete = (inputs.get("manchete") or "").strip()
+        subtitulo = (inputs.get("subtitulo") or "").strip()
+        foto = (inputs.get("foto_principal") or "").strip()
+        blocos = list(inputs.get("corpo_blocos") or [])
+        fontes = list(inputs.get("fontes") or [])
+
+        # Hero
+        if foto:
+            photo_css = (
+                f"background-image: url('{_escape_attr(foto)}');\n"
+                f"      background-size: cover;\n"
+                f"      background-position: center;\n"
+                f"      background-repeat: no-repeat;"
+            )
+        else:
+            photo_css = (
+                "background: linear-gradient(135deg, "
+                "var(--mint-80) 0%, var(--lavender) 50%, var(--sand) 100%);"
+            )
+
+        body_html = self._render_blocos(blocos)
+        fontes_html = (
+            f"""
+    <div class="story__fontes">
+      <span class="story__fontes-label">Fontes</span>
+      <span class="story__fontes-text">{' · '.join(_escape(f) for f in fontes)}</span>
+    </div>"""
+            if fontes else ""
+        )
+
+        return f"""
+<section class="page story-page">
+  <header class="story__hero" style="{photo_css}">
+    <div class="story__hero-overlay"></div>
+    <div class="story__hero-content">
+      <div class="story__kicker">{_escape(kicker)} · {_escape(mes)}</div>
+      <h1 class="story__manchete">{_escape(manchete)}</h1>
+      {f'<p class="story__subtitulo">{_escape(subtitulo)}</p>' if subtitulo else ''}
+    </div>
+  </header>
+
+  <div class="story__body">
+    {body_html}
+    {fontes_html}
+  </div>
+</section>
+
+<style>
+  .story-page {{
+    background: var(--white);
+    color: var(--onix);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }}
+
+  .story__hero {{
+    position: relative;
+    height: 380px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }}
+
+  .story__hero-overlay {{
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(26,28,41,0.0) 0%,
+      rgba(26,28,41,0.0) 35%,
+      rgba(26,28,41,0.7) 78%,
+      rgba(26,28,41,0.95) 100%
+    );
+  }}
+
+  .story__hero-content {{
+    position: absolute;
+    left: 56px; right: 56px; bottom: 36px;
+    color: var(--white);
+  }}
+
+  .story__kicker {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--mint);
+    margin-bottom: 14px;
+  }}
+
+  .story__manchete {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 48px;
+    font-weight: 400;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: var(--white);
+    max-width: 16ch;
+    margin-bottom: 12px;
+    text-wrap: balance;
+  }}
+
+  .story__subtitulo {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--sand-90);
+    max-width: 50ch;
+  }}
+
+  .story__body {{
+    padding: 32px 56px 36px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 100%;
+  }}
+
+  .story__p {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--onix);
+    text-align: justify;
+    hyphens: auto;
+    margin-bottom: 0;
+  }}
+
+  .story__p:first-of-type {{
+    font-size: 13.5px;
+    line-height: 1.55;
+  }}
+
+  .story__intertitulo {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    color: var(--onix);
+    margin-top: 12px;
+    border-top: 1px solid var(--mint-80);
+    padding-top: 12px;
+  }}
+
+  .story__pull-quote {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.15;
+    color: var(--mint-80);
+    text-align: center;
+    padding: 18px 36px;
+    border-top: 2px solid var(--mint-80);
+    border-bottom: 2px solid var(--mint-80);
+    margin: 14px 0;
+    letter-spacing: -0.01em;
+  }}
+
+  .story__pull-quote::before {{ content: "\\201C"; }}
+  .story__pull-quote::after  {{ content: "\\201D"; }}
+
+  .story__pull-quote-autor {{
+    display: block;
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--onix);
+    opacity: 0.6;
+    margin-top: 10px;
+  }}
+
+  .story__dado {{
+    background: var(--mint);
+    border-radius: 8px;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 6px 0;
+  }}
+
+  .story__dado-numero {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 0.95;
+    color: var(--onix);
+    letter-spacing: -0.025em;
+  }}
+
+  .story__dado-contexto {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: var(--onix);
+    opacity: 0.85;
+  }}
+
+  .story__dado-fonte {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--onix);
+    opacity: 0.65;
+    margin-top: 4px;
+  }}
+
+  .story__fontes {{
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    padding-top: 12px;
+    margin-top: 10px;
+    border-top: 1px solid var(--gray-20);
+  }}
+
+  .story__fontes-label {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--mint-80);
+  }}
+
+  .story__fontes-text {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 10px;
+    color: var(--onix);
+    opacity: 0.75;
+  }}
+</style>
+"""
+
+    def _render_blocos(self, blocos: list[dict]) -> str:
+        out = []
+        for b in blocos:
+            tipo = (b.get("tipo") or "paragrafo").strip().lower()
+            if tipo == "paragrafo":
+                out.append(f'<p class="story__p">{_escape(b.get("texto", ""))}</p>')
+            elif tipo == "intertitulo":
+                out.append(f'<h2 class="story__intertitulo">{_escape(b.get("texto", ""))}</h2>')
+            elif tipo == "pull_quote":
+                autor = b.get("autor", "").strip()
+                autor_html = (
+                    f'<span class="story__pull-quote-autor">{_escape(autor)}</span>'
+                    if autor else ""
+                )
+                out.append(
+                    f'<blockquote class="story__pull-quote">'
+                    f'{_escape(b.get("texto", ""))}{autor_html}</blockquote>'
+                )
+            elif tipo == "dado_box":
+                out.append(f"""
+    <div class="story__dado">
+      <div class="story__dado-numero">{_escape(b.get("numero", ""))}</div>
+      <div class="story__dado-contexto">{_escape(b.get("contexto", ""))}</div>
+      {f'<div class="story__dado-fonte">Fonte · {_escape(b.get("fonte", ""))}</div>' if b.get("fonte") else ''}
+    </div>""")
+            elif tipo == "foto_secundaria":
+                # Foto secundária — placeholder por ora
+                pass  # Sem foto real por enquanto
+        return "\n".join(out)
+
+
+def _escape(s: str) -> str:
+    return (
+        (s or "")
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+def _escape_attr(s: str) -> str:
+    return _escape(s).replace('"', "&quot;").replace("'", "&#39;")
