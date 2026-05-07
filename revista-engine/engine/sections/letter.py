@@ -1,0 +1,285 @@
+"""
+S02 — Carta do Síndico.
+
+Página única, sempre 1 página. Voz do síndico do condomínio aos moradores.
+Foto do síndico em destaque, texto longo (350-450 palavras), assinatura.
+
+Inputs (Doc 01 §3 S02):
+- genero ('masculino' | 'feminino') — define o título da seção
+- nome_sindico (str) — quem assina
+- cargo (str, default 'Síndico(a) Profissional')
+- foto_sindico (str, opcional) — caminho/URL da foto
+- object_position (str, default 'center 20%') — enquadramento da foto
+- texto (str) — corpo (350-450 palavras, parágrafos separados por \\n\\n)
+- mes_ano (str) — "ABRIL 2026" usado no kicker
+- titulo (str) — subtítulo da carta, ex: "Abril azul, olhar aberto."
+
+Regras (Doc 01):
+- Título adapta ao gênero (Carta do/da Síndico/Síndica)
+- Foto é a única imagem permitida
+- Sem foto: usa placeholder em Sand
+"""
+
+from __future__ import annotations
+
+from .base import A4, MOBILE, Section
+
+
+def _saudacao(genero: str, n_pessoas: int = 1) -> str:
+    """Decide o título da seção em função de gênero/quantidade."""
+    g = (genero or "masculino").strip().lower()
+    if n_pessoas >= 2:
+        return "Carta dos Síndicos" if g != "feminino" else "Carta das Síndicas"
+    return "Carta da Síndica" if g == "feminino" else "Carta do Síndico"
+
+
+class Letter(Section):
+    """Carta do Síndico (S02)."""
+
+    type = "letter"
+    label = "Carta do Síndico"
+
+    # =========================================================================
+    # Contrato Section
+    # =========================================================================
+
+    def validate(self, inputs: dict) -> list[str]:
+        errors: list[str] = []
+        if not inputs.get("nome_sindico"):
+            errors.append("Carta: 'nome_sindico' é obrigatório")
+        if not inputs.get("texto"):
+            errors.append("Carta: 'texto' é obrigatório")
+        else:
+            n_words = len(inputs["texto"].split())
+            if n_words < 150:
+                errors.append(
+                    f"Carta: texto curto demais ({n_words} palavras; mínimo 150, "
+                    "ideal 350-450)"
+                )
+        genero = inputs.get("genero", "masculino")
+        if genero not in ("masculino", "feminino"):
+            errors.append(
+                f"Carta: 'genero' deve ser 'masculino' ou 'feminino' (recebido {genero!r})"
+            )
+        return errors
+
+    def paginate(self, inputs: dict) -> int:
+        return 1
+
+    def render_a4(self, inputs: dict, theme) -> list[str]:
+        return [self._render(inputs, theme, scale="a4")]
+
+    def render_mobile(self, inputs: dict, theme) -> list[str]:
+        return [self._render(inputs, theme, scale="mobile")]
+
+    # =========================================================================
+    # Render
+    # =========================================================================
+
+    def _render(self, inputs: dict, theme, *, scale: str) -> str:
+        nome = (inputs.get("nome_sindico") or "").strip()
+        genero = inputs.get("genero", "masculino").strip().lower()
+        cargo = (inputs.get("cargo") or
+                 ("Síndica Profissional" if genero == "feminino" else "Síndico Profissional")
+                 ).strip()
+        foto = (inputs.get("foto_sindico") or "").strip()
+        object_position = (inputs.get("object_position") or "center 20%").strip()
+        texto = (inputs.get("texto") or "").strip()
+        mes_ano = (inputs.get("mes_ano") or "").strip()
+        titulo = (inputs.get("titulo") or "").strip()
+
+        kicker_label = _saudacao(genero, n_pessoas=1).upper()
+        kicker = f"{kicker_label}" + (f" · {mes_ano}" if mes_ano else "")
+
+        # Tamanhos por formato. layout_dir: row (foto ao lado) ou column (foto em cima).
+        if scale == "a4":
+            padding = 60
+            kicker_size = 11
+            titulo_size = 56
+            corpo_size = 13
+            corpo_leading = 1.55
+            assinatura_nome_size = 16
+            assinatura_cargo_size = 9
+            foto_w = 220
+            foto_h = 280
+            layout_dir = "row"
+        else:  # mobile — empilha foto em cima do texto pra texto longo caber
+            padding = 36
+            kicker_size = 12
+            titulo_size = 40
+            corpo_size = 13
+            corpo_leading = 1.5
+            assinatura_nome_size = 17
+            assinatura_cargo_size = 10
+            foto_w = 460   # quase full-width do mobile (540 - 2*40 padding)
+            foto_h = 200   # mais raso, paisagem
+            layout_dir = "column"
+
+        # Quebra parágrafos (separados por linha em branco)
+        paragrafos = [p.strip() for p in texto.split("\n\n") if p.strip()]
+        if not paragrafos:
+            paragrafos = [texto] if texto else []
+
+        # Primeiro parágrafo recebe drop cap
+        body_html_parts = []
+        for i, p in enumerate(paragrafos):
+            cls = "letter__p letter__p--first" if i == 0 else "letter__p"
+            body_html_parts.append(f'<p class="{cls}">{_escape(p)}</p>')
+        body_html = "\n".join(body_html_parts)
+
+        # Foto: arquivo real OU placeholder
+        if foto:
+            foto_bg = (
+                f"background-image: url('{_escape_attr(foto)}');\n"
+                f"      background-size: cover;\n"
+                f"      background-position: {object_position};\n"
+                f"      background-repeat: no-repeat;"
+            )
+        else:
+            # Placeholder Sand com gradiente sutil
+            foto_bg = (
+                "background: radial-gradient(ellipse at 50% 30%, "
+                "var(--sand-90) 0%, var(--sand) 50%, var(--sand-80) 100%);"
+            )
+
+        titulo_html = (
+            f'<h1 class="letter__titulo">{_escape(titulo)}</h1>'
+            if titulo else ""
+        )
+
+        return f"""
+<section class="page letter-page" data-format="{scale}">
+  <div class="letter__content">
+    <header class="letter__header">
+      <div class="letter__kicker">{_escape(kicker)}</div>
+      {titulo_html}
+    </header>
+
+    <div class="letter__layout">
+      <aside class="letter__photo" aria-hidden="true"></aside>
+      <div class="letter__body">{body_html}</div>
+    </div>
+
+    <footer class="letter__signature">
+      <div class="letter__sig-name">{_escape(nome)}</div>
+      <div class="letter__sig-cargo">{_escape(cargo)}</div>
+    </footer>
+  </div>
+</section>
+
+<style>
+  .letter-page {{
+    background: var(--white);
+    color: var(--onix);
+    padding: {padding}px;
+  }}
+
+  .letter__content {{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }}
+
+  .letter__header {{
+    margin-bottom: 28px;
+  }}
+
+  .letter__kicker {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: {kicker_size}px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--mint-80);
+    margin-bottom: 18px;
+  }}
+
+  .letter__titulo {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: {titulo_size}px;
+    font-weight: 400;
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    color: var(--onix);
+    max-width: 18ch;
+    text-wrap: balance;
+  }}
+
+  .letter__layout {{
+    display: flex;
+    flex-direction: {layout_dir};
+    gap: 24px;
+    flex: 1;
+    min-height: 0;
+  }}
+
+  .letter__photo {{
+    width: {foto_w}px;
+    height: {foto_h}px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    {foto_bg}
+  }}
+
+  .letter__body {{
+    flex: 1;
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: {corpo_size}px;
+    font-weight: 400;
+    line-height: {corpo_leading};
+    color: var(--onix);
+    text-align: justify;
+    hyphens: auto;
+  }}
+
+  .letter__p {{
+    margin-bottom: {corpo_size}px;
+    text-indent: 0;
+  }}
+
+  /* Primeiro parágrafo levemente maior pra destaque editorial */
+  .letter__p--first {{
+    font-size: {corpo_size + 1}px;
+    color: var(--onix);
+  }}
+
+  .letter__signature {{
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--gray-20);
+    text-align: right;
+  }}
+
+  .letter__sig-name {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: {assinatura_nome_size}px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--onix);
+    line-height: 1.1;
+  }}
+
+  .letter__sig-cargo {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: {assinatura_cargo_size}px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mint-80);
+    margin-top: 4px;
+  }}
+</style>
+"""
+
+
+def _escape(s: str) -> str:
+    return (
+        (s or "")
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+def _escape_attr(s: str) -> str:
+    return _escape(s).replace('"', "&quot;").replace("'", "&#39;")

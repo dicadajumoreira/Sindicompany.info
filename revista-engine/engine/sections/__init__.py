@@ -3,6 +3,7 @@
 from .back_cover import BackCover
 from .base import A4, MOBILE, PageDimensions, Section
 from .cover import Cover
+from .letter import Letter
 
 __all__ = [
     "Section",
@@ -11,4 +12,5 @@ __all__ = [
     "MOBILE",
     "BackCover",
     "Cover",
+    "Letter",
 ]
