@@ -34,6 +34,14 @@ def _badge_colors(badge: str) -> tuple[str, str]:
     return _BADGE_COLORS.get((badge or "").strip().lower(), ("#76B1BC", "#FFFFFF"))
 
 
+def _normalize_slug(s: str) -> str:
+    """Slug para data-tipo (lowercase, sem acentos)."""
+    import unicodedata
+    s = unicodedata.normalize("NFKD", s or "")
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return s.lower().strip()
+
+
 class News(Section):
     """Novidades e Legislação (S07)."""
 
@@ -145,31 +153,54 @@ class News(Section):
   }}
 
   .news-card {{
-    background: var(--gray-5);
+    position: relative;
+    background: var(--white);
+    border: 1px solid var(--gray-20);
     border-radius: 8px;
-    padding: 18px 22px;
-    display: grid;
-    grid-template-columns: 110px 1fr;
-    gap: 18px;
-    align-items: start;
+    padding: 20px 24px 18px 36px;
+    display: block;
     flex: 1;
+    overflow: hidden;
   }}
 
-  .news-card__meta {{
+  /* Tarja vertical colorida na esquerda — varia por tipo */
+  .news-card::before {{
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 6px;
+    background: var(--mint-80);
+  }}
+
+  .news-card[data-tipo="legislacao"]::before {{ background: #1A1C29; }}
+  .news-card[data-tipo="mercado"]::before     {{ background: #B07A4B; }}
+  .news-card[data-tipo="novidade"]::before    {{ background: #84C7D3; }}
+  .news-card[data-tipo="tecnologia"]::before  {{ background: #6B70B8; }}
+
+  /* Cards alternam entre branco e ultra-claro pra dar ritmo */
+  .news-card:nth-child(2n) {{ background: #FAFAFA; }}
+
+  .news-card__body {{
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    align-items: flex-start;
+    gap: 10px;
+  }}
+
+  .news-card__head {{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
   }}
 
   .badge {{
     display: inline-block;
-    padding: 3px 9px;
+    padding: 4px 10px;
     border-radius: 3px;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 8px;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
   }}
 
@@ -177,68 +208,73 @@ class News(Section):
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 9px;
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--onix);
     opacity: 0.55;
   }}
 
-  .news-card__body {{
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }}
-
   .news-card__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 400;
     line-height: 1.1;
     color: var(--onix);
-    letter-spacing: -0.015em;
+    letter-spacing: -0.018em;
   }}
 
   .news-card__resumo {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 11.5px;
-    line-height: 1.5;
+    line-height: 1.55;
     color: var(--onix);
-    opacity: 0.8;
+    opacity: 0.82;
   }}
 
   .news-card__fonte {{
-    margin-top: auto;
-    padding-top: 8px;
-    border-top: 1px solid rgba(26, 28, 41, 0.12);
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9px;
-    font-weight: 600;
-    color: var(--mint-80);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--gray-20);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
   }}
 
-  .news-card__fonte::before {{
-    content: "Fonte · ";
-    opacity: 0.7;
+  .news-card__fonte-label {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--mint-80);
+  }}
+
+  .news-card__fonte-text {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--onix);
+    opacity: 0.8;
   }}
 </style>
 """
 
     def _render_card(self, n: dict) -> str:
         bg, fg = _badge_colors(n.get("badge", ""))
+        tipo_slug = _normalize_slug(n.get("badge", ""))
         return f"""
-      <article class="news-card">
-        <div class="news-card__meta">
+      <article class="news-card" data-tipo="{tipo_slug}">
+        <div class="news-card__head">
           <span class="badge" style="background:{bg};color:{fg}">
             {_escape(n.get('badge', '—'))}
           </span>
-          <div class="news-card__data">{_escape(n.get('data', ''))}</div>
+          <span class="news-card__data">{_escape(n.get('data', ''))}</span>
         </div>
-        <div class="news-card__body">
-          <h3 class="news-card__titulo">{_escape(n.get('titulo', ''))}</h3>
-          <p class="news-card__resumo">{_escape(n.get('resumo', ''))}</p>
-          <div class="news-card__fonte">{_escape(n.get('fonte', ''))}</div>
+        <h3 class="news-card__titulo">{_escape(n.get('titulo', ''))}</h3>
+        <p class="news-card__resumo">{_escape(n.get('resumo', ''))}</p>
+        <div class="news-card__fonte">
+          <span class="news-card__fonte-label">Fonte</span>
+          <span class="news-card__fonte-text">{_escape(n.get('fonte', ''))}</span>
         </div>
       </article>"""
 
