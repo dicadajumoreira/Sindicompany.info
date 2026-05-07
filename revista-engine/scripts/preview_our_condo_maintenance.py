@@ -19,10 +19,10 @@ DEFAULT_INPUTS = {
     "mes_referencia": "ABRIL 2026",
     "nome_condominio": "Villa Park Osasco",
     "manutencoes": [
-        {"titulo": "Manutenção do Jardim",          "tipo_badge": "JARDIM",      "fotos": [""] * 6},
-        {"titulo": "Substituição da Esteira",        "tipo_badge": "MANUTENÇÃO",  "fotos": [""] * 6},
-        {"titulo": "Iluminação da Cancela",          "tipo_badge": "SEGURANÇA",   "fotos": [""] * 6},
-        {"titulo": "Reparo de Tubulação",            "tipo_badge": "MANUTENÇÃO",  "fotos": [""] * 6},
+        {"titulo": "Manutenção do Jardim",     "tipo_badge": "JARDIM",      "fotos": [""] * 6},
+        {"titulo": "Substituição da Esteira",   "tipo_badge": "MANUTENÇÃO",  "fotos": [""] * 4},
+        {"titulo": "Iluminação da Cancela",     "tipo_badge": "SEGURANÇA",   "fotos": [""] * 2},
+        {"titulo": "Reparo de Tubulação",       "tipo_badge": "MANUTENÇÃO",  "fotos": [""] * 3},
     ],
 }
 

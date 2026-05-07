@@ -421,11 +421,10 @@ class OurCondoMaintenance(Section):
     flex: 1;
   }}
 
-  /* Grid 3 col × 2 lin de fotos */
+  /* Grid de fotos — colunas variam por card (style inline override) */
   .maint-card__photos {{
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    grid-auto-rows: 1fr;
     gap: 4px;
     flex: 1;
     min-height: 0;
@@ -446,16 +445,20 @@ class OurCondoMaintenance(Section):
         titulo = (m.get("titulo") or "").strip()
         badge = (m.get("tipo_badge") or "MANUTENÇÃO").strip()
         fotos = list(m.get("fotos") or [])
-        n = len(fotos)
+        n = min(len(fotos), 6)
         bg, fg = _badge_colors(badge)
 
-        # Grid de 6 fotos (3 col × 2 lin); preenche placeholder se faltar
+        # Render apenas os N slots reais (não força 6) — variação por card
         slots = []
-        for i in range(6):
-            f = fotos[i] if i < n else ""
+        for i in range(n):
+            f = fotos[i]
             seed = f"{titulo}-{i}-{f}"
             slots.append(f'<div class="maint-card__photo-slot" style="{_photo_bg(f, seed)}"></div>')
         photos_grid = "".join(slots)
+
+        # Grid columns adapta ao número (6→3col, 4→2col, 3→3col, 2→2col, 1→1col)
+        cols_map = {1: 1, 2: 2, 3: 3, 4: 2, 5: 3, 6: 3}
+        cols = cols_map.get(n, 3)
 
         return f"""
       <article class="maint-card">
@@ -463,7 +466,7 @@ class OurCondoMaintenance(Section):
           <span class="badge" style="background:{bg};color:{fg}">{_escape(badge)}</span>
           <h3 class="maint-card__titulo">{_escape(titulo)}</h3>
         </div>
-        <div class="maint-card__photos">{photos_grid}</div>
+        <div class="maint-card__photos" style="grid-template-columns: repeat({cols}, 1fr);">{photos_grid}</div>
       </article>"""
 
 
