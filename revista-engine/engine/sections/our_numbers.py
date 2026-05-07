@@ -1,24 +1,25 @@
 """
 S11 — Nossos Números.
 
-Fechamento financeiro do mês: KPIs principais + tabela das principais
-despesas + nota de transparência.
+Fechamento financeiro do mês: KPIs + gráficos (donut de despesas, bar
+chart de histórico, sparkline de inadimplência) + tabela de despesas +
+nota de transparência.
 
 Dados são EXATOS — nunca inventar (Doc 01 §3 S11).
 
 Inputs:
 - mes_referencia (str) — ex: "FEVEREIRO 2026"
-- kpis (dict):
-  - receita_brl (float)
-  - despesas_brl (float)
-  - fundo_reserva_brl (float)
-  - inadimplencia_pct (float)
-- principais_despesas (list[dict]) — categorias com valor_brl e observacao opc.
+- kpis (dict): receita_brl, despesas_brl, fundo_reserva_brl, inadimplencia_pct
+- principais_despesas (list[dict]) — categorias com valor_brl, observacao opc.
 - despesa_extra (dict opcional) — categoria fora-da-curva com descricao
+- historico (list[dict] opcional) — últimos 5-6 meses para gráficos:
+    {mes: str, receita_brl, despesas_brl, inadimplencia_pct}
 - nota_transparencia (str) — texto no rodapé
 """
 
 from __future__ import annotations
+
+import math
 
 from .base import A4, Section
 
@@ -105,16 +106,39 @@ class OurNumbers(Section):
         kpis = inputs.get("kpis") or {}
         despesas = list(inputs.get("principais_despesas") or [])
         despesa_extra = inputs.get("despesa_extra")
+        historico = list(inputs.get("historico") or [])
         nota = (inputs.get("nota_transparencia") or _NOTA_DEFAULT).strip()
 
-        # Calcular maior valor pra normalizar barras
         max_despesa = max(
             (float(d.get("valor_brl", 0)) for d in despesas), default=1.0
         ) or 1.0
 
-        kpi_cards = self._render_kpi_cards(kpis, theme)
+        kpi_cards = self._render_kpi_cards(kpis, historico, theme)
+        donut_svg = _render_donut(despesas)
+        historico_svg = _render_histograma(historico)
         despesas_tbl = self._render_despesas(despesas, max_despesa, theme)
         extra_block = self._render_despesa_extra(despesa_extra, theme) if despesa_extra else ""
+
+        # Bloco gráficos: donut + histórico lado a lado se houver dados
+        graficos_html = ""
+        if despesas or historico:
+            graficos_html = f"""
+    <div class="numbers__charts">
+      <div class="chart-card">
+        <h2 class="chart-card__titulo">Distribuição das despesas</h2>
+        <div class="chart-card__body chart-card__body--donut">
+          {donut_svg}
+          {_render_donut_legend(despesas)}
+        </div>
+      </div>
+      <div class="chart-card">
+        <h2 class="chart-card__titulo">Histórico recente</h2>
+        <div class="chart-card__body">
+          {historico_svg}
+        </div>
+      </div>
+    </div>
+"""
 
         return f"""
 <section class="page numbers-page">
@@ -127,6 +151,8 @@ class OurNumbers(Section):
     <div class="numbers__kpis">
       {kpi_cards}
     </div>
+
+    {graficos_html}
 
     <div class="numbers__despesas">
       <h2 class="numbers__sub">Principais despesas do mês</h2>
@@ -224,6 +250,136 @@ class OurNumbers(Section):
     color: var(--onix);
     opacity: 0.55;
     margin-top: 4px;
+  }}
+
+  /* Charts row: donut + histograma */
+  .numbers__charts {{
+    display: grid;
+    grid-template-columns: 5fr 6fr;
+    gap: 16px;
+  }}
+
+  .chart-card {{
+    background: var(--gray-5);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }}
+
+  .chart-card__titulo {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mint-80);
+    margin-bottom: 12px;
+  }}
+
+  .chart-card__body {{
+    display: block;
+  }}
+
+  .chart-card__body--donut {{
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 14px;
+    align-items: center;
+  }}
+
+  .donut-chart {{
+    width: 110px; height: 110px;
+  }}
+
+  .donut-chart__total-label {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 4px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    fill: var(--mint-80);
+  }}
+
+  .donut-chart__total {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 7.2px;
+    fill: var(--onix);
+  }}
+
+  .donut-legend {{
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }}
+
+  .donut-legend__item {{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 10px;
+    color: var(--onix);
+  }}
+
+  .donut-legend__dot {{
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }}
+
+  .donut-legend__cat {{
+    flex: 1;
+  }}
+
+  .donut-legend__pct {{
+    font-weight: 600;
+    color: var(--mint-80);
+    font-variant-numeric: tabular-nums;
+  }}
+
+  /* Histograma */
+  .histo-chart {{
+    width: 100%;
+    height: 150px;
+  }}
+
+  .histo-label {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    fill: var(--onix);
+    text-transform: uppercase;
+  }}
+
+  .histo-axis {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 7px;
+    fill: var(--onix);
+    opacity: 0.5;
+  }}
+
+  .histo-legenda-label {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 7px;
+    fill: var(--onix);
+    opacity: 0.7;
+  }}
+
+  /* Sparkline na KPI da inadimplência */
+  .sparkline {{
+    width: 100%;
+    height: 22px;
+    margin-top: 6px;
+    opacity: 0.65;
+  }}
+
+  .chart-empty {{
+    font-size: 11px;
+    color: var(--onix);
+    opacity: 0.5;
+    padding: 24px 0;
+    text-align: center;
   }}
 
   /* Despesas table */
@@ -371,12 +527,18 @@ class OurNumbers(Section):
 </style>
 """
 
-    def _render_kpi_cards(self, kpis: dict, theme) -> str:
+    def _render_kpi_cards(self, kpis: dict, historico: list, theme) -> str:
         receita = kpis.get("receita_brl", 0)
         despesas = kpis.get("despesas_brl", 0)
         fundo = kpis.get("fundo_reserva_brl", 0)
         inad = kpis.get("inadimplencia_pct", 0)
         saldo = float(receita or 0) - float(despesas or 0)
+
+        # Sparkline do histórico de inadimplência (se tiver pelo menos 2 pontos)
+        inad_series = [float(h.get("inadimplencia_pct", 0) or 0) for h in historico]
+        if len(inad_series) < 2:
+            inad_series = []
+        sparkline = _render_sparkline(inad_series, "var(--onix)") if inad_series else ""
 
         return f"""
       <div class="kpi-card">
@@ -395,6 +557,7 @@ class OurNumbers(Section):
       <div class="kpi-card kpi-card--inad">
         <div class="kpi-card__label">Inadimplência</div>
         <div class="kpi-card__value">{_fmt_pct(inad)}</div>
+        {sparkline}
       </div>"""
 
     def _render_despesas(self, despesas: list, max_v: float, theme) -> str:
@@ -440,3 +603,188 @@ def _escape(s: str) -> str:
         .replace("<", "&lt;")
         .replace(">", "&gt;")
     )
+
+
+# =============================================================================
+# Helpers de gráficos SVG (sem dependências externas)
+# =============================================================================
+
+# Paleta cíclica para slices do donut e categorias
+_CHART_PALETTE = [
+    "var(--mint)",
+    "var(--sand-80)",
+    "var(--lavender)",
+    "var(--mint-80)",
+    "var(--onix)",
+    "var(--sand-90)",
+    "var(--gray-20)",
+    "var(--sand)",
+]
+
+
+def _render_donut(despesas: list[dict]) -> str:
+    """SVG donut chart das despesas. Slices proporcionais ao valor_brl."""
+    if not despesas:
+        return ""
+
+    total = sum(float(d.get("valor_brl", 0) or 0) for d in despesas)
+    if total <= 0:
+        return ""
+
+    # Geometria: viewBox 100x100, anel entre r=30 e r=42
+    cx, cy = 50, 50
+    r_outer, r_inner = 42, 30
+    # Stroke width = r_outer - r_inner = 12, mas vamos desenhar como path
+    # com fatias precisas usando arcos.
+
+    slices = []
+    angle = -math.pi / 2  # começa no topo (12h)
+    for i, d in enumerate(despesas):
+        valor = float(d.get("valor_brl", 0) or 0)
+        if valor <= 0:
+            continue
+        frac = valor / total
+        end = angle + frac * 2 * math.pi
+        large_arc = 1 if frac > 0.5 else 0
+        x1, y1 = cx + r_outer * math.cos(angle), cy + r_outer * math.sin(angle)
+        x2, y2 = cx + r_outer * math.cos(end), cy + r_outer * math.sin(end)
+        x3, y3 = cx + r_inner * math.cos(end), cy + r_inner * math.sin(end)
+        x4, y4 = cx + r_inner * math.cos(angle), cy + r_inner * math.sin(angle)
+        path = (
+            f"M {x1:.3f} {y1:.3f} "
+            f"A {r_outer} {r_outer} 0 {large_arc} 1 {x2:.3f} {y2:.3f} "
+            f"L {x3:.3f} {y3:.3f} "
+            f"A {r_inner} {r_inner} 0 {large_arc} 0 {x4:.3f} {y4:.3f} Z"
+        )
+        color = _CHART_PALETTE[i % len(_CHART_PALETTE)]
+        slices.append(f'<path d="{path}" fill="{color}" />')
+        angle = end
+
+    total_fmt = _fmt_brl(total).replace("R$ ", "")
+    return f"""
+<svg viewBox="0 0 100 100" class="donut-chart" preserveAspectRatio="xMidYMid meet">
+  {''.join(slices)}
+  <text x="50" y="48" text-anchor="middle" class="donut-chart__total-label">TOTAL</text>
+  <text x="50" y="58" text-anchor="middle" class="donut-chart__total">R$ {total_fmt}</text>
+</svg>
+"""
+
+
+def _render_donut_legend(despesas: list[dict]) -> str:
+    """Lista de legenda colorida ao lado do donut."""
+    if not despesas:
+        return ""
+    total = sum(float(d.get("valor_brl", 0) or 0) for d in despesas) or 1
+    items = []
+    for i, d in enumerate(despesas):
+        valor = float(d.get("valor_brl", 0) or 0)
+        pct = (valor / total) * 100
+        cat = _escape(str(d.get("categoria", "")))
+        color = _CHART_PALETTE[i % len(_CHART_PALETTE)]
+        items.append(f"""
+        <li class="donut-legend__item">
+          <span class="donut-legend__dot" style="background:{color}"></span>
+          <span class="donut-legend__cat">{cat}</span>
+          <span class="donut-legend__pct">{pct:.1f}%</span>
+        </li>""")
+    return f'<ul class="donut-legend">{"".join(items)}</ul>'
+
+
+def _render_histograma(historico: list[dict]) -> str:
+    """SVG bar chart de receita vs despesas dos últimos meses."""
+    if not historico or len(historico) < 2:
+        return '<div class="chart-empty">Sem histórico disponível.</div>'
+
+    pontos = list(historico)[-6:]  # últimos 6
+    n = len(pontos)
+    max_v = max(
+        max(float(p.get("receita_brl", 0) or 0), float(p.get("despesas_brl", 0) or 0))
+        for p in pontos
+    ) or 1.0
+
+    # SVG dimensions: viewBox 320x140
+    W, H = 320, 140
+    margin_left, margin_right = 28, 12
+    margin_top, margin_bottom = 12, 28
+    plot_w = W - margin_left - margin_right
+    plot_h = H - margin_top - margin_bottom
+
+    group_w = plot_w / n
+    bar_w = (group_w - 6) / 2  # 2 bars per group, 6px gap
+    bars = []
+    labels = []
+    for i, p in enumerate(pontos):
+        rec = float(p.get("receita_brl", 0) or 0)
+        des = float(p.get("despesas_brl", 0) or 0)
+        x_group = margin_left + i * group_w + 3
+        h_rec = (rec / max_v) * plot_h
+        h_des = (des / max_v) * plot_h
+        # Receita (mint)
+        bars.append(
+            f'<rect x="{x_group:.1f}" y="{margin_top + plot_h - h_rec:.1f}" '
+            f'width="{bar_w:.1f}" height="{h_rec:.1f}" fill="var(--mint)" rx="2" />'
+        )
+        # Despesas (sand-80)
+        bars.append(
+            f'<rect x="{x_group + bar_w + 2:.1f}" y="{margin_top + plot_h - h_des:.1f}" '
+            f'width="{bar_w:.1f}" height="{h_des:.1f}" fill="var(--sand-80)" rx="2" />'
+        )
+        # Label do mês
+        mes = _escape(str(p.get("mes", "")))
+        labels.append(
+            f'<text x="{x_group + group_w/2 - 3:.1f}" y="{H - 10}" '
+            f'text-anchor="middle" class="histo-label">{mes}</text>'
+        )
+
+    # Eixo Y: 4 grid lines + valores
+    grid_lines = []
+    for i in range(5):
+        y = margin_top + (plot_h * i / 4)
+        grid_lines.append(
+            f'<line x1="{margin_left}" y1="{y:.1f}" x2="{W - margin_right}" y2="{y:.1f}" '
+            f'stroke="var(--gray-20)" stroke-width="0.5" />'
+        )
+        # Label do valor (mil R$)
+        v = max_v * (1 - i / 4)
+        v_label = f"{v/1000:.0f}k" if v > 0 else "0"
+        grid_lines.append(
+            f'<text x="{margin_left - 4}" y="{y + 3:.1f}" text-anchor="end" '
+            f'class="histo-axis">{v_label}</text>'
+        )
+
+    legenda = """
+  <g class="histo-legenda" transform="translate(28, 4)">
+    <rect x="0" y="0" width="8" height="8" fill="var(--mint)" rx="1"/>
+    <text x="12" y="7" class="histo-legenda-label">Receita</text>
+    <rect x="60" y="0" width="8" height="8" fill="var(--sand-80)" rx="1"/>
+    <text x="72" y="7" class="histo-legenda-label">Despesas</text>
+  </g>
+"""
+    return f"""
+<svg viewBox="0 0 {W} {H}" class="histo-chart" preserveAspectRatio="xMidYMid meet">
+  {''.join(grid_lines)}
+  {''.join(bars)}
+  {''.join(labels)}
+  {legenda}
+</svg>
+"""
+
+
+def _render_sparkline(series: list[float], color: str = "currentColor") -> str:
+    """Mini sparkline SVG pra mostrar tendência (ex: inadimplência últimos meses)."""
+    if not series or len(series) < 2:
+        return ""
+    W, H = 120, 24
+    pad = 2
+    mn, mx = min(series), max(series)
+    rng = (mx - mn) or 1
+    xs = [pad + i * (W - 2 * pad) / (len(series) - 1) for i in range(len(series))]
+    ys = [pad + (1 - (v - mn) / rng) * (H - 2 * pad) for v in series]
+    points = " ".join(f"{x:.1f},{y:.1f}" for x, y in zip(xs, ys))
+    last_x, last_y = xs[-1], ys[-1]
+    return f"""
+<svg viewBox="0 0 {W} {H}" class="sparkline" preserveAspectRatio="none">
+  <polyline points="{points}" fill="none" stroke="{color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="{last_x:.1f}" cy="{last_y:.1f}" r="2" fill="{color}" />
+</svg>
+"""

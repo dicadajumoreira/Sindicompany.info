@@ -41,6 +41,13 @@ DEFAULT_INPUTS = {
             "reunião ordinária de janeiro."
         ),
     },
+    "historico": [
+        {"mes": "OUT", "receita_brl": 248_000, "despesas_brl": 178_000, "inadimplencia_pct": 5.4},
+        {"mes": "NOV", "receita_brl": 261_000, "despesas_brl": 172_000, "inadimplencia_pct": 5.1},
+        {"mes": "DEZ", "receita_brl": 288_000, "despesas_brl": 192_000, "inadimplencia_pct": 4.9},
+        {"mes": "JAN", "receita_brl": 274_000, "despesas_brl": 187_000, "inadimplencia_pct": 4.4},
+        {"mes": "FEV", "receita_brl": 280_000, "despesas_brl": 94_000,  "inadimplencia_pct": 4.0},
+    ],
     "nota_transparencia": "",  # usa default da seção
 }
 
