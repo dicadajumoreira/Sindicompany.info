@@ -104,15 +104,15 @@ class Letter(Section):
             foto_h = 280
             layout_dir = "row"
         else:  # mobile — empilha foto em cima do texto pra texto longo caber
-            padding = 36
-            kicker_size = 12
-            titulo_size = 40
-            corpo_size = 13
-            corpo_leading = 1.5
-            assinatura_nome_size = 17
-            assinatura_cargo_size = 10
-            foto_w = 460   # quase full-width do mobile (540 - 2*40 padding)
-            foto_h = 200   # mais raso, paisagem
+            padding = 32
+            kicker_size = 11
+            titulo_size = 36
+            corpo_size = 11
+            corpo_leading = 1.42
+            assinatura_nome_size = 15
+            assinatura_cargo_size = 9
+            foto_w = 476   # full-width do mobile (540 - 2*32 padding)
+            foto_h = 150   # bem mais raso pra liberar espaço pro texto
             layout_dir = "column"
 
         # Quebra parágrafos (separados por linha em branco)

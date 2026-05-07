@@ -97,7 +97,7 @@ def main():
         print(f"✗ {errors}"); sys.exit(1)
     print(f"✓ {section.label} validada · {section.paginate(inputs)} pág")
 
-    for fmt in ("a4", "mobile"):
+    for fmt in ("a4",):  # mobile pausado nesta fase — A4 only
         print(f"\n[{fmt.upper()}]")
         html = render_html(section, theme, fmt, inputs)
         html_path = out_dir / f"letter_{fmt}.html"

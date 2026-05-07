@@ -112,7 +112,7 @@ def main():
         sys.exit(1)
     print(f"  ✓ Seção {section.label} validada · {section.paginate(inputs)} página(s)")
 
-    for fmt in ("a4", "mobile"):
+    for fmt in ("a4",):  # mobile pausado nesta fase — A4 only
         print(f"\n[{fmt.upper()}]")
         html = render_html(section, theme, fmt, inputs)
 
