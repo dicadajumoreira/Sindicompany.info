@@ -8,6 +8,7 @@ from .horoscope import Horoscope
 from .letter import Letter
 from .our_numbers import OurNumbers
 from .recipe import Recipe
+from .tips import Tips
 from .warnings import Warnings
 
 __all__ = [
@@ -22,5 +23,6 @@ __all__ = [
     "Letter",
     "OurNumbers",
     "Recipe",
+    "Tips",
     "Warnings",
 ]
