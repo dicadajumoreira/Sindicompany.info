@@ -52,6 +52,7 @@ class Tips(Section):
             f"""
       <article class="dica-card">
         <div class="dica-card__num">{i+1:02d}</div>
+        <div class="dica-card__divider"></div>
         <div class="dica-card__body">
           <h3 class="dica-card__titulo">{_escape(d.get('titulo', ''))}</h3>
           <p class="dica-card__corpo">{_escape(d.get('corpo', ''))}</p>
@@ -106,12 +107,14 @@ class Tips(Section):
 
   .tips__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 44px;
+    font-size: 38px;
     font-weight: 400;
     line-height: 0.98;
     letter-spacing: -0.025em;
     color: var(--onix);
     margin-bottom: 8px;
+    max-width: 22ch;
+    text-wrap: balance;
   }}
 
   .tips__intro {{
@@ -134,40 +137,75 @@ class Tips(Section):
   }}
 
   .dica-card {{
-    background: var(--gray-5);
-    border-radius: 6px;
-    padding: 18px 20px;
-    display: flex;
-    gap: 18px;
-    align-items: flex-start;
+    background: var(--white);
+    border: 1px solid var(--gray-20);
+    border-radius: 8px;
+    padding: 22px 22px 20px;
+    display: block;
+    position: relative;
+    overflow: hidden;
   }}
 
-  .dica-card:nth-child(2n) {{
-    background: #EEF7F8; /* mint vibe */
+  /* Tarja de cor no topo, varia por card pra criar ritmo */
+  .dica-card::before {{
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: #84C7D3; /* mint default */
+  }}
+
+  .dica-card:nth-child(4n+1)::before {{ background: #84C7D3; }} /* mint */
+  .dica-card:nth-child(4n+2)::before {{ background: #D4AE94; }} /* sand-80 */
+  .dica-card:nth-child(4n+3)::before {{ background: #B8C0FF; }} /* lavender */
+  .dica-card:nth-child(4n+4)::before {{ background: #76B1BC; }} /* mint-80 */
+
+  /* Backgrounds alternados de card pra dar variedade */
+  .dica-card:nth-child(8n+5),
+  .dica-card:nth-child(8n+6),
+  .dica-card:nth-child(8n+7),
+  .dica-card:nth-child(8n+8) {{
+    background: #FAFAFA;
   }}
 
   .dica-card__num {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 38px;
+    font-size: 56px;
     font-weight: 400;
     line-height: 0.85;
-    color: var(--mint-80);
-    flex-shrink: 0;
-    width: 50px;
+    color: #76B1BC;
     font-variant-numeric: tabular-nums;
+    margin-bottom: 4px;
+    letter-spacing: -0.04em;
   }}
 
+  .dica-card:nth-child(4n+2) .dica-card__num {{ color: #B07A4B; }}
+  .dica-card:nth-child(4n+3) .dica-card__num {{ color: #6B70B8; }}
+  .dica-card:nth-child(4n+4) .dica-card__num {{ color: #1A1C29; }}
+
+  .dica-card__divider {{
+    width: 32px;
+    height: 2px;
+    background: var(--mint-80);
+    margin-bottom: 10px;
+  }}
+
+  .dica-card:nth-child(4n+2) .dica-card__divider {{ background: #B07A4B; }}
+  .dica-card:nth-child(4n+3) .dica-card__divider {{ background: #6B70B8; }}
+  .dica-card:nth-child(4n+4) .dica-card__divider {{ background: #1A1C29; }}
+
   .dica-card__body {{
-    flex: 1;
+    margin-top: 0;
   }}
 
   .dica-card__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 400;
     line-height: 1.1;
     color: var(--onix);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    letter-spacing: -0.015em;
   }}
 
   .dica-card__corpo {{
