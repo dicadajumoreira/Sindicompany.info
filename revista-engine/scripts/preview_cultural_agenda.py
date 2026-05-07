@@ -65,6 +65,42 @@ DEFAULT_INPUTS = {
             "descricao_curta": "Maior evento literário do país reúne autores e lançamentos.",
             "data": "16–27 abr",
         },
+        {
+            "categoria": "Cinema",
+            "titulo": "Karate Kid: Legends",
+            "descricao_curta": "Jackie Chan e Ralph Macchio juntos pela primeira vez. Nostalgia total.",
+            "data": "30 mai",
+        },
+        {
+            "categoria": "Série",
+            "titulo": "ST: Histórias de 85",
+            "descricao_curta": "Antologia do universo Hawkins. Novos personagens nos anos 80.",
+            "data": "23 abr · Netflix",
+        },
+        {
+            "categoria": "Show",
+            "titulo": "Anitta — Especial Brasil",
+            "descricao_curta": "Maior produção da carreira do pop-boy brasileiro. Quase esgotado.",
+            "data": "3 mai",
+        },
+        {
+            "categoria": "Game",
+            "titulo": "Hollow Knight: Silksong",
+            "descricao_curta": "O metroidvania mais esperado dos últimos anos finalmente chega.",
+            "data": "2026",
+        },
+        {
+            "categoria": "Evento",
+            "titulo": "SPFW — Moda BR",
+            "descricao_curta": "São Paulo Fashion Week apresenta coleções inverno das grandes grifes.",
+            "data": "abr · SP",
+        },
+        {
+            "categoria": "Show",
+            "titulo": "Lollapalooza Brasil",
+            "descricao_curta": "SZA, Arcade Fire e The Killers no maior festival urbano do país.",
+            "data": "25–27 abr",
+        },
     ],
 }
 

@@ -64,8 +64,8 @@ class CulturalAgenda(Section):
         cards = inputs.get("cards_secundarios") or []
         if not isinstance(cards, list):
             errors.append("Agenda: 'cards_secundarios' deve ser lista")
-        elif len(cards) > 6:
-            errors.append(f"Agenda: máximo 6 cards secundários (recebido {len(cards)})")
+        elif len(cards) > 12:
+            errors.append(f"Agenda: máximo 12 cards secundários (recebido {len(cards)})")
         return errors
 
     def paginate(self, inputs: dict) -> int:
@@ -80,7 +80,7 @@ class CulturalAgenda(Section):
     def _render(self, inputs: dict, theme) -> str:
         mes = (inputs.get("mes_referencia") or "").strip().upper()
         hero = inputs.get("hero") or {}
-        cards = list(inputs.get("cards_secundarios") or [])[:6]
+        cards = list(inputs.get("cards_secundarios") or [])[:12]
 
         hero_html = self._render_hero(hero, theme)
         cards_html = self._render_cards(cards, theme)
@@ -160,7 +160,7 @@ class CulturalAgenda(Section):
 
   .agenda-hero__photo {{
     flex: 0 0 50%;
-    min-height: 220px;
+    min-height: 170px;
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
