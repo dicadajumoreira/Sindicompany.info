@@ -308,10 +308,9 @@ class OurCondoMaintenance(Section):
                 )
             thumbs_html = f'<div class="maint-card__photo-thumbs">{"".join(thumbs)}</div>'
 
-        hero_class = " maint-card--hero" if display == "hero" else ""
-
+        # Sem hero: todas as cards iguais em grid 2 colunas
         return f"""
-      <article class="maint-card{hero_class}">
+      <article class="maint-card">
         <div class="maint-card__photo" style="{photo_bg}">
           <div class="maint-card__badge-overlay">
             <span class="badge" style="background:{bg};color:{fg}">{_escape(badge)}</span>
