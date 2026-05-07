@@ -209,12 +209,13 @@ class OurNumbers(Section):
 
   .kpi-card__value {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 22px;
+    font-size: 17px;
     font-weight: 400;
     letter-spacing: -0.01em;
     color: var(--onix);
-    line-height: 1.05;
-    word-break: break-word;
+    line-height: 1.1;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }}
 
   .kpi-card__hint {{
