@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
+import { novaRevistaAction } from "./actions";
 
 const CONDOMINIOS = [
   "Villa Park Osasco",
@@ -14,12 +15,17 @@ const MESES = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 
-export default async function NovaEdicaoPage() {
+export default async function NovaEdicaoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!verifySessionToken(token)) {
     redirect("/sindicompany/login");
   }
+  const { error } = await searchParams;
 
   return (
     <main className="max-w-2xl mx-auto px-6 py-12">
@@ -43,7 +49,16 @@ export default async function NovaEdicaoPage() {
         </p>
       </header>
 
-      <form className="space-y-5 bg-white rounded-xl border border-onix-100 p-6">
+      {error && (
+        <div className="mb-5 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-900">
+          {error}
+        </div>
+      )}
+
+      <form
+        action={novaRevistaAction}
+        className="space-y-5 bg-white rounded-xl border border-onix-100 p-6"
+      >
         <label className="block">
           <span className="text-xs font-semibold uppercase tracking-wider text-onix-800">
             Condomínio
