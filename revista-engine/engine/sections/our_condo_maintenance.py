@@ -387,40 +387,16 @@ class OurCondoMaintenance(Section):
   }}
 
   .maint-card {{
-    border-radius: 8px;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
-    background: var(--gray-5);
+    gap: 10px;
   }}
 
-  .maint-card--hero {{
-    grid-column: span 2;
-  }}
-
-  .maint-card__photo {{
-    flex: 1;
-    min-height: 140px;
-    position: relative;
-  }}
-
-  .maint-card__photo-thumbs {{
-    position: absolute;
-    bottom: 8px; right: 8px;
+  .maint-card__head {{
     display: flex;
-    gap: 4px;
-  }}
-
-  .maint-card__thumb {{
-    width: 28px; height: 28px;
-    border-radius: 3px;
-    border: 1.5px solid var(--white);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-  }}
-
-  .maint-card__badge-overlay {{
-    position: absolute;
-    top: 12px; left: 12px;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
   }}
 
   .badge {{
@@ -432,96 +408,62 @@ class OurCondoMaintenance(Section):
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-  }}
-
-  .maint-card__body {{
-    padding: 14px 16px 16px;
-    background: var(--white);
-    border-top: 1px solid var(--gray-20);
-  }}
-
-  .maint-card__head {{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-    gap: 10px;
-  }}
-
-  .maint-card__counter {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    color: var(--onix);
-    opacity: 0.55;
+    flex-shrink: 0;
   }}
 
   .maint-card__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 400;
     line-height: 1.15;
     color: var(--onix);
     letter-spacing: -0.015em;
-    margin-bottom: 4px;
+    flex: 1;
   }}
 
-  .maint-card__desc {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 10.5px;
-    line-height: 1.45;
-    color: var(--onix);
-    opacity: 0.78;
+  /* Grid 3 col × 2 lin de fotos */
+  .maint-card__photos {{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 4px;
+    flex: 1;
+    min-height: 0;
+    border-radius: 6px;
+    overflow: hidden;
+  }}
+
+  .maint-card__photo-slot {{
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 60px;
   }}
 </style>
 """
 
     def _render_card(self, m: dict, theme) -> str:
         titulo = (m.get("titulo") or "").strip()
-        descricao = (m.get("descricao") or "").strip()
         badge = (m.get("tipo_badge") or "MANUTENÇÃO").strip()
         fotos = list(m.get("fotos") or [])
         n = len(fotos)
-        display = _display_size(n)
         bg, fg = _badge_colors(badge)
 
-        # Foto principal
-        photo_seed = titulo + (fotos[0] if fotos else "0")
-        photo_bg = _photo_bg(fotos[0] if fotos else "", photo_seed)
+        # Grid de 6 fotos (3 col × 2 lin); preenche placeholder se faltar
+        slots = []
+        for i in range(6):
+            f = fotos[i] if i < n else ""
+            seed = f"{titulo}-{i}-{f}"
+            slots.append(f'<div class="maint-card__photo-slot" style="{_photo_bg(f, seed)}"></div>')
+        photos_grid = "".join(slots)
 
-        # Mini thumbs das fotos extras (até 4 thumbs, mais com "+N")
-        thumbs_html = ""
-        if n > 1:
-            thumbs = []
-            for i, f in enumerate(fotos[1:5]):
-                seed = titulo + f + str(i)
-                tbg = _photo_bg(f, seed)
-                thumbs.append(f'<div class="maint-card__thumb" style="{tbg}"></div>')
-            if n > 5:
-                thumbs.append(
-                    f'<div class="maint-card__thumb" style="background:rgba(0,0,0,0.55);'
-                    f'color:#fff;display:flex;align-items:center;justify-content:center;'
-                    f'font-size:9px;font-weight:600;">+{n-5}</div>'
-                )
-            thumbs_html = f'<div class="maint-card__photo-thumbs">{"".join(thumbs)}</div>'
-
-        # Sem hero: todas as cards iguais em grid 2 colunas
         return f"""
       <article class="maint-card">
-        <div class="maint-card__photo" style="{photo_bg}">
-          <div class="maint-card__badge-overlay">
-            <span class="badge" style="background:{bg};color:{fg}">{_escape(badge)}</span>
-          </div>
-          {thumbs_html}
+        <div class="maint-card__head">
+          <span class="badge" style="background:{bg};color:{fg}">{_escape(badge)}</span>
+          <h3 class="maint-card__titulo">{_escape(titulo)}</h3>
         </div>
-        <div class="maint-card__body">
-          <div class="maint-card__head">
-            <h3 class="maint-card__titulo">{_escape(titulo)}</h3>
-            <span class="maint-card__counter">{n} foto{'s' if n != 1 else ''}</span>
-          </div>
-          <p class="maint-card__desc">{_escape(descricao)}</p>
-        </div>
+        <div class="maint-card__photos">{photos_grid}</div>
       </article>"""
 
 

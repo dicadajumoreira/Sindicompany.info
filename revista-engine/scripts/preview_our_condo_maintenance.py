@@ -19,30 +19,10 @@ DEFAULT_INPUTS = {
     "mes_referencia": "ABRIL 2026",
     "nome_condominio": "Villa Park Osasco",
     "manutencoes": [
-        {
-            "titulo": "Manutenção do Jardim",
-            "tipo_badge": "JARDIM",
-            "descricao": "Poda completa de árvores e arbustos do bloco A, replantio do gramado lateral e adubação. Trabalho conduzido pela equipe técnica em dois dias.",
-            "fotos": ["", "", "", "", "", "", "", ""],  # 8 fotos -> hero
-        },
-        {
-            "titulo": "Substituição da Esteira da Academia",
-            "tipo_badge": "MANUTENÇÃO",
-            "descricao": "Equipamento atingiu fim de vida útil. Modelo novo cobrindo garantia de 24 meses.",
-            "fotos": ["", "", "", ""],  # 4 fotos -> large
-        },
-        {
-            "titulo": "Iluminação da Cancela",
-            "tipo_badge": "SEGURANÇA",
-            "descricao": "Troca de refletor LED na entrada principal para reforçar visibilidade noturna.",
-            "fotos": ["", ""],  # 2 fotos -> small
-        },
-        {
-            "titulo": "Reparo de Tubulação",
-            "tipo_badge": "MANUTENÇÃO",
-            "descricao": "Vazamento corrigido no subsolo. Sem impacto no abastecimento.",
-            "fotos": ["", "", ""],  # 3 fotos -> large
-        },
+        {"titulo": "Manutenção do Jardim",          "tipo_badge": "JARDIM",      "fotos": [""] * 6},
+        {"titulo": "Substituição da Esteira",        "tipo_badge": "MANUTENÇÃO",  "fotos": [""] * 6},
+        {"titulo": "Iluminação da Cancela",          "tipo_badge": "SEGURANÇA",   "fotos": [""] * 6},
+        {"titulo": "Reparo de Tubulação",            "tipo_badge": "MANUTENÇÃO",  "fotos": [""] * 6},
     ],
 }
 
