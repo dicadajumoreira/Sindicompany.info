@@ -63,16 +63,16 @@ def html_to_pdf(html, pdf_path):
 
 
 def pdf_to_png(pdf_path, png_path, dpi=150):
+    """Renderiza todas as páginas do PDF em PNGs separados (suffix -1, -2, ...)."""
     if not shutil.which("pdftoppm"): return False
     prefix = png_path.with_suffix("")
     subprocess.run(
-        ["pdftoppm", "-r", str(dpi), "-png", "-f", "1", "-l", "1",
+        ["pdftoppm", "-r", str(dpi), "-png",
          str(pdf_path), str(prefix)],
         check=True, capture_output=True,
     )
-    g = prefix.parent / f"{prefix.name}-1.png"
-    if g.exists(): g.rename(png_path)
-    return png_path.exists()
+    # pdftoppm gera <prefix>-1.png, <prefix>-2.png etc
+    return any(prefix.parent.glob(f"{prefix.name}-*.png"))
 
 
 def main():
