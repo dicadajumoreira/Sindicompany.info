@@ -8,6 +8,7 @@ from .cultural_agenda import CulturalAgenda
 from .horoscope import Horoscope
 from .industry_facts import IndustryFacts
 from .letter import Letter
+from .lifestyle_article import LifestyleArticle
 from .news import News
 from .our_numbers import OurNumbers
 from .recipe import Recipe
@@ -26,6 +27,7 @@ __all__ = [
     "Horoscope",
     "IndustryFacts",
     "Letter",
+    "LifestyleArticle",
     "News",
     "OurNumbers",
     "Recipe",
