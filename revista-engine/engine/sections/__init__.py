@@ -2,6 +2,7 @@
 
 from .back_cover import BackCover
 from .base import A4, MOBILE, PageDimensions, Section
+from .colophon import Colophon
 from .cover import Cover
 from .cultural_agenda import CulturalAgenda
 from .horoscope import Horoscope
@@ -19,6 +20,7 @@ __all__ = [
     "A4",
     "MOBILE",
     "BackCover",
+    "Colophon",
     "Cover",
     "CulturalAgenda",
     "Horoscope",
