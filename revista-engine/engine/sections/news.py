@@ -53,8 +53,8 @@ class News(Section):
         items = inputs.get("noticias") or []
         if not isinstance(items, list) or not items:
             errors.append("Novidades: 'noticias' precisa ser lista não-vazia")
-        elif len(items) > 5:
-            errors.append(f"Novidades: máximo 5 itens (recebido {len(items)})")
+        elif len(items) > 8:
+            errors.append(f"Novidades: máximo 8 itens (recebido {len(items)})")
         else:
             for i, n in enumerate(items):
                 if not n.get("fonte"):
@@ -75,7 +75,7 @@ class News(Section):
     def _render(self, inputs: dict, theme) -> str:
         mes = (inputs.get("mes_referencia") or "").strip().upper()
         intro = (inputs.get("intro") or "").strip()
-        items = list(inputs.get("noticias") or [])[:5]
+        items = list(inputs.get("noticias") or [])[:8]
 
         cards_html = "\n".join(self._render_card(n) for n in items)
 
@@ -157,7 +157,7 @@ class News(Section):
     background: var(--white);
     border: 1px solid var(--gray-20);
     border-radius: 8px;
-    padding: 20px 24px 18px 36px;
+    padding: 14px 22px 12px 32px;
     display: block;
     flex: 1;
     overflow: hidden;
@@ -216,24 +216,25 @@ class News(Section):
 
   .news-card__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 400;
-    line-height: 1.1;
+    line-height: 1.12;
     color: var(--onix);
     letter-spacing: -0.018em;
+    margin: 6px 0;
   }}
 
   .news-card__resumo {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 11.5px;
-    line-height: 1.55;
+    font-size: 10.5px;
+    line-height: 1.45;
     color: var(--onix);
     opacity: 0.82;
   }}
 
   .news-card__fonte {{
-    margin-top: 14px;
-    padding-top: 10px;
+    margin-top: 8px;
+    padding-top: 6px;
     border-top: 1px solid var(--gray-20);
     display: flex;
     align-items: baseline;

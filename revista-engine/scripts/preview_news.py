@@ -39,6 +39,27 @@ DEFAULT_INPUTS = {
             "resumo": "Adoção cresceu 47% em 12 meses. LGPD exige consentimento explícito do morador e plano de descarte de dados; condomínios que ignoram regra arriscam multa de até 2% do faturamento.",
             "fonte": "ANPD + ABADI · 2026",
         },
+        {
+            "badge": "Novidade",
+            "titulo": "Pix institucional já está disponível para condomínios em todos os bancos",
+            "data": "02/04/2026",
+            "resumo": "Recebimento de cotas via Pix QR estático foi liberado para CNPJ de condomínio em todos os bancos brasileiros. Tarifa zero, conciliação automática e baixa em segundos.",
+            "fonte": "Banco Central · Comunicado 2026/03",
+        },
+        {
+            "badge": "Mercado",
+            "titulo": "Síndicos profissionais já gerenciam 38% dos prédios na Grande SP",
+            "data": "abril/2026",
+            "resumo": "Crescimento de 6 pontos em 2 anos. Conselheiros voluntários ainda predominam em prédios menores; profissionalização cresce com gestão remota e exigências regulatórias.",
+            "fonte": "ABADI · Pesquisa 2026",
+        },
+        {
+            "badge": "Legislação",
+            "titulo": "Lei municipal exige sinalização tátil em entradas de prédios novos",
+            "data": "29/03/2026",
+            "resumo": "Capital paulista regulamenta a Lei 18.097/26: novos prédios e reformas estruturais devem incluir piso podotátil e sinalização em braille no hall e elevadores.",
+            "fonte": "Prefeitura SP · DOM 29/03",
+        },
     ],
 }
 
