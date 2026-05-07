@@ -113,6 +113,7 @@ class OurCondoMaintenance(Section):
 
     def _render_abertura(self, inputs: dict, theme) -> str:
         mes = (inputs.get("mes_referencia") or "").strip().upper()
+        condo = (inputs.get("nome_condominio") or "").strip().upper()
         foto = (inputs.get("foto_capa_caderno") or "").strip()
 
         # Foto full-bleed; placeholder gradient se sem foto
@@ -131,7 +132,7 @@ class OurCondoMaintenance(Section):
 <section class="page maint-cover-page" style="{bg_css}">
   <div class="maint-cover__overlay"></div>
   <div class="maint-cover__content">
-    <div class="maint-cover__kicker">{_escape(mes)}</div>
+    <div class="maint-cover__kicker">{_escape(condo)} · {_escape(mes)}</div>
     <h1 class="maint-cover__titulo">Caderno de<br>Manutenção</h1>
   </div>
 </section>
