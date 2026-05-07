@@ -3,6 +3,7 @@
 from .back_cover import BackCover
 from .base import A4, MOBILE, PageDimensions, Section
 from .cover import Cover
+from .horoscope import Horoscope
 from .letter import Letter
 from .our_numbers import OurNumbers
 from .warnings import Warnings
@@ -14,6 +15,7 @@ __all__ = [
     "MOBILE",
     "BackCover",
     "Cover",
+    "Horoscope",
     "Letter",
     "OurNumbers",
     "Warnings",
