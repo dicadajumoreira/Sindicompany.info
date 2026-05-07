@@ -5,6 +5,7 @@ from .base import A4, MOBILE, PageDimensions, Section
 from .cover import Cover
 from .letter import Letter
 from .our_numbers import OurNumbers
+from .warnings import Warnings
 
 __all__ = [
     "Section",
@@ -15,4 +16,5 @@ __all__ = [
     "Cover",
     "Letter",
     "OurNumbers",
+    "Warnings",
 ]
