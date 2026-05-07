@@ -359,11 +359,31 @@ class OurNumbers(Section):
     opacity: 0.5;
   }}
 
-  .histo-legenda-label {{
+  /* Legenda HTML do histograma — abaixo do SVG */
+  .histo-legend {{
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+  }}
+
+  .histo-legend li {{
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 7px;
-    fill: var(--onix);
-    opacity: 0.7;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--onix);
+  }}
+
+  .histo-legend__dot {{
+    width: 10px; height: 10px; border-radius: 2px;
+    display: inline-block;
   }}
 
   /* Sparkline na KPI da inadimplência */
@@ -609,16 +629,17 @@ def _escape(s: str) -> str:
 # Helpers de gráficos SVG (sem dependências externas)
 # =============================================================================
 
-# Paleta cíclica para slices do donut e categorias
+# Paleta cíclica para slices do donut. Ordem escolhida para maximizar
+# contraste entre slices adjacentes (cyan→tan→roxo→teal→beige→dark).
 _CHART_PALETTE = [
-    "var(--mint)",
-    "var(--sand-80)",
-    "var(--lavender)",
-    "var(--mint-80)",
-    "var(--onix)",
-    "var(--sand-90)",
-    "var(--gray-20)",
-    "var(--sand)",
+    "#84C7D3",   # mint
+    "#D4AE94",   # sand-80
+    "#B8C0FF",   # lavender
+    "#76B1BC",   # mint-80
+    "#DABDA9",   # sand
+    "#1A1C29",   # onix
+    "#EFCAAF",   # sand-90
+    "#E0E0E2",   # gray-20
 ]
 
 
@@ -664,8 +685,11 @@ def _render_donut(despesas: list[dict]) -> str:
     return f"""
 <svg viewBox="0 0 100 100" class="donut-chart" preserveAspectRatio="xMidYMid meet">
   {''.join(slices)}
-  <text x="50" y="48" text-anchor="middle" class="donut-chart__total-label">TOTAL</text>
-  <text x="50" y="58" text-anchor="middle" class="donut-chart__total">R$ {total_fmt}</text>
+  <text x="50" y="48" text-anchor="middle" font-size="4" font-weight="600"
+        letter-spacing="0.18em" fill="#76B1BC"
+        font-family="sans-serif">TOTAL</text>
+  <text x="50" y="58" text-anchor="middle" font-size="7"
+        fill="#1A1C29" font-family="serif">R$ {total_fmt}</text>
 </svg>
 """
 
@@ -691,26 +715,25 @@ def _render_donut_legend(despesas: list[dict]) -> str:
 
 
 def _render_histograma(historico: list[dict]) -> str:
-    """SVG bar chart de receita vs despesas dos últimos meses."""
+    """SVG bar chart de receita vs despesas. Legenda fica em HTML separado."""
     if not historico or len(historico) < 2:
         return '<div class="chart-empty">Sem histórico disponível.</div>'
 
-    pontos = list(historico)[-6:]  # últimos 6
+    pontos = list(historico)[-6:]
     n = len(pontos)
     max_v = max(
         max(float(p.get("receita_brl", 0) or 0), float(p.get("despesas_brl", 0) or 0))
         for p in pontos
     ) or 1.0
 
-    # SVG dimensions: viewBox 320x140
-    W, H = 320, 140
-    margin_left, margin_right = 28, 12
-    margin_top, margin_bottom = 12, 28
+    W, H = 340, 150
+    margin_left, margin_right = 44, 8
+    margin_top, margin_bottom = 8, 24
     plot_w = W - margin_left - margin_right
     plot_h = H - margin_top - margin_bottom
 
     group_w = plot_w / n
-    bar_w = (group_w - 6) / 2  # 2 bars per group, 6px gap
+    bar_w = (group_w - 6) / 2
     bars = []
     labels = []
     for i, p in enumerate(pontos):
@@ -719,54 +742,48 @@ def _render_histograma(historico: list[dict]) -> str:
         x_group = margin_left + i * group_w + 3
         h_rec = (rec / max_v) * plot_h
         h_des = (des / max_v) * plot_h
-        # Receita (mint)
         bars.append(
             f'<rect x="{x_group:.1f}" y="{margin_top + plot_h - h_rec:.1f}" '
-            f'width="{bar_w:.1f}" height="{h_rec:.1f}" fill="var(--mint)" rx="2" />'
+            f'width="{bar_w:.1f}" height="{h_rec:.1f}" fill="#84C7D3" rx="2" />'
         )
-        # Despesas (sand-80)
         bars.append(
             f'<rect x="{x_group + bar_w + 2:.1f}" y="{margin_top + plot_h - h_des:.1f}" '
-            f'width="{bar_w:.1f}" height="{h_des:.1f}" fill="var(--sand-80)" rx="2" />'
+            f'width="{bar_w:.1f}" height="{h_des:.1f}" fill="#D4AE94" rx="2" />'
         )
-        # Label do mês
         mes = _escape(str(p.get("mes", "")))
         labels.append(
-            f'<text x="{x_group + group_w/2 - 3:.1f}" y="{H - 10}" '
-            f'text-anchor="middle" class="histo-label">{mes}</text>'
+            f'<text x="{x_group + group_w/2 - 3:.1f}" y="{H - 8}" '
+            f'text-anchor="middle" font-size="9" font-weight="600" '
+            f'letter-spacing="0.05em" fill="#1A1C29" '
+            f'font-family="sans-serif">{mes}</text>'
         )
 
-    # Eixo Y: 4 grid lines + valores
+    # Gridlines + Y-axis (5 níveis)
     grid_lines = []
     for i in range(5):
         y = margin_top + (plot_h * i / 4)
         grid_lines.append(
             f'<line x1="{margin_left}" y1="{y:.1f}" x2="{W - margin_right}" y2="{y:.1f}" '
-            f'stroke="var(--gray-20)" stroke-width="0.5" />'
+            f'stroke="#E0E0E2" stroke-width="0.5" />'
         )
-        # Label do valor (mil R$)
         v = max_v * (1 - i / 4)
-        v_label = f"{v/1000:.0f}k" if v > 0 else "0"
+        v_label = f"R$ {v/1000:.0f}k" if v > 0 else "R$ 0"
         grid_lines.append(
-            f'<text x="{margin_left - 4}" y="{y + 3:.1f}" text-anchor="end" '
-            f'class="histo-axis">{v_label}</text>'
+            f'<text x="{margin_left - 6}" y="{y + 3:.1f}" text-anchor="end" '
+            f'font-size="7" fill="#1A1C29" opacity="0.55" '
+            f'font-family="sans-serif">{v_label}</text>'
         )
 
-    legenda = """
-  <g class="histo-legenda" transform="translate(28, 4)">
-    <rect x="0" y="0" width="8" height="8" fill="var(--mint)" rx="1"/>
-    <text x="12" y="7" class="histo-legenda-label">Receita</text>
-    <rect x="60" y="0" width="8" height="8" fill="var(--sand-80)" rx="1"/>
-    <text x="72" y="7" class="histo-legenda-label">Despesas</text>
-  </g>
-"""
     return f"""
 <svg viewBox="0 0 {W} {H}" class="histo-chart" preserveAspectRatio="xMidYMid meet">
   {''.join(grid_lines)}
   {''.join(bars)}
   {''.join(labels)}
-  {legenda}
 </svg>
+<ul class="histo-legend">
+  <li><span class="histo-legend__dot" style="background:#84C7D3"></span>Receita</li>
+  <li><span class="histo-legend__dot" style="background:#D4AE94"></span>Despesas</li>
+</ul>
 """
 
 
