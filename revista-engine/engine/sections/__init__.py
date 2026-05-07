@@ -5,6 +5,7 @@ from .base import A4, MOBILE, PageDimensions, Section
 from .cover import Cover
 from .cultural_agenda import CulturalAgenda
 from .horoscope import Horoscope
+from .industry_facts import IndustryFacts
 from .letter import Letter
 from .our_numbers import OurNumbers
 from .recipe import Recipe
@@ -20,6 +21,7 @@ __all__ = [
     "Cover",
     "CulturalAgenda",
     "Horoscope",
+    "IndustryFacts",
     "Letter",
     "OurNumbers",
     "Recipe",
