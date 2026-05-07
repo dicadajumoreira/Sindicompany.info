@@ -64,8 +64,8 @@ class CulturalAgenda(Section):
         cards = inputs.get("cards_secundarios") or []
         if not isinstance(cards, list):
             errors.append("Agenda: 'cards_secundarios' deve ser lista")
-        elif len(cards) > 12:
-            errors.append(f"Agenda: máximo 12 cards secundários (recebido {len(cards)})")
+        elif len(cards) > 18:
+            errors.append(f"Agenda: máximo 18 cards secundários (recebido {len(cards)})")
         return errors
 
     def paginate(self, inputs: dict) -> int:
@@ -80,7 +80,7 @@ class CulturalAgenda(Section):
     def _render(self, inputs: dict, theme) -> str:
         mes = (inputs.get("mes_referencia") or "").strip().upper()
         hero = inputs.get("hero") or {}
-        cards = list(inputs.get("cards_secundarios") or [])[:12]
+        cards = list(inputs.get("cards_secundarios") or [])[:18]
 
         hero_html = self._render_hero(hero, theme)
         cards_html = self._render_cards(cards, theme)
@@ -160,7 +160,7 @@ class CulturalAgenda(Section):
 
   .agenda-hero__photo {{
     flex: 0 0 50%;
-    min-height: 170px;
+    min-height: 240px;
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
@@ -221,12 +221,14 @@ class CulturalAgenda(Section):
     border-top: 1px solid var(--gray-20);
   }}
 
-  /* Cards secundários — grid 3 colunas, altura compacta */
+  /* Cards secundários — grid 3 colunas que estica pra preencher página */
   .agenda__cards {{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: min-content;
+    grid-auto-rows: 1fr;
     gap: 10px;
+    flex: 1;
+    min-height: 0;
   }}
 
   .agenda-card {{

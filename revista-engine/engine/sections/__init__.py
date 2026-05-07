@@ -7,6 +7,7 @@ from .cultural_agenda import CulturalAgenda
 from .horoscope import Horoscope
 from .letter import Letter
 from .our_numbers import OurNumbers
+from .recipe import Recipe
 from .warnings import Warnings
 
 __all__ = [
@@ -20,5 +21,6 @@ __all__ = [
     "Horoscope",
     "Letter",
     "OurNumbers",
+    "Recipe",
     "Warnings",
 ]

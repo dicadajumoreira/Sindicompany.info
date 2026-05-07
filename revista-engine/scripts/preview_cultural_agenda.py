@@ -101,6 +101,42 @@ DEFAULT_INPUTS = {
             "descricao_curta": "SZA, Arcade Fire e The Killers no maior festival urbano do país.",
             "data": "25–27 abr",
         },
+        {
+            "categoria": "Cinema",
+            "titulo": "Thunderbolts*",
+            "descricao_curta": "Anti-heróis em missão suicida. Florence Pugh e Sebastian Stan.",
+            "data": "30 abr",
+        },
+        {
+            "categoria": "Cinema",
+            "titulo": "Missão: Impossível 8",
+            "descricao_curta": "Tom Cruise no adeus definitivo de Ethan Hunt. Mais explosivo impossível.",
+            "data": "23 mai",
+        },
+        {
+            "categoria": "Série",
+            "titulo": "Andor — T2",
+            "descricao_curta": "A melhor série de Star Wars encerra com a resistência ao Império.",
+            "data": "22 abr · Disney+",
+        },
+        {
+            "categoria": "Série",
+            "titulo": "Black Mirror — T7",
+            "descricao_curta": "5 novos episódios perturbadores sobre tecnologia e humanidade.",
+            "data": "abr · Netflix",
+        },
+        {
+            "categoria": "Show",
+            "titulo": "Seu Jorge — 25 Anos",
+            "descricao_curta": "Vinte e cinco anos de carreira celebrados em turnê nacional.",
+            "data": "26 abr",
+        },
+        {
+            "categoria": "Game",
+            "titulo": "The Witcher 4",
+            "descricao_curta": "Ciri herda o manto de Geralt em novo mundo CD Projekt Red.",
+            "data": "2026",
+        },
     ],
 }
 
