@@ -116,7 +116,7 @@ class CoverStory(Section):
 
   .story__hero {{
     position: relative;
-    height: 380px;
+    height: 290px;
     flex-shrink: 0;
     overflow: hidden;
   }}
@@ -151,19 +151,19 @@ class CoverStory(Section):
 
   .story__manchete {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 48px;
+    font-size: 38px;
     font-weight: 400;
     line-height: 0.96;
     letter-spacing: -0.025em;
     color: var(--white);
     max-width: 16ch;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     text-wrap: balance;
   }}
 
   .story__subtitulo {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 14px;
+    font-size: 12.5px;
     font-weight: 400;
     line-height: 1.4;
     color: var(--sand-90);
@@ -171,18 +171,18 @@ class CoverStory(Section):
   }}
 
   .story__body {{
-    padding: 32px 56px 36px;
+    padding: 24px 56px 28px;
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
     max-width: 100%;
   }}
 
   .story__p {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 12px;
-    line-height: 1.6;
+    font-size: 11px;
+    line-height: 1.5;
     color: var(--onix);
     text-align: justify;
     hyphens: auto;
@@ -190,33 +190,33 @@ class CoverStory(Section):
   }}
 
   .story__p:first-of-type {{
-    font-size: 13.5px;
-    line-height: 1.55;
+    font-size: 12.5px;
+    line-height: 1.5;
   }}
 
   .story__intertitulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 400;
     line-height: 1.05;
     letter-spacing: -0.015em;
     color: var(--onix);
-    margin-top: 12px;
+    margin-top: 6px;
     border-top: 1px solid var(--mint-80);
-    padding-top: 12px;
+    padding-top: 8px;
   }}
 
   .story__pull-quote {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 24px;
+    font-size: 19px;
     font-weight: 400;
     line-height: 1.15;
     color: var(--mint-80);
     text-align: center;
-    padding: 18px 36px;
+    padding: 12px 24px;
     border-top: 2px solid var(--mint-80);
     border-bottom: 2px solid var(--mint-80);
-    margin: 14px 0;
+    margin: 8px 0;
     letter-spacing: -0.01em;
   }}
 
@@ -238,16 +238,16 @@ class CoverStory(Section):
   .story__dado {{
     background: var(--mint);
     border-radius: 8px;
-    padding: 18px 22px;
+    padding: 12px 16px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin: 6px 0;
+    gap: 3px;
+    margin: 4px 0;
   }}
 
   .story__dado-numero {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 36px;
+    font-size: 28px;
     font-weight: 400;
     line-height: 0.95;
     color: var(--onix);
