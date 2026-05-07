@@ -311,10 +311,9 @@ class OurCondoMaintenance(Section):
         condo = (inputs.get("nome_condominio") or "").strip()
         mans = list(inputs.get("manutencoes") or [])
 
-        # Por simplicidade no preview: pegar até 4 com display_size large/small
-        # e fazer um grid 2x2. Para hero (6+) renderizar como destaque mais largo.
+        # Mostra até 6 manutenções, cada uma com 1 foto representativa
         cards_html = "\n".join(
-            self._render_card(m, theme) for m in mans[:4]
+            self._render_card(m, theme) for m in mans[:6]
         )
 
         return f"""
@@ -379,64 +378,66 @@ class OurCondoMaintenance(Section):
 
   .maint__grid {{
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 1fr;
-    gap: 14px;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 12px;
     flex: 1;
     min-height: 0;
   }}
 
   .maint-card {{
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
   }}
 
-  .maint-card__head {{
+  .maint-card__photo {{
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+  }}
+
+  .maint-card__overlay {{
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(26,28,41,0.0) 50%,
+      rgba(26,28,41,0.78) 100%
+    );
+  }}
+
+  .maint-card__caption {{
+    position: absolute;
+    left: 14px; right: 14px; bottom: 14px;
+    color: var(--white);
     display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
   }}
 
   .badge {{
     display: inline-block;
-    padding: 4px 10px;
+    padding: 3px 9px;
     border-radius: 3px;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 8px;
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    flex-shrink: 0;
   }}
 
   .maint-card__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 400;
-    line-height: 1.15;
-    color: var(--onix);
+    line-height: 1.1;
+    color: var(--white);
     letter-spacing: -0.015em;
-    flex: 1;
-  }}
-
-  /* Grid de fotos — colunas variam por card (style inline override) */
-  .maint-card__photos {{
-    display: grid;
-    grid-auto-rows: 1fr;
-    gap: 4px;
-    flex: 1;
-    min-height: 0;
-    border-radius: 6px;
-    overflow: hidden;
-  }}
-
-  .maint-card__photo-slot {{
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    min-height: 60px;
   }}
 </style>
 """
@@ -445,28 +446,19 @@ class OurCondoMaintenance(Section):
         titulo = (m.get("titulo") or "").strip()
         badge = (m.get("tipo_badge") or "MANUTENÇÃO").strip()
         fotos = list(m.get("fotos") or [])
-        n = min(len(fotos), 6)
         bg, fg = _badge_colors(badge)
-
-        # Render apenas os N slots reais (não força 6) — variação por card
-        slots = []
-        for i in range(n):
-            f = fotos[i]
-            seed = f"{titulo}-{i}-{f}"
-            slots.append(f'<div class="maint-card__photo-slot" style="{_photo_bg(f, seed)}"></div>')
-        photos_grid = "".join(slots)
-
-        # Grid columns adapta ao número (6→3col, 4→2col, 3→3col, 2→2col, 1→1col)
-        cols_map = {1: 1, 2: 2, 3: 3, 4: 2, 5: 3, 6: 3}
-        cols = cols_map.get(n, 3)
+        photo_seed = titulo + (fotos[0] if fotos else "")
+        photo_bg = _photo_bg(fotos[0] if fotos else "", photo_seed)
 
         return f"""
       <article class="maint-card">
-        <div class="maint-card__head">
-          <span class="badge" style="background:{bg};color:{fg}">{_escape(badge)}</span>
-          <h3 class="maint-card__titulo">{_escape(titulo)}</h3>
+        <div class="maint-card__photo" style="{photo_bg}">
+          <div class="maint-card__overlay"></div>
+          <div class="maint-card__caption">
+            <span class="badge" style="background:{bg};color:{fg}">{_escape(badge)}</span>
+            <h3 class="maint-card__titulo">{_escape(titulo)}</h3>
+          </div>
         </div>
-        <div class="maint-card__photos" style="grid-template-columns: repeat({cols}, 1fr);">{photos_grid}</div>
       </article>"""
 
 
