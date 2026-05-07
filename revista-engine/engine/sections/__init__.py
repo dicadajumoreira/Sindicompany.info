@@ -11,6 +11,7 @@ from .industry_facts import IndustryFacts
 from .letter import Letter
 from .lifestyle_article import LifestyleArticle
 from .news import News
+from .our_condo_maintenance import OurCondoMaintenance
 from .our_numbers import OurNumbers
 from .recipe import Recipe
 from .tips import Tips
@@ -31,6 +32,7 @@ __all__ = [
     "Letter",
     "LifestyleArticle",
     "News",
+    "OurCondoMaintenance",
     "OurNumbers",
     "Recipe",
     "Tips",
