@@ -24,7 +24,9 @@ export async function loginAction(formData: FormData) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/sindicompany",
+    // path "/" para que o cookie chegue também em /api/sindicompany/*
+    // (rota que serve o PDF assinado)
+    path: "/",
     maxAge: SESSION_MAX_AGE,
   });
   redirect("/sindicompany/dashboard");
