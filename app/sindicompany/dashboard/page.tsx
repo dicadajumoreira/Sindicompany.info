@@ -61,6 +61,12 @@ export default async function DashboardPage({
         </div>
         <div className="flex items-center gap-3">
           <Link
+            href="/sindicompany/editorial"
+            className="inline-flex items-center px-4 py-2.5 rounded-lg border border-onix-100 text-onix-900 font-medium hover:bg-onix-50 text-sm"
+          >
+            Editorial mensal
+          </Link>
+          <Link
             href="/sindicompany/condominios"
             className="inline-flex items-center px-4 py-2.5 rounded-lg border border-onix-100 text-onix-900 font-medium hover:bg-onix-50 text-sm"
           >

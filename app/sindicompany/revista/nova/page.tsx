@@ -5,8 +5,11 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { CONDOMINIOS } from "@/lib/sindicompany/condominios";
 import { getCondoMeta } from "@/lib/sindicompany/condominios-db";
 import {
-  sugerirMateria,
-  sugerirReceita,
+  getEditorial,
+  editorialEstaPronto,
+  formatMesAno,
+} from "@/lib/sindicompany/editoriais";
+import {
   sugerirCartaSindico,
   sugerirCartaGestor,
 } from "@/lib/sindicompany/sugestoes";
@@ -42,16 +45,19 @@ export default async function NovaEdicaoPage({
   const defaultAno = Number(getStr(sp, "ano")) ||
     (now.getMonth() + 2 > 12 ? now.getFullYear() + 1 : now.getFullYear());
 
-  const sugMateria = sugerirMateria(defaultMes);
-  const sugReceita = sugerirReceita(defaultMes);
-  const sugCartaSindico = sugerirCartaSindico(defaultMes);
-  const sugCartaGestor = sugerirCartaGestor(defaultMes);
-
   const condoSelecionado = getStr(sp, "condominio");
   const meta = condoSelecionado
     ? await getCondoMeta(condoSelecionado).catch(() => null)
     : null;
   const condoTemGestor = !!meta?.tem_gestor;
+
+  const editorial = await getEditorial(defaultMes, defaultAno).catch(() => null);
+  const editorialOk = editorialEstaPronto(editorial);
+  const sugCartaSindico = sugerirCartaSindico(defaultMes);
+  const sugCartaGestor = sugerirCartaGestor(defaultMes);
+  const temaSindico = editorial?.carta_sindico_tema ?? sugCartaSindico?.tema ?? "";
+  const temaGestor = editorial?.carta_gestor_tema ?? sugCartaGestor?.tema ?? "";
+  const editorialSlug = formatMesAno(defaultMes, defaultAno);
 
   const v = (k: string, fallback = "") => getStr(sp, k, fallback);
 
@@ -80,6 +86,35 @@ export default async function NovaEdicaoPage({
           {error}
         </div>
       )}
+
+      {/* Status do editorial mensal */}
+      <div
+        className={`mb-6 rounded-xl border px-5 py-4 text-sm ${
+          editorialOk
+            ? "border-mint-100 bg-mint-50 text-mint-700"
+            : "border-amber-200 bg-amber-50 text-amber-900"
+        }`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="font-semibold mb-0.5">
+              Editorial de {MESES[defaultMes - 1]} / {defaultAno}:{" "}
+              {editorialOk ? "pronto" : editorial ? "em rascunho" : "não definido"}
+            </div>
+            <div className="text-xs opacity-80">
+              {editorialOk
+                ? `Matéria: "${editorial?.materia_capa_titulo}". Receita: ${editorial?.receita_titulo}.`
+                : "Defina matéria de capa, foto, receita e temas das cartas antes de gerar revistas deste mês."}
+            </div>
+          </div>
+          <Link
+            href={`/sindicompany/editorial/${editorialSlug}`}
+            className="shrink-0 underline font-medium"
+          >
+            {editorialOk ? "Editar" : "Definir"} →
+          </Link>
+        </div>
+      </div>
 
       <form action={novaRevistaAction} className="space-y-8">
         {/* ============ EDIÇÃO ============ */}
@@ -138,23 +173,28 @@ export default async function NovaEdicaoPage({
 
           {/* --- Carta do(a) síndico(a) --- */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-onix-900">Carta do(a) síndico(a)</h3>
+            <h3 className="text-sm font-semibold text-onix-900">
+              Carta do(a) síndico(a){meta?.sindico_nome ? ` — ${meta.sindico_nome}` : ""}
+            </h3>
 
-            {sugCartaSindico && (
+            {temaSindico ? (
               <div className="rounded-lg bg-mint-50 border border-mint-100 px-4 py-3 text-sm">
                 <div className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-1">
-                  Tema sugerido para {MESES[defaultMes - 1]}
+                  Tema deste mês (vem do editorial mensal)
                 </div>
-                <div className="font-medium text-onix-900">{sugCartaSindico.tema}</div>
-                <div className="text-onix-800 opacity-80 mt-0.5">{sugCartaSindico.resumo}</div>
+                <div className="font-medium text-onix-900">{temaSindico}</div>
+              </div>
+            ) : (
+              <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+                Tema da carta ainda não foi definido para esta edição.{" "}
+                <Link
+                  href={`/sindicompany/editorial/${String(defaultMes).padStart(2, "0")}-${defaultAno}`}
+                  className="font-semibold underline"
+                >
+                  Definir editorial mensal →
+                </Link>
               </div>
             )}
-
-            <Field label="Tema da carta">
-              <input type="text" name="carta_sindico_tema"
-                     defaultValue={v("carta_sindico_tema") || sugCartaSindico?.tema || ""}
-                     className={inputCls} />
-            </Field>
 
             <Field label="Texto da carta (opcional)"
                    hint="Se deixar em branco, a engine escreve uma carta baseada no tema. Se preencher, usa o seu texto.">
@@ -174,21 +214,24 @@ export default async function NovaEdicaoPage({
                 </h3>
               </div>
 
-              {sugCartaGestor && (
+              {temaGestor ? (
                 <div className="rounded-lg bg-sand-50 border border-onix-100 px-4 py-3 text-sm" style={{background:"#F7EFE9"}}>
                   <div className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-1">
-                    Tema sugerido para {MESES[defaultMes - 1]}
+                    Tema deste mês (vem do editorial mensal)
                   </div>
-                  <div className="font-medium text-onix-900">{sugCartaGestor.tema}</div>
-                  <div className="text-onix-800 opacity-80 mt-0.5">{sugCartaGestor.resumo}</div>
+                  <div className="font-medium text-onix-900">{temaGestor}</div>
+                </div>
+              ) : (
+                <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+                  Tema da carta ainda não foi definido para esta edição.{" "}
+                  <Link
+                    href={`/sindicompany/editorial/${String(defaultMes).padStart(2, "0")}-${defaultAno}`}
+                    className="font-semibold underline"
+                  >
+                    Definir editorial mensal →
+                  </Link>
                 </div>
               )}
-
-              <Field label="Tema da carta">
-                <input type="text" name="carta_gestor_tema"
-                       defaultValue={v("carta_gestor_tema") || sugCartaGestor?.tema || ""}
-                       className={inputCls} />
-              </Field>
 
               <Field label="Texto da carta (opcional)"
                      hint="Se deixar em branco, a engine escreve uma carta baseada no tema.">
@@ -277,62 +320,15 @@ export default async function NovaEdicaoPage({
           </Field>
         </section>
 
-        {/* ============ EDITORIAL ============ */}
+        {/* ============ NOTAS DESTA EDIÇÃO ============ */}
         <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
-            5 · Editorial
+            5 · Notas desta edição (opcional)
           </h2>
-
-          {sugMateria && (
-            <div className="rounded-lg bg-mint-50 border border-mint-100 px-4 py-3 text-sm">
-              <div className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-1">
-                Sugestão para {MESES[defaultMes - 1]}
-              </div>
-              <div className="font-medium text-onix-900">{sugMateria.titulo}</div>
-              <div className="text-onix-800 opacity-80 mt-0.5">{sugMateria.subtitulo}</div>
-            </div>
-          )}
-
-          <Field label="Título da matéria de capa">
-            <input type="text" name="materia_capa_titulo"
-                   defaultValue={v("materia_capa_titulo") || sugMateria?.titulo || ""}
-                   className={inputCls} />
-          </Field>
-
-          <Field label="Subtítulo da matéria de capa">
-            <textarea name="materia_capa_subtitulo" rows={2}
-                      defaultValue={v("materia_capa_subtitulo") || sugMateria?.subtitulo || ""}
-                      className={inputCls} />
-          </Field>
-
-          <Field label="Link/URL da foto de capa"
-                 hint="Foto que aparece como fundo da capa. Pode ser link do Drive ou URL pública.">
-            <input type="url" name="foto_capa_url"
-                   defaultValue={v("foto_capa_url")}
-                   placeholder="https://..."
-                   className={inputCls} />
-          </Field>
-
-          {sugReceita && (
-            <div className="rounded-lg bg-sand-50 border border-onix-100 px-4 py-3 text-sm" style={{background:"#F7EFE9"}}>
-              <div className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-1">
-                Receita sugerida
-              </div>
-              <div className="font-medium text-onix-900">{sugReceita.titulo}</div>
-              <div className="text-onix-800 opacity-80 mt-0.5">{sugReceita.descricao}</div>
-            </div>
-          )}
-
-          <Field label="Receita do mês">
-            <input type="text" name="receita_titulo"
-                   defaultValue={v("receita_titulo") || sugReceita?.titulo || ""}
-                   className={inputCls} />
-          </Field>
-
-          <Field label="Notas pro editor (opcional)">
+          <Field label="Algo específico desta revista que a equipe precisa saber">
             <textarea name="notas_editor" rows={3}
                       defaultValue={v("notas_editor")}
-                      placeholder="Algo que a equipe editorial precise saber sobre essa edição."
+                      placeholder="Ex: a foto da assembleia chega no dia 15, esperar."
                       className={inputCls} />
           </Field>
         </section>

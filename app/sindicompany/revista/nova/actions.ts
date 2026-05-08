@@ -7,6 +7,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { isCondominioValido } from "@/lib/sindicompany/condominios";
 import { getCondoMeta } from "@/lib/sindicompany/condominios-db";
 import { createRevista, type RevistaInput } from "@/lib/sindicompany/db";
+import { getEditorial, editorialEstaPronto } from "@/lib/sindicompany/editoriais";
 import { describeError, detectMigrationMissing } from "@/lib/sindicompany/errors";
 
 async function requireAuth() {
@@ -29,11 +30,6 @@ function backToFormWithError(message: string, fields: FormData): never {
 function isValidDriveUrl(url: string): boolean {
   if (!url) return true; // opcional
   return /^https?:\/\/(drive|docs)\.google\.com\//.test(url);
-}
-
-function isValidImageUrl(url: string): boolean {
-  if (!url) return true;
-  return /^https?:\/\//.test(url);
 }
 
 function getStr(fd: FormData, key: string): string {
@@ -103,19 +99,20 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     backToFormWithError("Link de eventos precisa ser do Google Drive.", formData);
   }
 
-  const materia_capa_titulo = getStr(formData, "materia_capa_titulo");
-  const materia_capa_subtitulo = getStr(formData, "materia_capa_subtitulo");
-  const foto_capa_url = getStr(formData, "foto_capa_url");
-  if (foto_capa_url && !isValidImageUrl(foto_capa_url)) {
-    backToFormWithError("Foto de capa precisa ser uma URL válida.", formData);
-  }
-  const receita_titulo = getStr(formData, "receita_titulo");
   const notas_editor = getStr(formData, "notas_editor");
-
-  const carta_sindico_tema = getStr(formData, "carta_sindico_tema");
   const carta_sindico_texto = getStr(formData, "carta_sindico_texto");
-  const carta_gestor_tema = getStr(formData, "carta_gestor_tema");
   const carta_gestor_texto = getStr(formData, "carta_gestor_texto");
+
+  // Editorial mensal precisa estar pronto antes de gerar revista.
+  const editorial = await getEditorial(mes, ano).catch(() => null);
+  if (!editorialEstaPronto(editorial)) {
+    const slug = `${String(mes).padStart(2, "0")}-${ano}`;
+    backToFormWithError(
+      `Editorial de ${mesRaw}/${anoRaw} ainda não está pronto. ` +
+        `Defina matéria de capa e receita em Editorial mensal (/sindicompany/editorial/${slug}).`,
+      formData,
+    );
+  }
 
   const input: RevistaInput = {
     condominio,
@@ -131,15 +128,9 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     multas_advertencias_obs: tem_advertencias ? multas_advertencias_obs : undefined,
     tem_eventos,
     drive_eventos_url: tem_eventos ? drive_eventos_url || undefined : undefined,
-    materia_capa_titulo: materia_capa_titulo || undefined,
-    materia_capa_subtitulo: materia_capa_subtitulo || undefined,
-    foto_capa_url: foto_capa_url || undefined,
-    receita_titulo: receita_titulo || undefined,
     notas_editor: notas_editor || undefined,
-    carta_sindico_tema: carta_sindico_tema || undefined,
     carta_sindico_texto: carta_sindico_texto || undefined,
     // Carta do gestor só salva se o condo tem gestor cadastrado
-    carta_gestor_tema: tem_gestor ? carta_gestor_tema || undefined : undefined,
     carta_gestor_texto: tem_gestor ? carta_gestor_texto || undefined : undefined,
   };
 
