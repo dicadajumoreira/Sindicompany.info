@@ -14,6 +14,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const TABLE = "editoriais_mensais";
+const BUCKET = "editoriais-fotos";
 
 export interface Editorial {
   mes: number;
@@ -95,6 +96,24 @@ export async function upsertEditorial(input: EditorialInput): Promise<Editorial>
 export function editorialEstaPronto(e: Editorial | null): boolean {
   if (!e) return false;
   return Boolean(e.materia_capa_titulo && e.receita_titulo);
+}
+
+/** Sobe foto de capa pro bucket público e retorna a URL pública. */
+export async function uploadEditorialFotoCapa(
+  mes: number,
+  ano: number,
+  bytes: Buffer,
+  contentType: string,
+  ext: string,
+): Promise<string> {
+  const path = `${ano}-${String(mes).padStart(2, "0")}-${Date.now()}.${ext}`;
+  const supabase = createAdminClient();
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, bytes, { contentType, upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
 }
 
 export function formatMesAno(mes: number, ano: number): string {

@@ -90,7 +90,7 @@ export default async function EditarEditorialPage({
         </div>
       )}
 
-      <form action={salvarEditorialAction} className="space-y-8">
+      <form action={salvarEditorialAction} encType="multipart/form-data" className="space-y-8">
         <input type="hidden" name="slug" value={formatMesAno(mes, ano)} />
 
         {/* ============ MATÉRIA DE CAPA ============ */}
@@ -125,12 +125,29 @@ export default async function EditarEditorialPage({
             />
           </Field>
 
-          <Field label="Foto de capa (URL)" hint="Imagem de fundo da capa. Pode ser link de Drive público ou URL pública.">
+          <Field
+            label="Foto de capa"
+            hint="JPG, PNG ou WebP. Máx 8MB. Aparece como fundo da capa da revista."
+          >
+            <input type="hidden" name="foto_capa_existente" value={ed?.foto_capa_url ?? ""} />
+            {ed?.foto_capa_url && (
+              <div className="mb-3 flex items-start gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={ed.foto_capa_url}
+                  alt="Foto de capa atual"
+                  className="rounded-lg object-cover w-32 h-20 border border-onix-100"
+                />
+                <span className="text-xs text-g60 mt-1">
+                  Foto atual. Suba uma nova abaixo para substituir.
+                </span>
+              </div>
+            )}
             <input
-              type="url" name="foto_capa_url"
-              defaultValue={ed?.foto_capa_url ?? ""}
-              placeholder="https://..."
-              className={inputCls}
+              type="file"
+              name="foto_capa_file"
+              accept="image/jpeg,image/png,image/webp"
+              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
             />
           </Field>
         </section>

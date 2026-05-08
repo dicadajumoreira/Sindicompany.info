@@ -7,9 +7,18 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import {
   parseMesAno,
   upsertEditorial,
+  uploadEditorialFotoCapa,
   type EditorialInput,
 } from "@/lib/sindicompany/editoriais";
 import { describeError, detectMigrationMissing } from "@/lib/sindicompany/errors";
+
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024; // 8MB
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const EXT_BY_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 async function requireAuth() {
   const store = await cookies();
@@ -42,9 +51,40 @@ export async function salvarEditorialAction(formData: FormData): Promise<void> {
     redirect("/sindicompany/editorial");
   }
 
-  const foto_capa_url = getStr(formData, "foto_capa_url");
+  // Foto de capa: novo upload (file) sobrescreve; senão mantém a existente.
+  const fotoExistente = getStr(formData, "foto_capa_existente");
+  let foto_capa_url = fotoExistente;
+
+  const fotoFile = formData.get("foto_capa_file");
+  if (fotoFile instanceof File && fotoFile.size > 0) {
+    if (fotoFile.size > MAX_PHOTO_BYTES) {
+      backWithError(slug, "Foto de capa maior que 8MB.");
+    }
+    if (!ALLOWED_TYPES.has(fotoFile.type)) {
+      backWithError(slug, "Foto de capa precisa ser JPG, PNG ou WebP.");
+    }
+    try {
+      const buf = Buffer.from(await fotoFile.arrayBuffer());
+      const ext = EXT_BY_TYPE[fotoFile.type];
+      foto_capa_url = await uploadEditorialFotoCapa(
+        parsed.mes,
+        parsed.ano,
+        buf,
+        fotoFile.type,
+        ext,
+      );
+    } catch (e) {
+      console.error("[editorial] upload foto failed:", e);
+      const msg = describeError(e);
+      if (/bucket.*not.*found|not.*found.*bucket/i.test(msg)) {
+        backWithError(slug, "Bucket editoriais-fotos não existe. Rode a migration 20260512.");
+      }
+      backWithError(slug, `Falha ao subir foto: ${msg}`);
+    }
+  }
+
   if (foto_capa_url && !isValidImageUrl(foto_capa_url)) {
-    backWithError(slug, "Foto de capa precisa ser uma URL válida (http/https).");
+    backWithError(slug, "URL de foto de capa inválida.");
   }
 
   const input: EditorialInput = {
