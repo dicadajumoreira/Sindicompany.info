@@ -108,6 +108,7 @@ class OurNumbers(Section):
         despesa_extra = inputs.get("despesa_extra")
         historico = list(inputs.get("historico") or [])
         nota = (inputs.get("nota_transparencia") or _NOTA_DEFAULT).strip()
+        dashboard_url = (inputs.get("dashboard_url") or "").strip()
 
         max_despesa = max(
             (float(d.get("valor_brl", 0)) for d in despesas), default=1.0
@@ -164,6 +165,7 @@ class OurNumbers(Section):
     <footer class="numbers__nota">
       <span class="numbers__nota-label">Transparência</span>
       <span class="numbers__nota-text">{_escape(nota)}</span>
+      {f'<a class="numbers__dashboard-link" href="{_escape_attr(dashboard_url)}">Ver dashboard completo →</a>' if dashboard_url else ''}
     </footer>
   </div>
 </section>
@@ -523,6 +525,25 @@ class OurNumbers(Section):
     display: flex;
     gap: 12px;
     align-items: flex-start;
+    flex-wrap: wrap;
+  }}
+
+  .numbers__dashboard-link {{
+    flex: 0 0 100%;
+    margin-top: 6px;
+    margin-left: 112px;
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--mint-80);
+    text-decoration: none;
+    border-bottom: 1.5px solid var(--mint-80);
+    padding-bottom: 1px;
+    align-self: flex-start;
+    width: fit-content;
+    max-width: calc(100% - 112px);
+    word-break: break-all;
   }}
 
   .numbers__nota-label {{
@@ -623,6 +644,10 @@ def _escape(s: str) -> str:
         .replace("<", "&lt;")
         .replace(">", "&gt;")
     )
+
+
+def _escape_attr(s: str) -> str:
+    return _escape(s).replace('"', "&quot;").replace("'", "&#39;")
 
 
 # =============================================================================

@@ -323,6 +323,8 @@ def build_inputs_from_db(
 
     drive_prestacao = revista.get("drive_prestacao_url")
     if drive_prestacao:
+        # Link clicável pro dashboard completo no rodapé da S11
+        numbers_inputs["dashboard_url"] = drive_prestacao
         import tempfile
         tmp_num = Path(tempfile.mkdtemp(prefix=f"numeros_{revista.get('id','')[:8]}_"))
         nums = parse_nossos_numeros(drive_prestacao, tmp_num)
