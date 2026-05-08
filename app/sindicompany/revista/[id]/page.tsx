@@ -3,6 +3,8 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { getRevista, formatEdicao } from "@/lib/sindicompany/db";
+import { RevistaProgress } from "./progress";
+import { cancelarRevistaAction } from "./actions";
 
 const STATUS_LABELS = {
   em_producao: "Em produção",
@@ -101,15 +103,32 @@ export default async function RevistaPage({
         )}
 
         {revista.status === "em_producao" && (
-          <div className="rounded-lg bg-onix-50 px-4 py-3 text-sm text-g60">
-            <strong className="text-onix-900">Em produção.</strong> A engine
-            está montando a revista. Atualize esta página em alguns instantes.
-          </div>
+          <>
+            <RevistaProgress
+              createdAt={revista.created_at}
+              expectedSeconds={90}
+              warnAfterSeconds={180}
+            />
+            <form action={cancelarRevistaAction}>
+              <input type="hidden" name="id" value={revista.id} />
+              <button
+                type="submit"
+                className="text-xs text-red-700 hover:text-red-900 hover:underline"
+              >
+                Cancelar geração e marcar como erro
+              </button>
+            </form>
+          </>
         )}
 
-        {revista.status === "erro" && revista.erro_mensagem && (
+        {revista.status === "erro" && (
           <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-900">
-            <strong>Falha na geração:</strong> {revista.erro_mensagem}
+            <strong>Falha na geração:</strong>{" "}
+            {revista.erro_mensagem ?? "sem detalhes"}
+            <div className="mt-2 text-xs opacity-80">
+              Você pode duplicar essa edição no painel pra tentar de novo
+              quando a engine estiver online.
+            </div>
           </div>
         )}
 
