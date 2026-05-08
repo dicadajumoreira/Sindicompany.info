@@ -3,7 +3,12 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { CONDOMINIOS } from "@/lib/sindicompany/condominios";
-import { sugerirMateria, sugerirReceita } from "@/lib/sindicompany/sugestoes";
+import {
+  sugerirMateria,
+  sugerirReceita,
+  sugerirCartaSindico,
+  sugerirCartaGestor,
+} from "@/lib/sindicompany/sugestoes";
 import { novaRevistaAction } from "./actions";
 
 const MESES = [
@@ -37,6 +42,8 @@ export default async function NovaEdicaoPage({
 
   const sugMateria = sugerirMateria(defaultMes);
   const sugReceita = sugerirReceita(defaultMes);
+  const sugCartaSindico = sugerirCartaSindico(defaultMes);
+  const sugCartaGestor = sugerirCartaGestor(defaultMes);
 
   const v = (k: string, fallback = "") => getStr(sp, k, fallback);
 
@@ -117,10 +124,80 @@ export default async function NovaEdicaoPage({
           </Link>
         </section>
 
+        {/* ============ CARTAS ============ */}
+        <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-6">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
+            3 · Cartas
+          </h2>
+
+          {/* --- Carta do(a) síndico(a) --- */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-onix-900">Carta do(a) síndico(a)</h3>
+
+            {sugCartaSindico && (
+              <div className="rounded-lg bg-mint-50 border border-mint-100 px-4 py-3 text-sm">
+                <div className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-1">
+                  Tema sugerido para {MESES[defaultMes - 1]}
+                </div>
+                <div className="font-medium text-onix-900">{sugCartaSindico.tema}</div>
+                <div className="text-onix-800 opacity-80 mt-0.5">{sugCartaSindico.resumo}</div>
+              </div>
+            )}
+
+            <Field label="Tema da carta">
+              <input type="text" name="carta_sindico_tema"
+                     defaultValue={v("carta_sindico_tema") || sugCartaSindico?.tema || ""}
+                     className={inputCls} />
+            </Field>
+
+            <Field label="Texto da carta (opcional)"
+                   hint="Se deixar em branco, a engine escreve uma carta baseada no tema. Se preencher, usa o seu texto.">
+              <textarea name="carta_sindico_texto" rows={6}
+                        defaultValue={v("carta_sindico_texto")}
+                        placeholder="Escreva a carta do(a) síndico(a) aqui, ou deixe em branco para o sistema sugerir."
+                        className={inputCls} />
+            </Field>
+          </div>
+
+          {/* --- Carta do gestor --- */}
+          <div className="space-y-3 pt-4 border-t border-onix-100">
+            <div>
+              <h3 className="text-sm font-semibold text-onix-900">Carta do gestor</h3>
+              <p className="text-xs text-g60 mt-1">
+                Só aparece na revista se o condomínio escolhido tiver gestor cadastrado.
+              </p>
+            </div>
+
+            {sugCartaGestor && (
+              <div className="rounded-lg bg-sand-50 border border-onix-100 px-4 py-3 text-sm" style={{background:"#F7EFE9"}}>
+                <div className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-1">
+                  Tema sugerido para {MESES[defaultMes - 1]}
+                </div>
+                <div className="font-medium text-onix-900">{sugCartaGestor.tema}</div>
+                <div className="text-onix-800 opacity-80 mt-0.5">{sugCartaGestor.resumo}</div>
+              </div>
+            )}
+
+            <Field label="Tema da carta">
+              <input type="text" name="carta_gestor_tema"
+                     defaultValue={v("carta_gestor_tema") || sugCartaGestor?.tema || ""}
+                     className={inputCls} />
+            </Field>
+
+            <Field label="Texto da carta (opcional)"
+                   hint="Se deixar em branco, a engine escreve uma carta baseada no tema.">
+              <textarea name="carta_gestor_texto" rows={6}
+                        defaultValue={v("carta_gestor_texto")}
+                        placeholder="Escreva a carta do gestor aqui, ou deixe em branco para o sistema sugerir."
+                        className={inputCls} />
+            </Field>
+          </div>
+        </section>
+
         {/* ============ CONTEÚDO DO CONDOMÍNIO ============ */}
         <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
-            3 · Conteúdo do condomínio
+            4 · Conteúdo do condomínio
           </h2>
 
           <Field label="Link da pasta de fotos de manutenção (Google Drive)"
@@ -173,7 +250,7 @@ export default async function NovaEdicaoPage({
         {/* ============ EDITORIAL ============ */}
         <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
-            4 · Editorial
+            5 · Editorial
           </h2>
 
           {sugMateria && (

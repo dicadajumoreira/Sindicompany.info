@@ -111,6 +111,11 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
   const receita_titulo = getStr(formData, "receita_titulo");
   const notas_editor = getStr(formData, "notas_editor");
 
+  const carta_sindico_tema = getStr(formData, "carta_sindico_tema");
+  const carta_sindico_texto = getStr(formData, "carta_sindico_texto");
+  const carta_gestor_tema = getStr(formData, "carta_gestor_tema");
+  const carta_gestor_texto = getStr(formData, "carta_gestor_texto");
+
   const input: RevistaInput = {
     condominio,
     mes,
@@ -130,6 +135,11 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     foto_capa_url: foto_capa_url || undefined,
     receita_titulo: receita_titulo || undefined,
     notas_editor: notas_editor || undefined,
+    carta_sindico_tema: carta_sindico_tema || undefined,
+    carta_sindico_texto: carta_sindico_texto || undefined,
+    // Carta do gestor só salva se o condo tem gestor cadastrado
+    carta_gestor_tema: tem_gestor ? carta_gestor_tema || undefined : undefined,
+    carta_gestor_texto: tem_gestor ? carta_gestor_texto || undefined : undefined,
   };
 
   let revista;

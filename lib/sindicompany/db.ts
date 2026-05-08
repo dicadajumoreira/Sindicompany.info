@@ -40,6 +40,11 @@ export interface Revista {
   receita_sugerida: string | null;
   receita_titulo: string | null;
   notas_editor: string | null;
+  // Cartas
+  carta_sindico_tema: string | null;
+  carta_sindico_texto: string | null;
+  carta_gestor_tema: string | null;
+  carta_gestor_texto: string | null;
   // Timestamps
   created_at: string;
   updated_at: string;
@@ -64,6 +69,10 @@ export interface RevistaInput {
   foto_capa_url?: string;
   receita_titulo?: string;
   notas_editor?: string;
+  carta_sindico_tema?: string;
+  carta_sindico_texto?: string;
+  carta_gestor_tema?: string;
+  carta_gestor_texto?: string;
 }
 
 const TABLE = "revistas";
