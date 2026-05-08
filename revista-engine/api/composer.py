@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from api.drive import baixar_capa_manutencao, baixar_pastas_manutencao
 from api.image_gen import (
     gerar_foto_agenda_hero,
+    gerar_foto_lifestyle,
     gerar_foto_materia_capa,
     gerar_foto_receita,
 )
@@ -338,9 +339,16 @@ def build_inputs_from_db(
     if revista.get("multas_advertencias_obs"):
         warnings_inputs["observacao"] = revista["multas_advertencias_obs"]
 
-    # ---- S12B Vida Condominial / S13 Signos
+    # ---- S12B Vida Condominial: gera foto se faltar
     life_inputs = dict(LIFE_DEFAULT)
     life_inputs["mes_referencia"] = mes_ano
+    if not life_inputs.get("foto_principal"):
+        foto_life = gerar_foto_lifestyle(
+            life_inputs.get("titulo", ""),
+            life_inputs.get("kicker", ""),
+        )
+        if foto_life:
+            life_inputs["foto_principal"] = foto_life
 
     # ---- S13 Signos — gerados por mês
     signos_ai = gerar_signos(mes_int, ano_int)

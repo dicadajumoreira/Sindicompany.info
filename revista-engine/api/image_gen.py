@@ -126,3 +126,18 @@ def gerar_foto_agenda_hero(titulo: str, categoria: str = "") -> str | None:
         f"hyper-detailed, warm tones, no text, no logos, no graphic art."
     )
     return _gerar_imagem(prompt, size="1792x1024")
+
+
+def gerar_foto_lifestyle(titulo: str, kicker: str = "") -> str | None:
+    """Gera foto pra Vida Condominial (S12B), normalmente conectada
+    a uma data celebrativa do mês."""
+    if not titulo:
+        return None
+    prompt = (
+        f"Editorial lifestyle photograph for an article titled '{titulo}'. "
+        f"Theme/kicker: {kicker}. Style: high-end Brazilian magazine, candid, "
+        f"natural lighting, real people in a Brazilian condominium / urban "
+        f"setting, warm tones, journalistic. Photorealistic, hyper-detailed, "
+        f"no text, no logos, no graphic art."
+    )
+    return _gerar_imagem(prompt, size="1792x1024")
