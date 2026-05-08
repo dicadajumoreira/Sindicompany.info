@@ -138,6 +138,19 @@ export async function markRevistaPublished(
   if (error) throw error;
 }
 
+export async function deleteRevista(id: string): Promise<void> {
+  const supabase = createAdminClient();
+
+  // Apaga PDF do storage (se existir) antes de remover o registro.
+  const revista = await getRevista(id);
+  if (revista?.pdf_storage_path) {
+    await supabase.storage.from(BUCKET).remove([revista.pdf_storage_path]);
+  }
+
+  const { error } = await supabase.from(TABLE).delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function markRevistaErro(id: string, mensagem: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { listRevistas, formatEdicao, type Revista } from "@/lib/sindicompany/db";
 import { logoutAction } from "../login/actions";
+import { DeleteRevistaButton } from "./delete-button";
 
 const STATUS_LABELS: Record<Revista["status"], string> = {
   em_producao: "Em produção",
@@ -27,7 +28,11 @@ async function safeListRevistas(): Promise<{ revistas: Revista[]; error: string 
   }
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!verifySessionToken(token)) {
@@ -35,6 +40,9 @@ export default async function DashboardPage() {
   }
 
   const { revistas, error } = await safeListRevistas();
+  const sp = await searchParams;
+  const flashErro = typeof sp.error === "string" ? sp.error : null;
+  const flashOk = sp.excluida ? "Revista excluída." : null;
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-12">
@@ -74,6 +82,17 @@ export default async function DashboardPage() {
           </form>
         </div>
       </header>
+
+      {flashOk && (
+        <div className="mb-6 rounded-xl border border-mint-100 bg-mint-50 px-5 py-3 text-sm text-mint-700">
+          {flashOk}
+        </div>
+      )}
+      {flashErro && (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm text-red-900">
+          {flashErro}
+        </div>
+      )}
 
       {/* Banner de erro de DB (Supabase ausente/desconfig) */}
       {error && (
@@ -146,12 +165,18 @@ export default async function DashboardPage() {
                     {r.gerado_em ? r.gerado_em.slice(0, 10) : "—"}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <Link
-                      href={`/sindicompany/revista/${r.id}`}
-                      className="text-sm font-medium text-onix-900 hover:underline"
-                    >
-                      Abrir →
-                    </Link>
+                    <div className="flex items-center justify-end gap-4">
+                      <Link
+                        href={`/sindicompany/revista/${r.id}`}
+                        className="text-sm font-medium text-onix-900 hover:underline"
+                      >
+                        Abrir →
+                      </Link>
+                      <DeleteRevistaButton
+                        id={r.id}
+                        label={`${formatEdicao(r.mes, r.ano)} — ${r.condominio}`}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}

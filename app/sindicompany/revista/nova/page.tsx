@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { CONDOMINIOS } from "@/lib/sindicompany/condominios";
+import { getCondoMeta } from "@/lib/sindicompany/condominios-db";
 import {
   sugerirMateria,
   sugerirReceita,
@@ -10,6 +11,7 @@ import {
   sugerirCartaGestor,
 } from "@/lib/sindicompany/sugestoes";
 import { novaRevistaAction } from "./actions";
+import { CondoSelect } from "./condo-select";
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -44,6 +46,12 @@ export default async function NovaEdicaoPage({
   const sugReceita = sugerirReceita(defaultMes);
   const sugCartaSindico = sugerirCartaSindico(defaultMes);
   const sugCartaGestor = sugerirCartaGestor(defaultMes);
+
+  const condoSelecionado = getStr(sp, "condominio");
+  const meta = condoSelecionado
+    ? await getCondoMeta(condoSelecionado).catch(() => null)
+    : null;
+  const condoTemGestor = !!meta?.tem_gestor;
 
   const v = (k: string, fallback = "") => getStr(sp, k, fallback);
 
@@ -81,13 +89,11 @@ export default async function NovaEdicaoPage({
           </h2>
 
           <Field label="Condomínio">
-            <select name="condominio" required defaultValue={v("condominio")}
-                    className={selectCls}>
-              <option value="">Selecione…</option>
-              {CONDOMINIOS.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+            <CondoSelect
+              condominios={CONDOMINIOS}
+              defaultValue={v("condominio")}
+              className={selectCls}
+            />
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
@@ -159,39 +165,63 @@ export default async function NovaEdicaoPage({
             </Field>
           </div>
 
-          {/* --- Carta do gestor --- */}
-          <div className="space-y-3 pt-4 border-t border-onix-100">
-            <div>
-              <h3 className="text-sm font-semibold text-onix-900">Carta do gestor</h3>
-              <p className="text-xs text-g60 mt-1">
-                Só aparece na revista se o condomínio escolhido tiver gestor cadastrado.
-              </p>
-            </div>
-
-            {sugCartaGestor && (
-              <div className="rounded-lg bg-sand-50 border border-onix-100 px-4 py-3 text-sm" style={{background:"#F7EFE9"}}>
-                <div className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-1">
-                  Tema sugerido para {MESES[defaultMes - 1]}
-                </div>
-                <div className="font-medium text-onix-900">{sugCartaGestor.tema}</div>
-                <div className="text-onix-800 opacity-80 mt-0.5">{sugCartaGestor.resumo}</div>
+          {/* --- Carta do gestor (só aparece se o condo tem gestor cadastrado) --- */}
+          {condoTemGestor && (
+            <div className="space-y-3 pt-4 border-t border-onix-100">
+              <div>
+                <h3 className="text-sm font-semibold text-onix-900">
+                  Carta do gestor{meta?.gestor_nome ? ` — ${meta.gestor_nome}` : ""}
+                </h3>
               </div>
-            )}
 
-            <Field label="Tema da carta">
-              <input type="text" name="carta_gestor_tema"
-                     defaultValue={v("carta_gestor_tema") || sugCartaGestor?.tema || ""}
-                     className={inputCls} />
-            </Field>
+              {sugCartaGestor && (
+                <div className="rounded-lg bg-sand-50 border border-onix-100 px-4 py-3 text-sm" style={{background:"#F7EFE9"}}>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-1">
+                    Tema sugerido para {MESES[defaultMes - 1]}
+                  </div>
+                  <div className="font-medium text-onix-900">{sugCartaGestor.tema}</div>
+                  <div className="text-onix-800 opacity-80 mt-0.5">{sugCartaGestor.resumo}</div>
+                </div>
+              )}
 
-            <Field label="Texto da carta (opcional)"
-                   hint="Se deixar em branco, a engine escreve uma carta baseada no tema.">
-              <textarea name="carta_gestor_texto" rows={6}
-                        defaultValue={v("carta_gestor_texto")}
-                        placeholder="Escreva a carta do gestor aqui, ou deixe em branco para o sistema sugerir."
-                        className={inputCls} />
-            </Field>
-          </div>
+              <Field label="Tema da carta">
+                <input type="text" name="carta_gestor_tema"
+                       defaultValue={v("carta_gestor_tema") || sugCartaGestor?.tema || ""}
+                       className={inputCls} />
+              </Field>
+
+              <Field label="Texto da carta (opcional)"
+                     hint="Se deixar em branco, a engine escreve uma carta baseada no tema.">
+                <textarea name="carta_gestor_texto" rows={6}
+                          defaultValue={v("carta_gestor_texto")}
+                          placeholder="Escreva a carta do gestor aqui, ou deixe em branco para o sistema sugerir."
+                          className={inputCls} />
+              </Field>
+            </div>
+          )}
+
+          {!condoSelecionado && (
+            <div className="pt-4 border-t border-onix-100 text-xs text-g60">
+              Carta do gestor aparece aqui depois que você selecionar um condomínio
+              (e só se ele tiver gestor cadastrado).
+            </div>
+          )}
+
+          {condoSelecionado && !condoTemGestor && (
+            <div className="pt-4 border-t border-onix-100 text-xs text-g60">
+              {meta
+                ? `${condoSelecionado} não tem gestor cadastrado — a carta do gestor não vai sair nesta edição.`
+                : `${condoSelecionado} ainda não foi cadastrado — `}
+              {!meta && (
+                <Link
+                  href={`/sindicompany/condominios`}
+                  className="text-mint-700 hover:underline"
+                >
+                  abrir cadastro
+                </Link>
+              )}
+            </div>
+          )}
         </section>
 
         {/* ============ CONTEÚDO DO CONDOMÍNIO ============ */}
