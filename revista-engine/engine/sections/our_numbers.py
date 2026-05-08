@@ -105,7 +105,6 @@ class OurNumbers(Section):
         mes = (inputs.get("mes_referencia") or "").strip().upper()
         kpis = inputs.get("kpis") or {}
         despesas = list(inputs.get("principais_despesas") or [])
-        despesa_extra = inputs.get("despesa_extra")
         historico = list(inputs.get("historico") or [])
         nota = (inputs.get("nota_transparencia") or _NOTA_DEFAULT).strip()
         dashboard_url = (inputs.get("dashboard_url") or "").strip()
@@ -116,27 +115,22 @@ class OurNumbers(Section):
 
         kpi_cards = self._render_kpi_cards(kpis, historico, theme)
         donut_svg = _render_donut(despesas)
-        historico_svg = _render_histograma(historico)
         despesas_tbl = self._render_despesas(despesas, max_despesa, theme)
-        extra_block = self._render_despesa_extra(despesa_extra, theme) if despesa_extra else ""
 
-        # Bloco gráficos: donut + histórico lado a lado se houver dados
-        graficos_html = ""
-        if despesas or historico:
-            graficos_html = f"""
-    <div class="numbers__charts">
-      <div class="chart-card">
+        # Bloco principal: donut à esquerda + tabela de despesas à direita.
+        # Sem despesa pontual, sem histograma — design enxuto.
+        bloco_principal = ""
+        if despesas:
+            bloco_principal = f"""
+    <div class="numbers__main">
+      <div class="chart-card chart-card--donut">
         <h2 class="chart-card__titulo">Distribuição das despesas</h2>
-        <div class="chart-card__body chart-card__body--donut">
-          {donut_svg}
-          {_render_donut_legend(despesas)}
-        </div>
+        {donut_svg}
+        {_render_donut_legend(despesas)}
       </div>
-      <div class="chart-card">
-        <h2 class="chart-card__titulo">Histórico recente</h2>
-        <div class="chart-card__body">
-          {historico_svg}
-        </div>
+      <div class="numbers__despesas">
+        <h2 class="numbers__sub">Principais despesas do mês</h2>
+        {despesas_tbl}
       </div>
     </div>
 """
@@ -147,20 +141,14 @@ class OurNumbers(Section):
     <header class="numbers__header">
       <div class="numbers__kicker">NOSSOS NÚMEROS · {_escape(mes)}</div>
       <h1 class="numbers__titulo">Fechamento financeiro</h1>
+      <p class="numbers__lede">Os números do mês em uma página: receita, despesas, fundo de reserva e como cada categoria pesou no caixa.</p>
     </header>
 
     <div class="numbers__kpis">
       {kpi_cards}
     </div>
 
-    {graficos_html}
-
-    <div class="numbers__despesas">
-      <h2 class="numbers__sub">Principais despesas do mês</h2>
-      {despesas_tbl}
-    </div>
-
-    {extra_block}
+    {bloco_principal}
 
     <footer class="numbers__nota">
       <span class="numbers__nota-label">Transparência</span>
@@ -181,67 +169,80 @@ class OurNumbers(Section):
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 28px;
   }}
 
   .numbers__header {{
     margin-bottom: 0;
+    border-bottom: 1px solid var(--gray-20);
+    padding-bottom: 18px;
   }}
 
   .numbers__kicker {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.2em;
+    font-weight: 700;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--mint-80);
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }}
 
   .numbers__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 48px;
+    font-size: 52px;
     font-weight: 400;
     line-height: 0.98;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.028em;
     color: var(--onix);
+    margin-bottom: 8px;
   }}
 
-  /* KPI cards: 4 colunas */
+  .numbers__lede {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--onix);
+    opacity: 0.65;
+    max-width: 60ch;
+  }}
+
+  /* KPI cards: 4 colunas, mais respiráveis */
   .numbers__kpis {{
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    gap: 14px;
   }}
 
   .kpi-card {{
     background: var(--gray-5);
-    border-radius: 6px;
-    padding: 18px 14px;
-    border-left: 3px solid var(--mint);
+    border-radius: 8px;
+    padding: 22px 18px 18px;
+    border-top: 4px solid var(--mint);
+    position: relative;
   }}
 
-  .kpi-card--neg {{ border-left-color: var(--sand-80); }}
-  .kpi-card--reserve {{ border-left-color: var(--lavender); }}
-  .kpi-card--inad {{ border-left-color: var(--onix); }}
+  .kpi-card--neg {{ border-top-color: var(--sand-80); }}
+  .kpi-card--reserve {{ border-top-color: var(--lavender); }}
+  .kpi-card--inad {{ border-top-color: var(--onix); }}
 
   .kpi-card__label {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
+    font-weight: 700;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--mint-80);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }}
 
   .kpi-card__value {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 17px;
+    font-size: 22px;
     font-weight: 400;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
     color: var(--onix);
-    line-height: 1.1;
+    line-height: 1.05;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }}
@@ -251,141 +252,102 @@ class OurNumbers(Section):
     font-size: 10px;
     color: var(--onix);
     opacity: 0.55;
-    margin-top: 4px;
+    margin-top: 6px;
   }}
 
-  /* Charts row: donut + histograma */
-  .numbers__charts {{
+  /* Bloco principal: donut + despesas lado a lado, ocupa o resto */
+  .numbers__main {{
+    flex: 1;
+    min-height: 0;
     display: grid;
-    grid-template-columns: 5fr 6fr;
-    gap: 16px;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 28px;
+    align-items: stretch;
   }}
 
   .chart-card {{
     background: var(--gray-5);
-    border-radius: 6px;
-    padding: 14px 16px;
+    border-radius: 8px;
+    padding: 22px 22px 24px;
+    display: flex;
+    flex-direction: column;
+  }}
+
+  .chart-card--donut {{
+    align-items: center;
+    text-align: center;
   }}
 
   .chart-card__titulo {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
+    font-weight: 700;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--mint-80);
-    margin-bottom: 12px;
-  }}
-
-  .chart-card__body {{
-    display: block;
-  }}
-
-  .chart-card__body--donut {{
-    display: grid;
-    grid-template-columns: 110px 1fr;
-    gap: 14px;
-    align-items: center;
+    margin-bottom: 18px;
+    align-self: stretch;
+    text-align: left;
   }}
 
   .donut-chart {{
-    width: 110px; height: 110px;
+    width: 170px; height: 170px;
+    margin: 4px 0 18px;
   }}
 
   .donut-chart__total-label {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 4px;
+    font-size: 3.4px;
     font-weight: 600;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     fill: var(--mint-80);
   }}
 
   .donut-chart__total {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 7.2px;
+    font-size: 7.5px;
     fill: var(--onix);
   }}
 
   .donut-legend {{
     list-style: none;
     margin: 0; padding: 0;
+    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 8px;
+    text-align: left;
   }}
 
   .donut-legend__item {{
-    display: flex;
+    display: grid;
+    grid-template-columns: 10px 1fr auto;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 10px;
     color: var(--onix);
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--gray-20);
   }}
 
+  .donut-legend__item:last-child {{ border-bottom: none; padding-bottom: 0; }}
+
   .donut-legend__dot {{
-    width: 8px; height: 8px;
+    width: 10px; height: 10px;
     border-radius: 2px;
     flex-shrink: 0;
   }}
 
   .donut-legend__cat {{
-    flex: 1;
-  }}
-
-  .donut-legend__pct {{
-    font-weight: 600;
-    color: var(--mint-80);
-    font-variant-numeric: tabular-nums;
-  }}
-
-  /* Histograma */
-  .histo-chart {{
-    width: 100%;
-    height: 150px;
-  }}
-
-  .histo-label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 8px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    fill: var(--onix);
-    text-transform: uppercase;
-  }}
-
-  .histo-axis {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 7px;
-    fill: var(--onix);
-    opacity: 0.5;
-  }}
-
-  /* Legenda HTML do histograma — abaixo do SVG */
-  .histo-legend {{
-    list-style: none;
-    margin: 8px 0 0;
-    padding: 0;
-    display: flex;
-    gap: 18px;
-    justify-content: center;
-  }}
-
-  .histo-legend li {{
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: var(--onix);
   }}
 
-  .histo-legend__dot {{
-    width: 10px; height: 10px; border-radius: 2px;
-    display: inline-block;
+  .donut-legend__pct {{
+    font-weight: 700;
+    color: var(--onix);
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
   }}
 
   /* Sparkline na KPI da inadimplência */
@@ -404,118 +366,74 @@ class OurNumbers(Section):
     text-align: center;
   }}
 
-  /* Despesas table */
+  /* Despesas table — sem card, integrada na coluna da direita */
   .numbers__despesas {{
-    flex: 1;
+    display: flex;
+    flex-direction: column;
     min-height: 0;
   }}
 
   .numbers__sub {{
-    font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 18px;
-    font-weight: 400;
-    color: var(--onix);
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--gray-20);
-    padding-bottom: 8px;
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--mint-80);
+    margin-bottom: 18px;
   }}
 
   .despesa-row {{
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 110px;
     align-items: center;
-    gap: 12px;
-    padding: 7px 0;
-    border-bottom: 1px solid var(--gray-5);
+    column-gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-20);
   }}
 
+  .despesa-row:last-child {{ border-bottom: none; }}
+
   .despesa-row__cat {{
-    flex: 0 0 30%;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 12px;
     font-weight: 500;
     color: var(--onix);
   }}
 
+  .despesa-row__val {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--onix);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }}
+
   .despesa-row__bar-wrap {{
-    flex: 1;
-    height: 6px;
-    background: var(--gray-5);
-    border-radius: 3px;
+    grid-column: 1 / -1;
+    margin-top: 6px;
+    height: 4px;
+    background: var(--gray-20);
+    border-radius: 2px;
     overflow: hidden;
   }}
 
   .despesa-row__bar {{
     height: 100%;
     background: var(--mint);
-    border-radius: 3px;
-  }}
-
-  .despesa-row__val {{
-    flex: 0 0 110px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--onix);
-    text-align: right;
-    font-variant-numeric: tabular-nums;
+    border-radius: 2px;
   }}
 
   .despesa-row__obs {{
-    flex: 0 0 25%;
+    grid-column: 1 / -1;
+    margin-top: 4px;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 10px;
     color: var(--onix);
-    opacity: 0.6;
+    opacity: 0.55;
     font-style: italic;
-  }}
-
-  /* Despesa extra (highlight) */
-  .despesa-extra {{
-    background: var(--sand);
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin-top: 4px;
-  }}
-
-  .despesa-extra__label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--onix);
-    margin-bottom: 4px;
-  }}
-
-  .despesa-extra__head {{
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-  }}
-
-  .despesa-extra__cat {{
-    font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--onix);
-  }}
-
-  .despesa-extra__val {{
-    font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 18px;
-    font-weight: 400;
-    color: var(--onix);
-    font-variant-numeric: tabular-nums;
-  }}
-
-  .despesa-extra__desc {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 11px;
-    color: var(--onix);
-    opacity: 0.7;
-    margin-top: 6px;
-    line-height: 1.4;
   }}
 
   /* Nota de transparência */
@@ -603,38 +521,31 @@ class OurNumbers(Section):
 
     def _render_despesas(self, despesas: list, max_v: float, theme) -> str:
         if not despesas:
-            return '<p class="despesa-row"><span class="despesa-row__cat">—</span></p>'
+            return '<div class="despesa-row"><span class="despesa-row__cat">—</span></div>'
 
+        # Ordena do maior pro menor — leitura mais natural na revista
+        despesas_ord = sorted(
+            despesas,
+            key=lambda d: float(d.get("valor_brl", 0) or 0),
+            reverse=True,
+        )
         rows = []
-        for d in despesas:
+        for d in despesas_ord:
             cat = _escape(str(d.get("categoria", "")))
-            val = float(d.get("valor_brl", 0))
+            val = float(d.get("valor_brl", 0) or 0)
             obs = _escape(str(d.get("observacao", "")))
             pct = max(0, min(100, (val / max_v) * 100)) if max_v else 0
+            obs_html = f'<div class="despesa-row__obs">{obs}</div>' if obs else ""
             rows.append(f"""
       <div class="despesa-row">
         <div class="despesa-row__cat">{cat}</div>
+        <div class="despesa-row__val">{_fmt_brl(val)}</div>
         <div class="despesa-row__bar-wrap">
           <div class="despesa-row__bar" style="width: {pct:.1f}%;"></div>
         </div>
-        <div class="despesa-row__obs">{obs}</div>
-        <div class="despesa-row__val">{_fmt_brl(val)}</div>
+        {obs_html}
       </div>""")
         return "\n".join(rows)
-
-    def _render_despesa_extra(self, extra: dict, theme) -> str:
-        cat = _escape(str(extra.get("categoria", "")))
-        val = _fmt_brl(extra.get("valor_brl", 0))
-        desc = _escape(str(extra.get("descricao", "")))
-        return f"""
-    <div class="despesa-extra">
-      <div class="despesa-extra__label">Despesa pontual do mês</div>
-      <div class="despesa-extra__head">
-        <span class="despesa-extra__cat">{cat}</span>
-        <span class="despesa-extra__val">{val}</span>
-      </div>
-      <div class="despesa-extra__desc">{desc}</div>
-    </div>"""
 
 
 def _escape(s: str) -> str:
@@ -737,79 +648,6 @@ def _render_donut_legend(despesas: list[dict]) -> str:
           <span class="donut-legend__pct">{pct:.1f}%</span>
         </li>""")
     return f'<ul class="donut-legend">{"".join(items)}</ul>'
-
-
-def _render_histograma(historico: list[dict]) -> str:
-    """SVG bar chart de receita vs despesas. Legenda fica em HTML separado."""
-    if not historico or len(historico) < 2:
-        return '<div class="chart-empty">Sem histórico disponível.</div>'
-
-    pontos = list(historico)[-6:]
-    n = len(pontos)
-    max_v = max(
-        max(float(p.get("receita_brl", 0) or 0), float(p.get("despesas_brl", 0) or 0))
-        for p in pontos
-    ) or 1.0
-
-    W, H = 340, 150
-    margin_left, margin_right = 44, 8
-    margin_top, margin_bottom = 8, 24
-    plot_w = W - margin_left - margin_right
-    plot_h = H - margin_top - margin_bottom
-
-    group_w = plot_w / n
-    bar_w = (group_w - 6) / 2
-    bars = []
-    labels = []
-    for i, p in enumerate(pontos):
-        rec = float(p.get("receita_brl", 0) or 0)
-        des = float(p.get("despesas_brl", 0) or 0)
-        x_group = margin_left + i * group_w + 3
-        h_rec = (rec / max_v) * plot_h
-        h_des = (des / max_v) * plot_h
-        bars.append(
-            f'<rect x="{x_group:.1f}" y="{margin_top + plot_h - h_rec:.1f}" '
-            f'width="{bar_w:.1f}" height="{h_rec:.1f}" fill="#84C7D3" rx="2" />'
-        )
-        bars.append(
-            f'<rect x="{x_group + bar_w + 2:.1f}" y="{margin_top + plot_h - h_des:.1f}" '
-            f'width="{bar_w:.1f}" height="{h_des:.1f}" fill="#D4AE94" rx="2" />'
-        )
-        mes = _escape(str(p.get("mes", "")))
-        labels.append(
-            f'<text x="{x_group + group_w/2 - 3:.1f}" y="{H - 8}" '
-            f'text-anchor="middle" font-size="9" font-weight="600" '
-            f'letter-spacing="0.05em" fill="#1A1C29" '
-            f'font-family="sans-serif">{mes}</text>'
-        )
-
-    # Gridlines + Y-axis (5 níveis)
-    grid_lines = []
-    for i in range(5):
-        y = margin_top + (plot_h * i / 4)
-        grid_lines.append(
-            f'<line x1="{margin_left}" y1="{y:.1f}" x2="{W - margin_right}" y2="{y:.1f}" '
-            f'stroke="#E0E0E2" stroke-width="0.5" />'
-        )
-        v = max_v * (1 - i / 4)
-        v_label = f"R$ {v/1000:.0f}k" if v > 0 else "R$ 0"
-        grid_lines.append(
-            f'<text x="{margin_left - 6}" y="{y + 3:.1f}" text-anchor="end" '
-            f'font-size="7" fill="#1A1C29" opacity="0.55" '
-            f'font-family="sans-serif">{v_label}</text>'
-        )
-
-    return f"""
-<svg viewBox="0 0 {W} {H}" class="histo-chart" preserveAspectRatio="xMidYMid meet">
-  {''.join(grid_lines)}
-  {''.join(bars)}
-  {''.join(labels)}
-</svg>
-<ul class="histo-legend">
-  <li><span class="histo-legend__dot" style="background:#84C7D3"></span>Receita</li>
-  <li><span class="histo-legend__dot" style="background:#D4AE94"></span>Despesas</li>
-</ul>
-"""
 
 
 def _render_sparkline(series: list[float], color: str = "currentColor") -> str:
