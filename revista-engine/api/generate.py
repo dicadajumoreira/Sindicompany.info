@@ -47,13 +47,21 @@ def main() -> int:
 
         editorial = fetch_editorial(revista["mes"], revista["ano"])
         if editorial is None:
-            mark_erro(revista_id, "Editorial mensal não definido para esse mês.")
-            return 3
+            print(
+                f"[generate] WARN editorial faltando pra mes={revista['mes']}/ano={revista['ano']}; "
+                "renderizando com sugestões do mês",
+                flush=True,
+            )
+            editorial = {}
 
         condo = fetch_condo_meta(revista["condominio"])
         if condo is None:
-            mark_erro(revista_id, f"Cadastro do condomínio '{revista['condominio']}' não encontrado.")
-            return 4
+            print(
+                f"[generate] WARN condo_meta '{revista['condominio']}' não encontrado; "
+                "renderizando com placeholders",
+                flush=True,
+            )
+            condo = {}
 
         print(
             f"[generate] condo={revista['condominio']} mes={revista['mes']:02d}/{revista['ano']}",
