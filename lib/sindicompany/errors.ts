@@ -95,4 +95,6 @@ const COLUMN_TO_MIGRATION: Record<string, string> = {
   gestor_foto_url: "20260513_logo_e_gestor_revista.sql",
   // 20260514
   prestacao_arquivo_url: "20260514_prestacao_arquivo.sql",
+  // 20260517
+  manutencao_zip_url: "20260517_manutencao_zip.sql",
 };
