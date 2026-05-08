@@ -73,9 +73,13 @@ class OurNumbers(Section):
         if not isinstance(kpis, dict):
             errors.append("Nossos Números: 'kpis' deve ser um dicionário")
         else:
-            for key in ("receita_brl", "despesas_brl", "fundo_reserva_brl", "inadimplencia_pct"):
-                if key not in kpis:
-                    errors.append(f"Nossos Números: kpis.{key} não pode ser omitido (use 0 se não aplica)")
+            # Aceita os 4 campos novos (preferidos) OU os 4 antigos (compat).
+            novos = {"saldo_anterior_brl", "credito_mes_brl", "debito_mes_brl", "saldo_atual_brl"}
+            antigos = {"receita_brl", "despesas_brl", "fundo_reserva_brl", "inadimplencia_pct"}
+            tem_novos = any(k in kpis for k in novos)
+            tem_antigos = any(k in kpis for k in antigos)
+            if not tem_novos and not tem_antigos:
+                errors.append("Nossos Números: kpis precisa ter ao menos um dos 4 campos novos (saldo_anterior_brl, credito_mes_brl, debito_mes_brl, saldo_atual_brl)")
 
         despesas = inputs.get("principais_despesas") or []
         if not isinstance(despesas, list):
@@ -105,7 +109,8 @@ class OurNumbers(Section):
         mes = (inputs.get("mes_referencia") or "").strip().upper()
         kpis = inputs.get("kpis") or {}
         despesas = list(inputs.get("principais_despesas") or [])
-        historico = list(inputs.get("historico") or [])
+        resumo_contas = list(inputs.get("resumo_contas") or [])
+        previsto_realizado = list(inputs.get("previsto_realizado") or [])
         nota = (inputs.get("nota_transparencia") or _NOTA_DEFAULT).strip()
         dashboard_url = (inputs.get("dashboard_url") or "").strip()
 
@@ -113,24 +118,52 @@ class OurNumbers(Section):
             (float(d.get("valor_brl", 0)) for d in despesas), default=1.0
         ) or 1.0
 
-        kpi_cards = self._render_kpi_cards(kpis, historico, theme)
+        kpi_cards = self._render_kpi_cards(kpis, theme)
         donut_svg = _render_donut(despesas)
         despesas_tbl = self._render_despesas(despesas, max_despesa, theme)
+        resumo_contas_html = self._render_resumo_contas(resumo_contas, theme)
+        previsto_html = self._render_previsto_realizado(previsto_realizado, theme)
 
-        # Bloco principal: donut à esquerda + tabela de despesas à direita.
-        # Sem despesa pontual, sem histograma — design enxuto.
+        # Bloco principal: 2 colunas
+        # Esquerda: resumo contas + previsto x realizado (empilhados)
+        # Direita: donut despesas por categoria + tabela de despesas
         bloco_principal = ""
-        if despesas:
+        if despesas or resumo_contas or previsto_realizado:
+            despesas_block = ""
+            if despesas:
+                despesas_block = f"""
+        <div class="chart-card chart-card--donut">
+          <h2 class="chart-card__titulo">Despesas por categoria</h2>
+          {donut_svg}
+          {_render_donut_legend(despesas)}
+        </div>
+        <div class="numbers__despesas">
+          <h2 class="numbers__sub">Detalhamento</h2>
+          {despesas_tbl}
+        </div>
+"""
+            esquerda_block = ""
+            if resumo_contas:
+                esquerda_block += f"""
+        <div class="numbers__sub-block">
+          <h2 class="numbers__sub">Resumo das contas</h2>
+          {resumo_contas_html}
+        </div>
+"""
+            if previsto_realizado:
+                esquerda_block += f"""
+        <div class="numbers__sub-block">
+          <h2 class="numbers__sub">Previsto × Realizado</h2>
+          {previsto_html}
+        </div>
+"""
             bloco_principal = f"""
     <div class="numbers__main">
-      <div class="chart-card chart-card--donut">
-        <h2 class="chart-card__titulo">Distribuição das despesas</h2>
-        {donut_svg}
-        {_render_donut_legend(despesas)}
+      <div class="numbers__col numbers__col--left">
+        {esquerda_block}
       </div>
-      <div class="numbers__despesas">
-        <h2 class="numbers__sub">Principais despesas do mês</h2>
-        {despesas_tbl}
+      <div class="numbers__col numbers__col--right">
+        {despesas_block}
       </div>
     </div>
 """
@@ -141,7 +174,7 @@ class OurNumbers(Section):
     <header class="numbers__header">
       <div class="numbers__kicker">NOSSOS NÚMEROS · {_escape(mes)}</div>
       <h1 class="numbers__titulo">Fechamento financeiro</h1>
-      <p class="numbers__lede">Os números do mês em uma página: receita, despesas, fundo de reserva e como cada categoria pesou no caixa.</p>
+      <p class="numbers__lede">Movimentação do mês: saldo anterior, créditos, débitos, saldo atual, e como cada conta e categoria fechou.</p>
     </header>
 
     <div class="numbers__kpis">
@@ -222,9 +255,9 @@ class OurNumbers(Section):
     position: relative;
   }}
 
-  .kpi-card--neg {{ border-top-color: var(--sand-80); }}
-  .kpi-card--reserve {{ border-top-color: var(--lavender); }}
-  .kpi-card--inad {{ border-top-color: var(--onix); }}
+  .kpi-card--credito {{ border-top-color: var(--mint); }}
+  .kpi-card--debito {{ border-top-color: var(--sand-80); }}
+  .kpi-card--saldo {{ border-top-color: var(--onix); }}
 
   .kpi-card__label {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
@@ -255,15 +288,118 @@ class OurNumbers(Section):
     margin-top: 6px;
   }}
 
-  /* Bloco principal: donut + despesas lado a lado, ocupa o resto */
+  /* Bloco principal: 2 colunas (esquerda compacta, direita com donut+detalhe) */
   .numbers__main {{
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 1fr 1.6fr;
-    gap: 28px;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 24px;
     align-items: stretch;
   }}
+
+  .numbers__col {{
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: 0;
+  }}
+
+  .numbers__sub-block {{
+    background: var(--gray-5);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }}
+
+  .numbers__empty {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 11px;
+    color: var(--onix);
+    opacity: 0.5;
+    margin: 0;
+  }}
+
+  /* Resumo das contas */
+  .resumo-contas {{
+    width: 100%;
+    border-collapse: collapse;
+  }}
+
+  .resumo-contas tr {{
+    border-bottom: 1px solid var(--gray-20);
+  }}
+
+  .resumo-contas tr:last-child {{ border-bottom: none; }}
+
+  .resumo-contas td {{
+    padding: 8px 0;
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+  }}
+
+  .resumo-contas__nome {{
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--onix);
+  }}
+
+  .resumo-contas__valor {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--onix);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.005em;
+  }}
+
+  /* Previsto x Realizado */
+  .prev-real {{
+    width: 100%;
+    border-collapse: collapse;
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+  }}
+
+  .prev-real .pr__th {{
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mint-80);
+    padding: 4px 0 8px;
+    text-align: right;
+  }}
+
+  .prev-real tbody tr {{
+    border-top: 1px solid var(--gray-20);
+  }}
+
+  .prev-real td {{
+    padding: 7px 0;
+    font-size: 10.5px;
+  }}
+
+  .prev-real .pr__cat {{
+    color: var(--onix);
+    font-weight: 500;
+  }}
+
+  .prev-real .pr__val {{
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: var(--onix);
+    padding-left: 8px;
+  }}
+
+  .prev-real .pr__diff {{
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    font-weight: 700;
+    padding-left: 8px;
+    width: 50px;
+  }}
+
+  .pr-status--ok {{ color: #2A8A6F; }}
+  .pr-status--over {{ color: #C46A47; }}
 
   .chart-card {{
     background: var(--gray-5);
@@ -291,8 +427,8 @@ class OurNumbers(Section):
   }}
 
   .donut-chart {{
-    width: 170px; height: 170px;
-    margin: 4px 0 18px;
+    width: 140px; height: 140px;
+    margin: 4px 0 14px;
   }}
 
   .donut-chart__total-label {{
@@ -486,38 +622,83 @@ class OurNumbers(Section):
 </style>
 """
 
-    def _render_kpi_cards(self, kpis: dict, historico: list, theme) -> str:
-        receita = kpis.get("receita_brl", 0)
-        despesas = kpis.get("despesas_brl", 0)
-        fundo = kpis.get("fundo_reserva_brl", 0)
-        inad = kpis.get("inadimplencia_pct", 0)
-        saldo = float(receita or 0) - float(despesas or 0)
-
-        # Sparkline do histórico de inadimplência (se tiver pelo menos 2 pontos)
-        inad_series = [float(h.get("inadimplencia_pct", 0) or 0) for h in historico]
-        if len(inad_series) < 2:
-            inad_series = []
-        sparkline = _render_sparkline(inad_series, "var(--onix)") if inad_series else ""
+    def _render_kpi_cards(self, kpis: dict, theme) -> str:
+        # Novos campos preferidos; cai pros antigos por compat (revistas antigas).
+        saldo_ant = kpis.get("saldo_anterior_brl", kpis.get("fundo_reserva_brl", 0))
+        credito = kpis.get("credito_mes_brl", kpis.get("receita_brl", 0))
+        debito = kpis.get("debito_mes_brl", kpis.get("despesas_brl", 0))
+        saldo_atual = kpis.get(
+            "saldo_atual_brl",
+            float(saldo_ant or 0) + float(credito or 0) - float(debito or 0),
+        )
 
         return f"""
       <div class="kpi-card">
-        <div class="kpi-card__label">Receita</div>
-        <div class="kpi-card__value">{_fmt_brl(receita)}</div>
+        <div class="kpi-card__label">Saldo anterior</div>
+        <div class="kpi-card__value">{_fmt_brl(saldo_ant)}</div>
       </div>
-      <div class="kpi-card kpi-card--neg">
-        <div class="kpi-card__label">Despesas</div>
-        <div class="kpi-card__value">{_fmt_brl(despesas)}</div>
-        <div class="kpi-card__hint">Saldo {_fmt_brl(saldo)}</div>
+      <div class="kpi-card kpi-card--credito">
+        <div class="kpi-card__label">Crédito do mês</div>
+        <div class="kpi-card__value">{_fmt_brl(credito)}</div>
       </div>
-      <div class="kpi-card kpi-card--reserve">
-        <div class="kpi-card__label">Fundo de reserva</div>
-        <div class="kpi-card__value">{_fmt_brl(fundo)}</div>
+      <div class="kpi-card kpi-card--debito">
+        <div class="kpi-card__label">Débito do mês</div>
+        <div class="kpi-card__value">{_fmt_brl(debito)}</div>
       </div>
-      <div class="kpi-card kpi-card--inad">
-        <div class="kpi-card__label">Inadimplência</div>
-        <div class="kpi-card__value">{_fmt_pct(inad)}</div>
-        {sparkline}
+      <div class="kpi-card kpi-card--saldo">
+        <div class="kpi-card__label">Saldo atual</div>
+        <div class="kpi-card__value">{_fmt_brl(saldo_atual)}</div>
       </div>"""
+
+    def _render_resumo_contas(self, contas: list, theme) -> str:
+        if not contas:
+            return '<p class="numbers__empty">Sem dados de contas.</p>'
+        rows = []
+        for c in contas:
+            nome = _escape(str(c.get("conta", "") or c.get("nome", "")))
+            saldo = _fmt_brl(c.get("saldo_brl", 0) or 0)
+            rows.append(f"""
+        <tr>
+          <td class="resumo-contas__nome">{nome}</td>
+          <td class="resumo-contas__valor">{saldo}</td>
+        </tr>""")
+        return f"""
+      <table class="resumo-contas">
+        <tbody>{''.join(rows)}</tbody>
+      </table>"""
+
+    def _render_previsto_realizado(self, items: list, theme) -> str:
+        if not items:
+            return '<p class="numbers__empty">Sem dados de orçamento.</p>'
+        rows = []
+        for it in items:
+            cat = _escape(str(it.get("categoria", "")))
+            prev = float(it.get("previsto_brl", 0) or 0)
+            real = float(it.get("realizado_brl", 0) or 0)
+            diff_pct = ((real - prev) / prev * 100) if prev else 0.0
+            # Status: verde se gastou menos que previsto, sand se gastou mais
+            status_cls = "pr-status--ok" if real <= prev else "pr-status--over"
+            sinal = "+" if diff_pct >= 0 else ""
+            diff_str = f"{sinal}{diff_pct:.0f}%" if prev else "—"
+            rows.append(f"""
+        <tr>
+          <td class="pr__cat">{cat}</td>
+          <td class="pr__val">{_fmt_brl(prev)}</td>
+          <td class="pr__val">{_fmt_brl(real)}</td>
+          <td class="pr__diff {status_cls}">{diff_str}</td>
+        </tr>""")
+        return f"""
+      <table class="prev-real">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="pr__th">Previsto</th>
+            <th class="pr__th">Realizado</th>
+            <th class="pr__th">Δ</th>
+          </tr>
+        </thead>
+        <tbody>{''.join(rows)}</tbody>
+      </table>"""
 
     def _render_despesas(self, despesas: list, max_v: float, theme) -> str:
         if not despesas:

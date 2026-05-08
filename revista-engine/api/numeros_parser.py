@@ -40,40 +40,51 @@ _PDF_EXTS = {".pdf"}
 
 _PROMPT_INSTRUCAO = (
     "Aqui está o dashboard de prestação de contas mensal de um condomínio "
-    "brasileiro. Extraia os principais números financeiros em JSON estruturado.\n\n"
+    "brasileiro. Extraia os números financeiros em JSON estruturado.\n\n"
     "Formato esperado:\n"
     "{\n"
     '  "kpis": {\n'
-    '    "receita_brl": float,        // total de receitas/arrecadação no mês\n'
-    '    "despesas_brl": float,       // total de despesas/saídas no mês\n'
-    '    "fundo_reserva_brl": float,  // saldo do fundo de reserva\n'
-    '    "inadimplencia_pct": float   // percentual de inadimplência (ex: 4.2)\n'
+    '    "saldo_anterior_brl": float,  // saldo no início do período (mês anterior)\n'
+    '    "credito_mes_brl": float,     // total de entradas/créditos no mês\n'
+    '    "debito_mes_brl": float,      // total de saídas/débitos no mês\n'
+    '    "saldo_atual_brl": float      // saldo no fim do período = anterior + credito - debito\n'
     "  },\n"
-    '  "principais_despesas": [\n'
-    '    {"categoria":"...", "valor_brl": float, "observacao": "..."}  // 5-7 itens, dos maiores\n'
+    '  "resumo_contas": [\n'
+    '    {"conta":"Conta corrente", "saldo_brl": float},\n'
+    '    {"conta":"Fundo de reserva", "saldo_brl": float},\n'
+    '    {"conta":"Aplicação financeira", "saldo_brl": float}\n'
+    "    // 2 a 6 contas com saldo final do mês\n"
     "  ],\n"
-    '  "historico": [\n'
-    '    {"mes_label":"AAA/MM", "saldo_brl": float}  // últimos 5-6 meses se aparecer\n'
+    '  "previsto_realizado": [\n'
+    '    {"categoria":"...", "previsto_brl": float, "realizado_brl": float}\n'
+    "    // 4 a 8 categorias macro com previsto vs realizado do mês\n"
+    "  ],\n"
+    '  "principais_despesas": [\n'
+    '    {"categoria":"...", "valor_brl": float, "observacao": "..."}\n'
+    "    // 5 a 8 categorias detalhadas das maiores despesas (Despesas por categoria)\n"
     "  ]\n"
     "}\n\n"
     "REGRAS:\n"
     "- Use float (R$ 12.345,67 → 12345.67). Não use string nem prefixo R$.\n"
-    "- Inadimplência em % numérico (ex: 4.2, não '4,2%').\n"
     "- Use 0 quando o valor não estiver claramente disponível.\n"
-    "- 'principais_despesas' deve listar as MAIORES despesas do mês.\n"
+    "- Em 'previsto_realizado', se não houver coluna 'previsto' no dashboard, "
+    "  retorne o array vazio []. Não invente valores.\n"
+    "- Em 'resumo_contas', use os nomes das contas exatamente como aparecem.\n"
+    "- 'principais_despesas' lista as MAIORES despesas (categoria detalhada, não macro).\n"
     "- Sem texto fora do JSON. Sem markdown.\n"
 )
 
 
 _FALLBACK = {
     "kpis": {
-        "receita_brl": 0,
-        "despesas_brl": 0,
-        "fundo_reserva_brl": 0,
-        "inadimplencia_pct": 0,
+        "saldo_anterior_brl": 0,
+        "credito_mes_brl": 0,
+        "debito_mes_brl": 0,
+        "saldo_atual_brl": 0,
     },
+    "resumo_contas": [],
+    "previsto_realizado": [],
     "principais_despesas": [],
-    "historico": [],
 }
 
 

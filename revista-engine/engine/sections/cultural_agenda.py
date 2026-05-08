@@ -223,12 +223,12 @@ class CulturalAgenda(Section):
     border-top: 1px solid var(--gray-20);
   }}
 
-  /* Cards secundários — grid 5 colunas, preenche a página inteira */
+  /* Cards secundários — grid 4 colunas, preenche a página inteira */
   .agenda__cards {{
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     grid-auto-rows: 1fr;
-    gap: 8px;
+    gap: 10px;
     flex: 1;
     min-height: 0;
   }}
@@ -245,11 +245,10 @@ class CulturalAgenda(Section):
   }}
 
   /* Alterna sutilmente o fundo dos cards pra dar ritmo visual */
-  .agenda-card:nth-child(5n+1) {{ background: #F4F4F5; }}
-  .agenda-card:nth-child(5n+2) {{ background: #EEF7F8; }}  /* mint vibe */
-  .agenda-card:nth-child(5n+3) {{ background: #F7EFE9; }}  /* sand vibe */
-  .agenda-card:nth-child(5n+4) {{ background: #F4F4F5; }}
-  .agenda-card:nth-child(5n+5) {{ background: #EEF0FF; }}  /* lavender vibe */
+  .agenda-card:nth-child(4n+1) {{ background: #F4F4F5; }}
+  .agenda-card:nth-child(4n+2) {{ background: #EEF7F8; }}  /* mint vibe */
+  .agenda-card:nth-child(4n+3) {{ background: #F7EFE9; }}  /* sand vibe */
+  .agenda-card:nth-child(4n+4) {{ background: #EEF0FF; }}  /* lavender vibe */
 
   /* Borda lateral colorida por categoria */
   .agenda-card::before {{
@@ -298,12 +297,11 @@ class CulturalAgenda(Section):
 
   .agenda-card__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 11.5px;
+    font-size: 13px;
     font-weight: 500;
     line-height: 1.15;
     color: var(--onix);
     margin-top: 2px;
-    /* Limita 3 linhas no título pra cards iguais */
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -312,13 +310,13 @@ class CulturalAgenda(Section):
 
   .agenda-card__desc {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 8.5px;
-    line-height: 1.35;
+    font-size: 9.5px;
+    line-height: 1.4;
     color: var(--onix);
     opacity: 0.78;
-    margin-top: 3px;
+    margin-top: 4px;
     display: -webkit-box;
-    -webkit-line-clamp: 4;
+    -webkit-line-clamp: 5;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }}

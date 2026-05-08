@@ -463,14 +463,14 @@ def gerar_agenda_cultural(mes: int, ano: int) -> dict[str, Any]:
         f"(consulte AdoroCinema, Filmow, Folha de São Paulo - Guia)\n"
         f"- TEATRO: peças em cartaz em São Paulo em {mes_nome}/{ano} "
         f"(consulte Quero na Cena, Veja SP, Catraca Livre, sites de teatros)\n\n"
-        f"Selecione 1 destaque (hero) + 15 cards. Cada item com data real, local "
+        f"Selecione 1 destaque (hero) + 12 cards. Cada item com data real, local "
         f"(quando aplicável) e descrição curta de 1 frase. Use SEMPRE títulos reais.\n\n"
         f"REGRA CRÍTICA: 'titulo', 'sinopse' e 'descricao_curta' devem ser "
         f"prosa limpa. Sem URLs, sem markdown [texto](url), sem citações "
         f"inline tipo '([site.com](https://...))'. Não cite veículos no texto.\n\n"
         f'JSON estrito (sem markdown): {{ '
         f'"hero": {{"categoria":"NETFLIX/CINEMA/TEATRO/STREAMING","titulo":"Título real","sinopse":"...","data":"DD/MM","local":"..."}}, '
-        f'"cards_secundarios": [{{"categoria":"...","titulo":"Título real","descricao_curta":"...","data":"DD/MM","local":"..."}} x 15] '
+        f'"cards_secundarios": [{{"categoria":"...","titulo":"Título real","descricao_curta":"...","data":"DD/MM","local":"..."}} x 12] '
         f'}}'
     )
     fallback = {
@@ -489,7 +489,7 @@ def gerar_agenda_cultural(mes: int, ano: int) -> dict[str, Any]:
                 "data": f"{(i+1)*2:02d}/{mes:02d}",
                 "local": "São Paulo",
             }
-            for i in range(15)
+            for i in range(12)
         ],
     }
     data = _gerar_json(prompt, fallback, expected_keys=["cards_secundarios"], use_web_search=True)

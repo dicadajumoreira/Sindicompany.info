@@ -347,8 +347,10 @@ def build_inputs_from_db(
         numbers_inputs["kpis"] = nums["kpis"]
         if nums.get("principais_despesas"):
             numbers_inputs["principais_despesas"] = nums["principais_despesas"]
-        if nums.get("historico"):
-            numbers_inputs["historico"] = nums["historico"]
+        if nums.get("resumo_contas"):
+            numbers_inputs["resumo_contas"] = nums["resumo_contas"]
+        if nums.get("previsto_realizado"):
+            numbers_inputs["previsto_realizado"] = nums["previsto_realizado"]
 
     # ---- S12 Advertências (só renderiza se a edição teve)
     warnings_inputs = dict(WARNINGS_DEFAULT)
