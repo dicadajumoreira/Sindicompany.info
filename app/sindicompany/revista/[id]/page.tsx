@@ -4,7 +4,11 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { getRevista, formatEdicao } from "@/lib/sindicompany/db";
 import { RevistaProgress } from "./progress";
-import { cancelarRevistaAction, regerarRevistaAction } from "./actions";
+import {
+  cancelarRevistaAction,
+  regerarRevistaAction,
+  uploadRevistaPdfAction,
+} from "./actions";
 
 const STATUS_LABELS = {
   em_producao: "Em produção",
@@ -109,6 +113,52 @@ export default async function RevistaPage({
               expectedSeconds={90}
               warnAfterSeconds={180}
             />
+
+            {/* Upload manual como fallback se a engine falhar */}
+            <details className="rounded-lg border border-onix-100 bg-white">
+              <summary className="px-4 py-2 text-sm font-medium text-onix-900 cursor-pointer hover:bg-onix-50">
+                Subir PDF manualmente (fallback)
+              </summary>
+              <form
+                action={uploadRevistaPdfAction}
+                encType="multipart/form-data"
+                className="px-4 py-3 space-y-3 border-t border-onix-100"
+              >
+                <input type="hidden" name="id" value={revista.id} />
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-onix-800 mb-1">
+                    Arquivo PDF (até 50MB)
+                  </label>
+                  <input
+                    type="file"
+                    name="pdf"
+                    accept="application/pdf,.pdf"
+                    required
+                    className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-onix-800 mb-1">
+                    Páginas (opcional)
+                  </label>
+                  <input
+                    type="number"
+                    name="paginas"
+                    min={1}
+                    max={200}
+                    placeholder="Ex: 32"
+                    className="w-32 rounded-lg border border-onix-100 px-3 py-2 text-sm tabular-nums"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-onix-900 text-white px-4 py-2 text-sm font-medium hover:bg-onix-800"
+                >
+                  Subir PDF e marcar como publicada
+                </button>
+              </form>
+            </details>
+
             <form action={cancelarRevistaAction}>
               <input type="hidden" name="id" value={revista.id} />
               <button

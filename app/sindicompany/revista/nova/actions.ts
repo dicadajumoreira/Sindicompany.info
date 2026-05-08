@@ -151,8 +151,9 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     );
   }
 
-  // Dispara a engine via GitHub Actions (fire and forget). Mesmo que
-  // o dispatch falhe, a revista fica gravada e dá pra reprocessar.
+  // Dispara a engine via GitHub Actions (fire-and-forget). Se falhar
+  // ou demorar demais, a editora pode subir o PDF manualmente na página
+  // da revista como fallback.
   await dispatchGenerateRevista(revista.id);
 
   revalidatePath("/sindicompany/dashboard");
