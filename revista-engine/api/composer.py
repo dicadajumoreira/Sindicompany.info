@@ -23,6 +23,7 @@ from api.image_gen import (
     gerar_foto_materia_capa,
     gerar_foto_receita,
 )
+from api.numeros_parser import parse_nossos_numeros
 from api.text_gen import (
     clean_text,
     gerar_agenda_cultural,
@@ -315,9 +316,21 @@ def build_inputs_from_db(
     if foto_receita_ai:
         recipe_inputs["foto_receita"] = foto_receita_ai
 
-    # ---- S11 Nossos Números (Drive prestação ainda pendente)
+    # ---- S11 Nossos Números: parse do HTML dentro da pasta de prestação
     numbers_inputs = dict(NUMBERS_DEFAULT)
     numbers_inputs["mes_referencia"] = mes_ano
+
+    drive_prestacao = revista.get("drive_prestacao_url")
+    if drive_prestacao:
+        import tempfile
+        tmp_num = Path(tempfile.mkdtemp(prefix=f"numeros_{revista.get('id','')[:8]}_"))
+        nums = parse_nossos_numeros(drive_prestacao, tmp_num)
+        if nums and nums.get("kpis"):
+            numbers_inputs["kpis"] = nums["kpis"]
+            if nums.get("principais_despesas"):
+                numbers_inputs["principais_despesas"] = nums["principais_despesas"]
+            if nums.get("historico"):
+                numbers_inputs["historico"] = nums["historico"]
 
     # ---- S12 Advertências (só renderiza se a edição teve)
     warnings_inputs = dict(WARNINGS_DEFAULT)

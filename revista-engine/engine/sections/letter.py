@@ -156,7 +156,7 @@ class Letter(Section):
     </header>
 
     <div class="letter__layout">
-      <aside class="letter__photo" aria-hidden="true"></aside>
+      <aside class="letter__photo" style="{foto_bg}" aria-hidden="true"></aside>
       <div class="letter__body">{body_html}</div>
     </div>
 
@@ -218,7 +218,8 @@ class Letter(Section):
     height: {foto_h}px;
     flex-shrink: 0;
     border-radius: 4px;
-    {foto_bg}
+    /* background-image vem inline no <aside> pra não vazar entre cartas
+       quando há mais de uma na mesma revista (síndico + gestor). */
   }}
 
   .letter__body {{
