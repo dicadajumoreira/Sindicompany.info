@@ -65,15 +65,25 @@ def baixar_pastas_manutencao(drive_url: str, dest: Path) -> list[dict[str, Any]]
 
     try:
         # download_folder respeita estrutura de subpastas
+        # remaining_ok=True permite passar do limite default de 50 arquivos
         gdown.download_folder(
             url=full_url,
             output=str(dest),
-            quiet=True,
+            quiet=False,
             use_cookies=False,
+            remaining_ok=True,
         )
     except Exception as e:  # noqa: BLE001
         print(f"[drive] download falhou: {type(e).__name__}: {e}", flush=True)
         return []
+
+    # Diagnóstico: lista o que veio
+    todos = list(dest.rglob("*"))
+    arquivos = [p for p in todos if p.is_file()]
+    pastas = [p for p in todos if p.is_dir()]
+    print(f"[drive] baixados {len(arquivos)} arquivos em {len(pastas)} pastas/subpastas", flush=True)
+    for p in pastas[:10]:
+        print(f"[drive]   pasta: {p.relative_to(dest)}", flush=True)
 
     # gdown cria um diretório com o nome da pasta raiz dentro de dest.
     # Procuramos o primeiro subdir e listamos seus filhos como subpastas.
@@ -84,23 +94,44 @@ def baixar_pastas_manutencao(drive_url: str, dest: Path) -> list[dict[str, Any]]
 
     root = root_dirs[0]
     out: list[dict[str, Any]] = []
-    for sub in sorted(root.iterdir()):
-        if not sub.is_dir():
-            continue
-        imagens = sorted(
-            p for p in sub.iterdir() if p.suffix.lower() in IMAGE_EXTENSIONS
-        )
-        if not imagens:
-            print(f"[drive] subpasta '{sub.name}' sem imagens", flush=True)
-            continue
-        out.append(
-            {
-                "nome_pasta": sub.name,
-                "foto_path": str(imagens[0].absolute()),
-            }
-        )
 
-    print(f"[drive] {len(out)} subpastas com fotos: {[o['nome_pasta'] for o in out]}", flush=True)
+    # Caso 1: tem subpastas dentro de root (estrutura esperada)
+    subpastas = [p for p in sorted(root.iterdir()) if p.is_dir()]
+    if subpastas:
+        for sub in subpastas:
+            imagens = sorted(
+                p for p in sub.rglob("*")
+                if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
+            )
+            if not imagens:
+                print(f"[drive] subpasta '{sub.name}' sem imagens", flush=True)
+                continue
+            out.append(
+                {
+                    "nome_pasta": sub.name,
+                    "foto_path": str(imagens[0].absolute()),
+                }
+            )
+        print(f"[drive] {len(out)} subpastas com fotos: {[o['nome_pasta'] for o in out]}", flush=True)
+        return out
+
+    # Caso 2: só fotos diretamente na root (sem subpastas) — usa filename como título
+    imagens_diretas = sorted(
+        p for p in root.iterdir()
+        if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
+    )
+    if imagens_diretas:
+        for img in imagens_diretas:
+            out.append(
+                {
+                    "nome_pasta": img.stem,  # filename sem extensão
+                    "foto_path": str(img.absolute()),
+                }
+            )
+        print(f"[drive] {len(out)} fotos diretas (sem subpastas): {[o['nome_pasta'] for o in out[:5]]}...", flush=True)
+        return out
+
+    print(f"[drive] root '{root.name}' sem subpastas e sem imagens diretas", flush=True)
     return out
 
 
