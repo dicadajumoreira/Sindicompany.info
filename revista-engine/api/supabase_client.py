@@ -5,6 +5,7 @@ Acesso ao Supabase (DB + Storage) usando a service role key.
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 from typing import Any
 
 from supabase import create_client, Client
@@ -24,8 +25,15 @@ def _client() -> Client:
 
 def fetch_revista(revista_id: str) -> dict[str, Any] | None:
     sb = _client()
-    res = sb.table("revistas").select("*").eq("id", revista_id).maybe_single().execute()
-    return res.data
+    res = (
+        sb.table("revistas")
+        .select("*")
+        .eq("id", revista_id)
+        .limit(1)
+        .execute()
+    )
+    rows = res.data or []
+    return rows[0] if rows else None
 
 
 def fetch_editorial(mes: int, ano: int) -> dict[str, Any] | None:
@@ -35,10 +43,11 @@ def fetch_editorial(mes: int, ano: int) -> dict[str, Any] | None:
         .select("*")
         .eq("mes", mes)
         .eq("ano", ano)
-        .maybe_single()
+        .limit(1)
         .execute()
     )
-    return res.data
+    rows = res.data or []
+    return rows[0] if rows else None
 
 
 def fetch_condo_meta(condominio: str) -> dict[str, Any] | None:
@@ -47,10 +56,11 @@ def fetch_condo_meta(condominio: str) -> dict[str, Any] | None:
         sb.table("condominios_meta")
         .select("*")
         .eq("nome", condominio)
-        .maybe_single()
+        .limit(1)
         .execute()
     )
-    return res.data
+    rows = res.data or []
+    return rows[0] if rows else None
 
 
 def upload_pdf(revista_id: str, pdf_bytes: bytes) -> str:
@@ -72,7 +82,7 @@ def mark_publicada(revista_id: str, storage_path: str, paginas: int) -> None:
             "status": "publicada",
             "pdf_storage_path": storage_path,
             "paginas": paginas,
-            "gerado_em": "now()",
+            "gerado_em": datetime.now(timezone.utc).isoformat(),
             "erro_mensagem": None,
         }
     ).eq("id", revista_id).execute()
