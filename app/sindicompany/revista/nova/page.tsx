@@ -2,13 +2,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
+import { CONDOMINIOS } from "@/lib/sindicompany/condominios";
 import { novaRevistaAction } from "./actions";
-
-const CONDOMINIOS = [
-  "Villa Park Osasco",
-  "Gardens Living Club",
-  "Club Park Butantã",
-];
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",

@@ -4,13 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
+import { isCondominioValido } from "@/lib/sindicompany/condominios";
 import { createRevista } from "@/lib/sindicompany/db";
-
-const CONDOMINIOS_VALIDOS = new Set([
-  "Villa Park Osasco",
-  "Gardens Living Club",
-  "Club Park Butantã",
-]);
 
 async function requireAuth() {
   const store = await cookies();
@@ -32,7 +27,7 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
   const mesRaw = String(formData.get("mes") ?? "").trim();
   const anoRaw = String(formData.get("ano") ?? "").trim();
 
-  if (!condominio || !CONDOMINIOS_VALIDOS.has(condominio)) {
+  if (!condominio || !isCondominioValido(condominio)) {
     backToFormWithError("Condomínio inválido.");
   }
 
