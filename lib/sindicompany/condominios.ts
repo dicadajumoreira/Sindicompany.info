@@ -68,3 +68,24 @@ export const CONDOMINIOS_SET = new Set<string>(CONDOMINIOS);
 export function isCondominioValido(nome: string): boolean {
   return CONDOMINIOS_SET.has(nome);
 }
+
+/**
+ * Slug URL-safe pra usar como [param] na rota /condominios/[slug].
+ * Decodifica acento e troca não-alfanum por '-'.
+ */
+export function slugifyCondo(nome: string): string {
+  return nome
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+const SLUG_TO_NOME = new Map<string, string>(
+  CONDOMINIOS.map((nome) => [slugifyCondo(nome), nome]),
+);
+
+export function condoFromSlug(slug: string): string | null {
+  return SLUG_TO_NOME.get(slug) ?? null;
+}
