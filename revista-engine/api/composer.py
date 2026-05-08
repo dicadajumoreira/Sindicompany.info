@@ -321,11 +321,10 @@ def build_inputs_from_db(
     numbers_inputs = dict(NUMBERS_DEFAULT)
     numbers_inputs["mes_referencia"] = mes_ano
 
-    # Preferência: arquivo direto (PNG/JPG/PDF do form). Fallback: Drive.
-    prestacao_arquivo = revista.get("prestacao_arquivo_url")
+    # Preferência: arquivo direto cadastrado no condomínio (PNG/JPG/PDF).
+    # Fallback: link de Drive da revista (legado).
+    prestacao_arquivo = cd.get("prestacao_arquivo_url")
     drive_prestacao = revista.get("drive_prestacao_url")
-    # Link clicável pro dashboard completo: usa o arquivo direto ou o
-    # link do Drive (o que estiver presente).
     if prestacao_arquivo or drive_prestacao:
         numbers_inputs["dashboard_url"] = prestacao_arquivo or drive_prestacao
 

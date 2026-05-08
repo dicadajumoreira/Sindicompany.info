@@ -16,6 +16,7 @@ export interface CondoMeta {
   sindico_genero: Genero | null;
   sindico_foto_path: string | null;
   logo_url: string | null;
+  prestacao_arquivo_url: string | null;
   // Campos de gestor abaixo são deprecated em condo_meta — moved to revistas.
   // Mantidos no schema só pra não quebrar dados antigos.
   tem_gestor: boolean;
@@ -30,6 +31,7 @@ export interface CondoMetaInput {
   sindico_genero?: Genero;
   sindico_foto_path?: string | null;
   logo_url?: string | null;
+  prestacao_arquivo_url?: string | null;
 }
 
 export async function getCondoMeta(nome: string): Promise<CondoMeta | null> {
@@ -61,6 +63,7 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
         sindico_genero: input.sindico_genero ?? null,
         sindico_foto_path: input.sindico_foto_path ?? null,
         logo_url: input.logo_url ?? null,
+        prestacao_arquivo_url: input.prestacao_arquivo_url ?? null,
       },
       { onConflict: "nome" },
     )
@@ -88,23 +91,24 @@ export async function uploadGestorFotoRevista(
   return data.publicUrl;
 }
 
-/** Sobe o arquivo de prestação de contas (imagem ou PDF) atrelado a
- *  uma revista. A engine baixa pela URL pública e roda Vision/OCR. */
+/** Sobe o arquivo de prestação de contas (imagem ou PDF) do condomínio.
+ *  Sempre sobrescreve o arquivo do mesmo slug — a editora atualiza
+ *  mensalmente o dashboard. Usa cache-busting via timestamp na URL
+ *  retornada pra forçar o engine a buscar a versão nova. */
 export async function uploadPrestacaoArquivo(
   condoSlug: string,
-  revistaId: string,
   bytes: Buffer,
   contentType: string,
   ext: string,
 ): Promise<string> {
-  const path = `${condoSlug}/prestacao-${revistaId}.${ext}`;
+  const path = `${condoSlug}/prestacao.${ext}`;
   const supabase = createAdminClient();
   const { error } = await supabase.storage
     .from(BUCKET)
     .upload(path, bytes, { contentType, upsert: true });
   if (error) throw error;
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+  return `${data.publicUrl}?v=${Date.now()}`;
 }
 
 /** Sobe logotipo do condomínio e retorna URL pública. */

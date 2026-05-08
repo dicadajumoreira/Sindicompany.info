@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { isCondominioValido, slugifyCondo } from "@/lib/sindicompany/condominios";
-import { getCondoMeta, uploadGestorFotoRevista, uploadPrestacaoArquivo } from "@/lib/sindicompany/condominios-db";
+import { getCondoMeta, uploadGestorFotoRevista } from "@/lib/sindicompany/condominios-db";
 import { createRevista, type RevistaInput } from "@/lib/sindicompany/db";
 import { getEditorial, editorialEstaPronto } from "@/lib/sindicompany/editoriais";
 import { dispatchGenerateRevista } from "@/lib/sindicompany/engine";
@@ -17,17 +17,6 @@ const PHOTO_EXT_BY_TYPE: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
-};
-
-const MAX_PRESTACAO_BYTES = 15 * 1024 * 1024; // 15MB (PDF pode ser maior)
-const ALLOWED_PRESTACAO_TYPES = new Set([
-  "image/jpeg", "image/png", "image/webp", "application/pdf",
-]);
-const PRESTACAO_EXT_BY_TYPE: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "application/pdf": "pdf",
 };
 
 async function requireAuth() {
@@ -167,35 +156,6 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     gestor_foto_url = undefined;
   }
 
-  // Arquivo de prestação de contas (imagem ou PDF). Se já tem da edição
-  // duplicada, mantém; novo upload sobrescreve.
-  let prestacao_arquivo_url: string | undefined =
-    getStr(formData, "prestacao_arquivo_existente") || undefined;
-  {
-    const file = formData.get("prestacao_arquivo_file");
-    if (file instanceof File && file.size > 0) {
-      if (file.size > MAX_PRESTACAO_BYTES) {
-        backToFormWithError("Arquivo de prestação maior que 15MB.", formData);
-      }
-      if (!ALLOWED_PRESTACAO_TYPES.has(file.type)) {
-        backToFormWithError("Arquivo de prestação precisa ser JPG, PNG, WebP ou PDF.", formData);
-      }
-      try {
-        const buf = Buffer.from(await file.arrayBuffer());
-        const ext = PRESTACAO_EXT_BY_TYPE[file.type];
-        prestacao_arquivo_url = await uploadPrestacaoArquivo(
-          slugifyCondo(condominio),
-          `pending-${Date.now()}`,
-          buf,
-          file.type,
-          ext,
-        );
-      } catch (e) {
-        backToFormWithError(`Falha ao subir arquivo de prestação: ${describeError(e)}`, formData);
-      }
-    }
-  }
-
   const input: RevistaInput = {
     condominio,
     mes,
@@ -207,7 +167,6 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     gestor_foto_url: tem_gestor ? gestor_foto_url : undefined,
     drive_manutencao_url: drive_manutencao_url || undefined,
     drive_prestacao_url: drive_prestacao_url || undefined,
-    prestacao_arquivo_url: prestacao_arquivo_url || undefined,
     tem_advertencias,
     multas_advertencias_obs: tem_advertencias ? multas_advertencias_obs : undefined,
     tem_eventos,
