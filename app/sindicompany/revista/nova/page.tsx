@@ -14,7 +14,7 @@ import {
   sugerirCartaGestor,
 } from "@/lib/sindicompany/sugestoes";
 import { novaRevistaAction } from "./actions";
-import { CondoSelect } from "./condo-select";
+import { CondoSelect, MesSelect, AnoInput } from "./condo-select";
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -87,34 +87,75 @@ export default async function NovaEdicaoPage({
         </div>
       )}
 
-      {/* Status do editorial mensal */}
-      <div
-        className={`mb-6 rounded-xl border px-5 py-4 text-sm ${
+      {/* Editorial mensal — vai aplicado a toda revista deste mês */}
+      <section
+        className={`mb-6 rounded-xl border ${
           editorialOk
-            ? "border-mint-100 bg-mint-50 text-mint-700"
-            : "border-amber-200 bg-amber-50 text-amber-900"
+            ? "border-mint-100 bg-mint-50/40"
+            : "border-amber-200 bg-amber-50/60"
         }`}
       >
-        <div className="flex items-start justify-between gap-4">
+        <header className="flex items-start justify-between gap-4 px-5 py-4 border-b border-onix-100/60">
           <div>
-            <div className="font-semibold mb-0.5">
-              Editorial de {MESES[defaultMes - 1]} / {defaultAno}:{" "}
-              {editorialOk ? "pronto" : editorial ? "em rascunho" : "não definido"}
+            <div className="text-xs uppercase tracking-[0.2em] font-semibold text-mint-700">
+              Editorial mensal · {MESES[defaultMes - 1]} / {defaultAno}
             </div>
-            <div className="text-xs opacity-80">
+            <div className="mt-0.5 text-sm font-semibold text-onix-900">
               {editorialOk
-                ? `Matéria: "${editorial?.materia_capa_titulo}". Receita: ${editorial?.receita_titulo}.`
-                : "Defina matéria de capa, foto, receita e temas das cartas antes de gerar revistas deste mês."}
+                ? "Pronto — esses dados vão entrar na revista"
+                : editorial
+                  ? "Em rascunho — faltam campos obrigatórios"
+                  : "Ainda não definido"}
             </div>
           </div>
           <Link
             href={`/sindicompany/editorial/${editorialSlug}`}
-            className="shrink-0 underline font-medium"
+            className="shrink-0 text-sm underline font-medium text-onix-900"
           >
-            {editorialOk ? "Editar" : "Definir"} →
+            {editorial ? "Editar" : "Definir"} →
           </Link>
-        </div>
-      </div>
+        </header>
+
+        {editorial ? (
+          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-4 px-5 py-4 text-sm">
+            <PreviewItem
+              label="Matéria de capa"
+              value={editorial.materia_capa_titulo}
+              sub={editorial.materia_capa_subtitulo ?? undefined}
+            />
+            <PreviewItem
+              label="Receita do mês"
+              value={editorial.receita_titulo}
+              sub={editorial.receita_descricao ?? undefined}
+            />
+            <PreviewItem
+              label="Foto de capa"
+              value={editorial.foto_capa_url ? "Definida" : null}
+              sub={editorial.foto_capa_url ?? undefined}
+              mono
+            />
+            <PreviewItem
+              label="Tema · Carta do(a) síndico(a)"
+              value={editorial.carta_sindico_tema}
+            />
+            <PreviewItem
+              label="Tema · Carta do gestor"
+              value={editorial.carta_gestor_tema}
+            />
+            {editorial.notas_editor_geral && (
+              <PreviewItem
+                label="Notas do editor"
+                value={editorial.notas_editor_geral}
+              />
+            )}
+          </div>
+        ) : (
+          <div className="px-5 py-4 text-sm text-amber-900">
+            Defina matéria de capa, foto, receita e temas das cartas antes
+            de gerar revistas deste mês.
+          </div>
+        )}
+      </section>
 
       <form action={novaRevistaAction} className="space-y-8">
         {/* ============ EDIÇÃO ============ */}
@@ -133,17 +174,14 @@ export default async function NovaEdicaoPage({
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Mês">
-              <select name="mes" required defaultValue={String(defaultMes).padStart(2, "0")}
-                      className={selectCls}>
-                {MESES.map((m, i) => (
-                  <option key={m} value={String(i + 1).padStart(2, "0")}>{m}</option>
-                ))}
-              </select>
+              <MesSelect
+                meses={MESES}
+                defaultValue={String(defaultMes).padStart(2, "0")}
+                className={selectCls}
+              />
             </Field>
             <Field label="Ano">
-              <input type="number" name="ano" defaultValue={defaultAno}
-                     min={2025} max={2030} required
-                     className={inputCls + " tabular-nums"} />
+              <AnoInput defaultValue={defaultAno} className={inputCls} />
             </Field>
           </div>
         </section>
@@ -372,6 +410,38 @@ function Field({
       {children}
       {hint && <span className="text-xs text-g60 mt-1 block">{hint}</span>}
     </label>
+  );
+}
+
+function PreviewItem({
+  label,
+  value,
+  sub,
+  mono = false,
+}: {
+  label: string;
+  value: string | null;
+  sub?: string;
+  mono?: boolean;
+}) {
+  return (
+    <div>
+      <div className="text-xs uppercase tracking-wider font-semibold text-mint-700 mb-0.5">
+        {label}
+      </div>
+      {value ? (
+        <div className={`text-onix-900 font-medium ${mono ? "break-all text-xs" : ""}`}>
+          {value}
+        </div>
+      ) : (
+        <div className="text-g60 italic">não definido</div>
+      )}
+      {sub && (
+        <div className={`text-onix-800 opacity-70 text-xs mt-0.5 ${mono ? "break-all" : ""}`}>
+          {sub}
+        </div>
+      )}
+    </div>
   );
 }
 

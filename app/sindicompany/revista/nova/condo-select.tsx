@@ -47,3 +47,81 @@ export function CondoSelect({ condominios, defaultValue, className }: CondoSelec
     </select>
   );
 }
+
+interface MesSelectProps {
+  meses: readonly string[];
+  defaultValue: string;
+  className: string;
+}
+
+/** Select de mês que sincroniza ?mes=MM na URL pra puxar o editorial. */
+export function MesSelect({ meses, defaultValue, className }: MesSelectProps) {
+  const router = useRouter();
+  const params = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const next = new URLSearchParams(params?.toString() ?? "");
+    next.set("mes", e.target.value);
+    startTransition(() => {
+      router.replace(`?${next.toString()}`, { scroll: false });
+    });
+  }
+
+  return (
+    <select
+      name="mes"
+      required
+      defaultValue={defaultValue}
+      onChange={onChange}
+      disabled={isPending}
+      className={className}
+    >
+      {meses.map((m, i) => (
+        <option key={m} value={String(i + 1).padStart(2, "0")}>{m}</option>
+      ))}
+    </select>
+  );
+}
+
+interface AnoInputProps {
+  defaultValue: number;
+  className: string;
+}
+
+/** Input de ano que sincroniza ?ano=YYYY na URL no blur. */
+export function AnoInput({ defaultValue, className }: AnoInputProps) {
+  const router = useRouter();
+  const params = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  function commit(value: string) {
+    const n = Number.parseInt(value, 10);
+    if (!Number.isInteger(n) || n < 2025 || n > 2030) return;
+    const next = new URLSearchParams(params?.toString() ?? "");
+    next.set("ano", String(n));
+    startTransition(() => {
+      router.replace(`?${next.toString()}`, { scroll: false });
+    });
+  }
+
+  return (
+    <input
+      type="number"
+      name="ano"
+      defaultValue={defaultValue}
+      min={2025}
+      max={2030}
+      required
+      disabled={isPending}
+      onBlur={(e) => commit(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          commit((e.target as HTMLInputElement).value);
+        }
+      }}
+      className={className + " tabular-nums"}
+    />
+  );
+}
