@@ -98,15 +98,22 @@ class OurCondoMaintenance(Section):
         return errors
 
     def paginate(self, inputs: dict) -> int:
-        # 1 abertura + 1 página com cards. Multi-página real (cards quebrando
-        # entre páginas) vem com o paginador dinâmico.
-        return 2
+        # 1 abertura + N páginas de cards (6 cards por página).
+        mans = inputs.get("manutencoes") or []
+        n_card_pages = max(1, (len(mans) + 5) // 6)
+        return 1 + n_card_pages
 
     def render_a4(self, inputs: dict, theme) -> list[str]:
-        return [
-            self._render_abertura(inputs, theme),
-            self._render_cards(inputs, theme),
-        ]
+        # Split em chunks de 6 manutenções por página.
+        mans = list(inputs.get("manutencoes") or [])
+        chunks = [mans[i : i + 6] for i in range(0, max(len(mans), 1), 6)] or [[]]
+
+        pages = [self._render_abertura(inputs, theme)]
+        for chunk in chunks:
+            chunk_inputs = dict(inputs)
+            chunk_inputs["manutencoes"] = chunk
+            pages.append(self._render_cards(chunk_inputs, theme))
+        return pages
 
     def render_mobile(self, inputs: dict, theme) -> list[str]:
         return self.render_a4(inputs, theme)

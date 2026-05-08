@@ -96,7 +96,6 @@ class BackCover(Section):
   </div>
   <footer class="back-cover__footer">
     {proxima_block}
-    <div class="back-cover__handle">{_escape(theme.handle)}</div>
   </footer>
 </section>
 

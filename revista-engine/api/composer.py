@@ -17,6 +17,7 @@ from typing import Any
 # Garante import do package engine + dos scripts de preview (defaults)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from api.drive import baixar_capa_manutencao, baixar_pastas_manutencao
 from api.text_gen import (
     clean_text,
     gerar_agenda_cultural,
@@ -66,7 +67,9 @@ def _edicao_label(revista: dict[str, Any]) -> str:
     mes = int(revista["mes"])
     ano = revista["ano"]
     condo = revista["condominio"].upper()
-    return f"EDIÇÃO {mes:02d} · {MESES[mes - 1]} {ano} · {condo} · @sindicompanybr"
+    # @sindicompanybr removido a pedido — o logo da Sindicompany já
+    # aparece no canto da capa quando o condomínio não tem logo próprio.
+    return f"EDIÇÃO {mes:02d} · {MESES[mes - 1]} {ano} · {condo}"
 
 
 def _cargo_sindico(condo_meta: dict[str, Any] | None) -> str:
@@ -238,14 +241,44 @@ def build_inputs_from_db(
         "noticias": nov_ai.get("noticias", NEWS_DEFAULT["noticias"]),
     }
 
-    # ---- S08/S09 (Drive integration ainda pendente — placeholders)
+    # ---- S08 Manutenções: baixa Drive e popula manutencoes
     maint_inputs = dict(MAINT_DEFAULT)
     maint_inputs["mes_referencia"] = mes_ano
     maint_inputs["nome_condominio"] = condominio
 
+    drive_url = revista.get("drive_manutencao_url")
+    if drive_url:
+        import tempfile
+        tmpdir = Path(tempfile.mkdtemp(prefix=f"manut_{revista.get('id','')[:8]}_"))
+        pastas = baixar_pastas_manutencao(drive_url, tmpdir)
+        if pastas:
+            # Cada subpasta vira uma manutenção. Título = nome da pasta.
+            maint_inputs["manutencoes"] = [
+                {
+                    "titulo": p["nome_pasta"],
+                    "foto": p["foto_path"],
+                    "descricao": "",
+                }
+                for p in pastas
+            ]
+            # Foto de capa do caderno = primeira imagem na raiz da pasta
+            capa = baixar_capa_manutencao(drive_url, tmpdir)
+            if capa:
+                maint_inputs["foto_capa_caderno"] = capa
+
     events_inputs = dict(EVENTS_DEFAULT)
     events_inputs["mes_referencia"] = mes_ano
     events_inputs["nome_condominio"] = condominio
+    drive_eventos_url = revista.get("drive_eventos_url")
+    if drive_eventos_url:
+        import tempfile
+        tmpdir_ev = Path(tempfile.mkdtemp(prefix=f"event_{revista.get('id','')[:8]}_"))
+        pastas_ev = baixar_pastas_manutencao(drive_eventos_url, tmpdir_ev)
+        if pastas_ev:
+            events_inputs["eventos"] = [
+                {"titulo": p["nome_pasta"], "foto": p["foto_path"], "descricao": ""}
+                for p in pastas_ev
+            ]
 
     # ---- S10 Receita
     recipe_inputs = dict(RECIPE_DEFAULT)

@@ -94,7 +94,7 @@ def _gerar_carta(prompt_user: str, fallback: str) -> str:
                 {"role": "user", "content": prompt_user},
             ],
             temperature=0.8,
-            max_tokens=1200,
+            max_tokens=800,
         )
         text = resp.choices[0].message.content or ""
     except Exception as e:  # noqa: BLE001
@@ -145,7 +145,8 @@ def gerar_carta_sindico(
         f"4) Menção à receita e aos eventos/notícias do condomínio quando houver\n"
         f"5) Encerramento caloroso, assinado por {nome}\n\n"
         f"Tom: caloroso, próximo, em primeira pessoa do singular. "
-        f"5 a 6 parágrafos densos. Total entre 350 e 500 palavras."
+        f"4 a 5 parágrafos. Total entre 300 e 400 palavras (limite estrito "
+        f"para caber na página A4 sem cortar)."
     )
 
     fallback = (
@@ -316,18 +317,23 @@ def gerar_curiosidades(mes: int, ano: int) -> dict[str, Any]:
 
 
 def gerar_novidades(mes: int, ano: int) -> dict[str, Any]:
-    """6 novidades reais de mercado/legislação pro mês (via web search)."""
+    """6 novidades reais que impactam quem vive em condomínios."""
     mes_nome = MESES_PT[mes - 1]
     prompt = (
-        f"Pesquise NA WEB notícias REAIS de {mes_nome} de {ano} sobre o setor "
-        f"condominial brasileiro: legislação (leis, decretos, súmulas STJ), "
-        f"tecnologia (apps, automação), mercado (juros, inadimplência, taxas), "
-        f"sustentabilidade. Use portais especializados (SíndicoNet, Folha "
-        f"Condomínios, Direcional Condomínios, ABADI, blogs jurídicos).\n\n"
-        f"Selecione 6 notícias com data, título, resumo (1-2 frases) e fonte "
-        f"verificável. Apenas fatos publicados, nada inventado.\n\n"
-        f'JSON estrito: {{ "intro": "Resumo do mês no setor", '
-        f'"noticias": [{{"data":"DD/MM","titulo":"...","resumo":"...","fonte":"Veículo"}} x 6] }}'
+        f"Pesquise NA WEB notícias REAIS de {mes_nome} de {ano} que IMPACTAM "
+        f"a vida de quem mora em condomínios. Cubra:\n"
+        f"- Mudanças em leis (Código Civil, lei do inquilinato, IPTU, IR)\n"
+        f"- Decisões do STJ/STF sobre condomínios\n"
+        f"- Tecnologia que muda o dia a dia (delivery, IoT, segurança)\n"
+        f"- Tarifas e custos (água, luz, gás, serviços)\n"
+        f"- Tendências de mercado imobiliário e aluguel\n\n"
+        f"FONTES OBRIGATÓRIAS (pesquise nesses portais): UOL, G1, Folha de "
+        f"São Paulo, R7. Pode complementar com SíndicoNet e Direcional Condomínios. "
+        f"Apenas notícias REAIS publicadas, com fonte verificável.\n\n"
+        f"Selecione 6 notícias com data (dentro de {mes_nome}/{ano}), título "
+        f"original, resumo (1-2 frases) e veículo.\n\n"
+        f'JSON estrito: {{ "intro": "Resumo do mês para condôminos", '
+        f'"noticias": [{{"data":"DD/MM","titulo":"...","resumo":"...","fonte":"UOL/G1/Folha/R7"}} x 6] }}'
     )
     fallback = {
         "intro": "Seis movimentos do mês no universo condominial.",
@@ -371,21 +377,21 @@ def gerar_signos(mes: int, ano: int) -> dict[str, Any]:
 
 
 def gerar_agenda_cultural(mes: int, ano: int) -> dict[str, Any]:
-    """Agenda cultural com eventos reais via web search."""
+    """Agenda cultural com lançamentos reais via web search."""
     mes_nome = MESES_PT[mes - 1]
     prompt = (
-        f"Pesquise NA WEB (em portais como Veja SP, Catraca Livre, Quero na Cena, "
-        f"Folha de São Paulo - Guia, Time Out São Paulo, sites de teatros e museus, "
-        f"Netflix/Globoplay/Prime Video pra estreias) eventos culturais REAIS "
-        f"acontecendo em São Paulo em {mes_nome} de {ano}.\n\n"
-        f"Categorias: shows, peças, exposições, cinema, festivais, gastronomia, "
-        f"streaming. Use eventos com datas e locais reais.\n\n"
-        f"Retorne 1 hero + 12 cards. Para cada um, traga categoria, título, "
-        f"descrição curta (1 frase), data (DD/MM ou intervalo), local. "
-        f"O hero é o evento mais importante do mês.\n\n"
-        f'JSON estrito (sem markdown, sem texto antes/depois): {{ '
-        f'"hero": {{"categoria":"Cinema/Teatro/etc.","titulo":"...","sinopse":"...","data":"DD/MM","local":"..."}}, '
-        f'"cards_secundarios": [{{"categoria":"...","titulo":"...","descricao_curta":"...","data":"DD/MM","local":"..."}} x 12] '
+        f"Pesquise NA WEB lançamentos REAIS de {mes_nome} de {ano} nessas categorias:\n"
+        f"- NETFLIX: séries e filmes que estreiam em {mes_nome}/{ano}\n"
+        f"- GOOGLE PLAY / Prime Video / Disney+: estreias do mês\n"
+        f"- CINEMA: filmes que estreiam nas salas brasileiras em {mes_nome}/{ano} "
+        f"(consulte AdoroCinema, Filmow, Folha de São Paulo - Guia)\n"
+        f"- TEATRO: peças em cartaz em São Paulo em {mes_nome}/{ano} "
+        f"(consulte Quero na Cena, Veja SP, Catraca Livre, sites de teatros)\n\n"
+        f"Selecione 1 destaque (hero) + 12 cards. Cada item com data real, local "
+        f"(quando aplicável) e descrição curta de 1 frase. Use SEMPRE títulos reais.\n\n"
+        f'JSON estrito (sem markdown): {{ '
+        f'"hero": {{"categoria":"NETFLIX/CINEMA/TEATRO/STREAMING","titulo":"Título real","sinopse":"...","data":"DD/MM","local":"..."}}, '
+        f'"cards_secundarios": [{{"categoria":"...","titulo":"Título real","descricao_curta":"...","data":"DD/MM","local":"..."}} x 12] '
         f'}}'
     )
     fallback = {
@@ -414,15 +420,19 @@ def gerar_agenda_cultural(mes: int, ano: int) -> dict[str, Any]:
 def gerar_materia_capa_completa(
     titulo: str, subtitulo: str, mes: int, ano: int,
 ) -> dict[str, Any]:
-    """Texto completo de matéria de capa em 8 blocos (preenche 2 páginas)."""
+    """Matéria de capa em 8 blocos baseada em pesquisa real."""
     mes_nome = MESES_PT[mes - 1]
     prompt = (
-        f"Escreva uma matéria de capa de revista mensal de condomínios pra {mes_nome} {ano}. "
-        f"Título: '{titulo}'. Subtítulo: '{subtitulo}'.\n\n"
-        f"Estrutura: 8 blocos curtos de texto (cada bloco com 80 a 120 palavras). "
-        f"Tom: jornalístico próximo, voz humana, em português brasileiro com acentos corretos. "
-        f"Nada de bullets ou listas. Sem travessões. Cada bloco aborda um ângulo diferente do tema. "
-        f"Use dados plausíveis (não invente números específicos).\n\n"
+        f"Escreva a matéria de capa de uma revista mensal de condomínios "
+        f"para {mes_nome} {ano}. Título: '{titulo}'. Subtítulo: '{subtitulo}'.\n\n"
+        f"PESQUISE NA WEB (UOL, G1, Folha de São Paulo, R7) reportagens, "
+        f"dados, tendências e estudos recentes que cabem no tema E que "
+        f"IMPACTAM a vida de quem vive em condomínios. Use fatos reais, "
+        f"números reais (com fonte) e cite os portais consultados.\n\n"
+        f"Estrutura: 8 blocos curtos (80-120 palavras cada). Tom jornalístico "
+        f"próximo, voz humana, português brasileiro com acentos corretos. "
+        f"Nada de bullets, nada de travessões. Cada bloco aborda um ângulo "
+        f"diferente. Sempre conecte com o cotidiano do condomínio.\n\n"
         f'JSON: {{ "corpo_blocos": [{{"tipo":"paragrafo","texto":"..."}} x 8] }}'
     )
     fallback = {
@@ -439,7 +449,7 @@ def gerar_materia_capa_completa(
             for _ in range(8)
         ]
     }
-    data = _gerar_json(prompt, fallback, expected_keys=["corpo_blocos"])
+    data = _gerar_json(prompt, fallback, expected_keys=["corpo_blocos"], use_web_search=True)
     return _aplicar_clean_recursivo(data)
 
 
