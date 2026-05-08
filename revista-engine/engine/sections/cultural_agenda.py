@@ -221,12 +221,12 @@ class CulturalAgenda(Section):
     border-top: 1px solid var(--gray-20);
   }}
 
-  /* Cards secundários — grid 3 colunas que estica pra preencher página */
+  /* Cards secundários — grid 5 colunas, preenche a página inteira */
   .agenda__cards {{
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     grid-auto-rows: 1fr;
-    gap: 10px;
+    gap: 8px;
     flex: 1;
     min-height: 0;
   }}
@@ -234,34 +234,60 @@ class CulturalAgenda(Section):
   .agenda-card {{
     background: var(--gray-5);
     border-radius: 6px;
-    padding: 12px 14px;
+    padding: 10px 11px;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    overflow: hidden;
+    position: relative;
   }}
+
+  /* Alterna sutilmente o fundo dos cards pra dar ritmo visual */
+  .agenda-card:nth-child(5n+1) {{ background: #F4F4F5; }}
+  .agenda-card:nth-child(5n+2) {{ background: #EEF7F8; }}  /* mint vibe */
+  .agenda-card:nth-child(5n+3) {{ background: #F7EFE9; }}  /* sand vibe */
+  .agenda-card:nth-child(5n+4) {{ background: #F4F4F5; }}
+  .agenda-card:nth-child(5n+5) {{ background: #EEF0FF; }}  /* lavender vibe */
+
+  /* Borda lateral colorida por categoria */
+  .agenda-card::before {{
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--mint);
+  }}
+  .agenda-card[data-categoria="NETFLIX"]::before,
+  .agenda-card[data-categoria="STREAMING"]::before {{ background: #E50914; }}
+  .agenda-card[data-categoria="CINEMA"]::before {{ background: #1A1C29; }}
+  .agenda-card[data-categoria="TEATRO"]::before {{ background: #B07A4B; }}
+  .agenda-card[data-categoria="MÚSICA"]::before,
+  .agenda-card[data-categoria="MUSICA"]::before {{ background: #6B70B8; }}
 
   .agenda-card__head {{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
+    gap: 4px;
+    margin-bottom: 2px;
   }}
 
   .badge {{
     display: inline-block;
-    padding: 2px 8px;
+    padding: 2px 6px;
     border-radius: 3px;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 7.5px;
+    font-size: 6.5px;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
   }}
 
   .agenda-card__data {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 600;
     letter-spacing: 0.08em;
     color: var(--onix);
@@ -270,20 +296,41 @@ class CulturalAgenda(Section):
 
   .agenda-card__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.1;
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.15;
     color: var(--onix);
     margin-top: 2px;
+    /* Limita 3 linhas no título pra cards iguais */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }}
 
   .agenda-card__desc {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9.5px;
-    line-height: 1.4;
+    font-size: 8.5px;
+    line-height: 1.35;
     color: var(--onix);
-    opacity: 0.75;
-    margin-top: 4px;
+    opacity: 0.78;
+    margin-top: 3px;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }}
+
+  .agenda-card__local {{
+    margin-top: auto;
+    padding-top: 6px;
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 7.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--onix);
+    opacity: 0.6;
   }}
 </style>
 """
@@ -330,16 +377,19 @@ class CulturalAgenda(Section):
         items = []
         for c in cards:
             cat = (c.get("categoria") or "").strip()
+            cat_attr = cat.upper()
             bg, fg = _badge_colors(cat)
             data = (c.get("data") or "").strip()
+            local = (c.get("local") or "").strip()
             items.append(f"""
-      <article class="agenda-card">
+      <article class="agenda-card" data-categoria="{_escape_attr(cat_attr)}">
         <div class="agenda-card__head">
           <span class="badge" style="background:{bg};color:{fg}">{_escape(cat) or '—'}</span>
           {f'<span class="agenda-card__data">{_escape(data)}</span>' if data else ''}
         </div>
         <h3 class="agenda-card__titulo">{_escape(c.get('titulo',''))}</h3>
         <p class="agenda-card__desc">{_escape(c.get('descricao_curta','') or c.get('descricao',''))}</p>
+        {f'<div class="agenda-card__local">{_escape(local)}</div>' if local else ''}
       </article>""")
         return "\n".join(items)
 
