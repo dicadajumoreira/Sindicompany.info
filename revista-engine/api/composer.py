@@ -9,6 +9,7 @@ fixo). À medida que mais dados vêm do site, esses fallbacks somem.
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -18,8 +19,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from api.text_gen import (
     clean_text,
+    gerar_agenda_cultural,
     gerar_carta_gestor,
     gerar_carta_sindico,
+    gerar_curiosidades,
+    gerar_dicas_praticas,
+    gerar_materia_capa_completa,
+    gerar_novidades,
+    gerar_signos,
 )
 from engine.theme import load_theme
 from engine.sections import (
@@ -109,6 +116,22 @@ def build_inputs_from_db(
     """Retorna [(label, section_instance, inputs), …] na ordem editorial."""
 
     ed = editorial or {}
+    cd = condo or {}
+    mes_ano = _mes_ano(revista)
+    condominio = revista.get("condominio", "")
+
+    # Foto pública do(a) síndico(a) — bucket condominios-fotos é público,
+    # então construímos a URL completa a partir do path armazenado.
+    sindico_foto_url = None
+    if cd.get("sindico_foto_path"):
+        url_base = os.environ.get("SUPABASE_URL", "")
+        if url_base:
+            sindico_foto_url = (
+                f"{url_base}/storage/v1/object/public/condominios-fotos/"
+                f"{cd['sindico_foto_path']}"
+            )
+        else:
+            sindico_foto_url = cd["sindico_foto_path"]
 
     # ---- S01 Capa
     cover_inputs = dict(COVER_DEFAULT)
@@ -121,26 +144,24 @@ def build_inputs_from_db(
     if ed.get("foto_capa_url"):
         cover_inputs["foto_capa"] = ed["foto_capa_url"]
     cover_inputs["chamadas"] = _build_chamadas(revista, editorial, condo)
-    # Logo do condomínio substitui o Sindicompany na capa, se cadastrado.
-    if (condo or {}).get("logo_url"):
-        cover_inputs["logo_url"] = condo["logo_url"]
+    if cd.get("logo_url"):
+        cover_inputs["logo_url"] = cd["logo_url"]
 
     # ---- S02 Carta do Síndico
     letter_inputs = dict(LETTER_DEFAULT)
-    if condo and condo.get("sindico_nome"):
-        letter_inputs["nome_sindico"] = condo["sindico_nome"]
-        letter_inputs["genero"] = condo.get("sindico_genero") or "feminino"
+    if cd.get("sindico_nome"):
+        letter_inputs["nome_sindico"] = cd["sindico_nome"]
+        letter_inputs["genero"] = cd.get("sindico_genero") or "feminino"
         letter_inputs["cargo"] = _cargo_sindico(condo)
-    letter_inputs["mes_ano"] = _mes_ano(revista)
+    letter_inputs["mes_ano"] = mes_ano
     if ed.get("carta_sindico_tema"):
         letter_inputs["titulo"] = ed["carta_sindico_tema"]
-    # Texto: editora forneceu? aplica clean_text. Senão, gera com IA humanizada.
     if revista.get("carta_sindico_texto"):
         letter_inputs["texto"] = clean_text(revista["carta_sindico_texto"])
     else:
-        letter_inputs["texto"] = gerar_carta_sindico(condo or {}, ed, revista)
-    if condo and condo.get("sindico_foto_path"):
-        letter_inputs["foto_sindico"] = condo["sindico_foto_path"]
+        letter_inputs["texto"] = gerar_carta_sindico(cd, ed, revista)
+    if sindico_foto_url:
+        letter_inputs["foto_sindico"] = sindico_foto_url
 
     # ---- S02B Carta do Gestor (só se a revista marcar tem_gestor)
     gestor_letter_inputs: dict[str, Any] | None = None
@@ -149,40 +170,77 @@ def build_inputs_from_db(
         gestor_letter_inputs["nome_sindico"] = revista["gestor_nome"]
         gestor_letter_inputs["cargo"] = "Gestor de atendimento"
         gestor_letter_inputs["genero"] = "masculino"
-        gestor_letter_inputs["mes_ano"] = _mes_ano(revista)
+        gestor_letter_inputs["mes_ano"] = mes_ano
         if ed.get("carta_gestor_tema"):
             gestor_letter_inputs["titulo"] = ed["carta_gestor_tema"]
         if revista.get("carta_gestor_texto"):
             gestor_letter_inputs["texto"] = clean_text(revista["carta_gestor_texto"])
         else:
-            gestor_letter_inputs["texto"] = gerar_carta_gestor(condo or {}, ed, revista)
+            gestor_letter_inputs["texto"] = gerar_carta_gestor(cd, ed, revista)
         if revista.get("gestor_foto_url"):
             gestor_letter_inputs["foto_sindico"] = revista["gestor_foto_url"]
 
-    # ---- S03 Agenda Cultural
-    agenda_inputs = dict(AGENDA_DEFAULT)
+    mes_int = int(revista["mes"])
+    ano_int = int(revista["ano"])
 
-    # ---- S04 Matéria de Capa
+    # ---- S03 Agenda Cultural — gerada por mês via AI
+    agenda_ai = gerar_agenda_cultural(mes_int, ano_int)
+    agenda_inputs = {
+        "mes_referencia": mes_ano,
+        "hero": agenda_ai.get("hero", AGENDA_DEFAULT["hero"]),
+        "cards_secundarios": agenda_ai.get("cards_secundarios", AGENDA_DEFAULT["cards_secundarios"]),
+    }
+
+    # ---- S04 Matéria de Capa — corpo gerado por AI
     cover_story_inputs = dict(COVER_STORY_DEFAULT)
-    if ed.get("materia_capa_titulo"):
-        cover_story_inputs["titulo"] = ed["materia_capa_titulo"]
-    if ed.get("materia_capa_subtitulo"):
-        cover_story_inputs["subtitulo"] = ed["materia_capa_subtitulo"]
+    cover_story_inputs["mes_referencia"] = mes_ano
+    titulo_capa = ed.get("materia_capa_titulo") or COVER_STORY_DEFAULT["manchete"]
+    subtitulo_capa = ed.get("materia_capa_subtitulo") or COVER_STORY_DEFAULT["subtitulo"]
+    cover_story_inputs["manchete"] = titulo_capa
+    cover_story_inputs["subtitulo"] = subtitulo_capa
+    if ed.get("foto_capa_url"):
+        cover_story_inputs["foto_principal"] = ed["foto_capa_url"]
+    materia_ai = gerar_materia_capa_completa(titulo_capa, subtitulo_capa, mes_int, ano_int)
+    if materia_ai.get("corpo_blocos"):
+        cover_story_inputs["corpo_blocos"] = materia_ai["corpo_blocos"]
 
-    # ---- S05/S06/S07 placeholders (ainda sem input via site)
-    tips_inputs = dict(TIPS_DEFAULT)
-    industry_inputs = dict(INDUSTRY_DEFAULT)
-    news_inputs = dict(NEWS_DEFAULT)
+    # ---- S05 Dicas Práticas — geradas por mês
+    dicas_ai = gerar_dicas_praticas(mes_int, ano_int)
+    tips_inputs = {
+        "mes_referencia": mes_ano,
+        "titulo_secao": dicas_ai.get("titulo_secao", TIPS_DEFAULT["titulo_secao"]),
+        "intro": dicas_ai.get("intro", TIPS_DEFAULT["intro"]),
+        "dicas": dicas_ai.get("dicas", TIPS_DEFAULT["dicas"]),
+    }
+
+    # ---- S06 Curiosidades — geradas por mês
+    curi_ai = gerar_curiosidades(mes_int, ano_int)
+    industry_inputs = {
+        "mes_referencia": mes_ano,
+        "intro": curi_ai.get("intro", INDUSTRY_DEFAULT["intro"]),
+        "curiosidades": curi_ai.get("curiosidades", INDUSTRY_DEFAULT["curiosidades"]),
+    }
+
+    # ---- S07 Novidades — geradas por mês
+    nov_ai = gerar_novidades(mes_int, ano_int)
+    news_inputs = {
+        "mes_referencia": mes_ano,
+        "intro": nov_ai.get("intro", NEWS_DEFAULT["intro"]),
+        "noticias": nov_ai.get("noticias", NEWS_DEFAULT["noticias"]),
+    }
 
     # ---- S08/S09 (Drive integration ainda pendente — placeholders)
     maint_inputs = dict(MAINT_DEFAULT)
-    if revista.get("condominio"):
-        maint_inputs["condominio"] = revista["condominio"]
+    maint_inputs["mes_referencia"] = mes_ano
+    maint_inputs["nome_condominio"] = condominio
+
     events_inputs = dict(EVENTS_DEFAULT)
+    events_inputs["mes_referencia"] = mes_ano
+    events_inputs["nome_condominio"] = condominio
 
     # ---- S10 Receita
     recipe_inputs = dict(RECIPE_DEFAULT)
-    recipe_inputs["mes_referencia"] = _mes_ano(revista)
+    recipe_inputs["mes_referencia"] = mes_ano
     if ed.get("receita_titulo"):
         recipe_inputs["titulo_receita"] = ed["receita_titulo"]
     if ed.get("receita_descricao"):
@@ -190,21 +248,49 @@ def build_inputs_from_db(
 
     # ---- S11 Nossos Números (Drive prestação ainda pendente)
     numbers_inputs = dict(NUMBERS_DEFAULT)
+    numbers_inputs["mes_referencia"] = mes_ano
 
-    # ---- S12 Advertências
+    # ---- S12 Advertências (só renderiza se a edição teve)
     warnings_inputs = dict(WARNINGS_DEFAULT)
+    warnings_inputs["mes_referencia"] = mes_ano
     if revista.get("multas_advertencias_obs"):
         warnings_inputs["observacao"] = revista["multas_advertencias_obs"]
 
-    # ---- S12B Vida Condominial / S13 Signos / S14 Expediente / S15 Contracapa
+    # ---- S12B Vida Condominial / S13 Signos
     life_inputs = dict(LIFE_DEFAULT)
-    horoscope_inputs = dict(HOROSCOPE_DEFAULT)
-    colophon_inputs = dict(COLOPHON_DEFAULT)
-    back_cover_inputs: dict[str, Any] = {
-        "proxima_edicao_label": f"Próxima edição: {MESES[(int(revista['mes'])) % 12].lower()} {revista['ano'] if int(revista['mes']) < 12 else int(revista['ano'])+1}"
+    life_inputs["mes_referencia"] = mes_ano
+
+    # ---- S13 Signos — gerados por mês
+    signos_ai = gerar_signos(mes_int, ano_int)
+    horoscope_inputs = {
+        "mes_referencia": mes_ano,
+        "previsoes": signos_ai.get("previsoes", HOROSCOPE_DEFAULT["previsoes"]),
     }
-    if (condo or {}).get("logo_url"):
-        back_cover_inputs["logo_url"] = condo["logo_url"]
+
+    # ---- S14 Expediente (com dados reais do condomínio + síndico)
+    colophon_inputs = dict(COLOPHON_DEFAULT)
+    colophon_inputs["mes_referencia"] = mes_ano
+    colophon_inputs["nome_condominio"] = condominio
+    colophon_inputs["numero_edicao"] = int(revista["mes"])
+    colophon_inputs["ano_edicao"] = int(revista["ano"])
+    if cd.get("sindico_nome"):
+        colophon_inputs["nome_sindico"] = cd["sindico_nome"]
+        colophon_inputs["cargo_sindico"] = _cargo_sindico(condo)
+    # Equipe do condomínio: se tem gestor, inclui; senão, vazio.
+    equipe = []
+    if revista.get("tem_gestor") and revista.get("gestor_nome"):
+        equipe.append(f"{revista['gestor_nome']} (Gestor de atendimento)")
+    if equipe:
+        colophon_inputs["equipe_condominio"] = equipe
+
+    # ---- S15 Contracapa
+    proximo_mes = (int(revista["mes"]) % 12) + 1
+    proximo_ano = int(revista["ano"]) if int(revista["mes"]) < 12 else int(revista["ano"]) + 1
+    back_cover_inputs: dict[str, Any] = {
+        "proxima_edicao_label": f"Próxima edição: {MESES[proximo_mes - 1].lower()} {proximo_ano}",
+    }
+    if cd.get("logo_url"):
+        back_cover_inputs["logo_url"] = cd["logo_url"]
 
     sequence: list[tuple[str, Any, dict[str, Any]]] = [
         ("S01 Capa",                   Cover(),                cover_inputs),
@@ -219,10 +305,16 @@ def build_inputs_from_db(
         ("S06 Curiosidades",           IndustryFacts(),        industry_inputs),
         ("S07 Novidades e Legislação", News(),                 news_inputs),
         ("S08 Manutenções",            OurCondoMaintenance(),  maint_inputs),
-        ("S09 Eventos",                OurCondoEvents(),       events_inputs),
+    ])
+    if revista.get("tem_eventos"):
+        sequence.append(("S09 Eventos", OurCondoEvents(), events_inputs))
+    sequence.extend([
         ("S10 Receita do Mês",         Recipe(),               recipe_inputs),
         ("S11 Nossos Números",         OurNumbers(),           numbers_inputs),
-        ("S12 Advertências e Multas",  Warnings(),             warnings_inputs),
+    ])
+    if revista.get("tem_advertencias"):
+        sequence.append(("S12 Advertências e Multas", Warnings(), warnings_inputs))
+    sequence.extend([
         ("S12B Vida Condominial",      LifestyleArticle(),     life_inputs),
         ("S13 Signos do Mês",          Horoscope(),            horoscope_inputs),
         ("S14 Expediente",             Colophon(),             colophon_inputs),

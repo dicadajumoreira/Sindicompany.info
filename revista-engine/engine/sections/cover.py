@@ -90,7 +90,17 @@ class Cover(Section):
             padding = 40
             logo_w = 130
 
-        logo_svg = theme.logo_svg("white")
+        # Logo do condomínio (se cadastrado) substitui o Sindicompany.
+        # A editora deve subir um logo que funcione em fundo escuro
+        # (transparente ou com cores claras).
+        logo_url = (inputs.get("logo_url") or "").strip()
+        if logo_url:
+            logo_svg = (
+                f'<img src="{_escape(logo_url)}" alt="Logo" '
+                f'style="height:{logo_w}px;width:auto;object-fit:contain;" />'
+            )
+        else:
+            logo_svg = theme.logo_svg("white")
 
         # Background: foto real OU gradiente placeholder (Mint -> Onix).
         # Aplicado direto na .cover-page (mais confiável em WeasyPrint do

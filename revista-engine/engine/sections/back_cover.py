@@ -53,7 +53,15 @@ class BackCover(Section):
 
     def _render(self, inputs: dict, theme, *, dims, scale: str) -> str:
         proxima = inputs.get("proxima_edicao_label", "").strip() if inputs else ""
-        logo_svg = theme.logo_svg("white")
+        logo_url = (inputs.get("logo_url") or "").strip() if inputs else ""
+        if logo_url:
+            from html import escape as _esc
+            logo_svg = (
+                f'<img src="{_esc(logo_url)}" alt="Logo" '
+                f'style="max-width:100%;height:auto;object-fit:contain;" />'
+            )
+        else:
+            logo_svg = theme.logo_svg("white")
 
         # Tamanhos por formato (em px CSS). A4 é o "normal"; Mobile escala
         # em torno de 0.7x mas ajusta proporção: queremos a tagline grande

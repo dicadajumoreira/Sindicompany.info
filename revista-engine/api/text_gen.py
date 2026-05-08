@@ -91,7 +91,7 @@ def _gerar_carta(prompt_user: str, fallback: str) -> str:
                 {"role": "user", "content": prompt_user},
             ],
             temperature=0.8,
-            max_tokens=600,
+            max_tokens=1200,
         )
         text = resp.choices[0].message.content or ""
     except Exception as e:  # noqa: BLE001
@@ -135,12 +135,14 @@ def gerar_carta_sindico(
         f"Receita do mês: {receita}\n"
         f"{('Acontecimentos internos: ' + eventos) if eventos else ''}\n"
         f"{('Notas sobre advertências/multas: ' + advert) if advert else ''}\n\n"
-        f"Estrutura sugerida:\n"
-        f"1) Saudação calorosa aos moradores, mencionando o condomínio pelo nome\n"
-        f"2) Conexão entre o tema da carta e a vida real do condomínio\n"
-        f"3) Referência leve à matéria de capa e à receita do mês como convite à leitura\n"
-        f"4) Encerramento simples, assinado por {nome}\n\n"
-        f"Tom: caloroso, próximo, em primeira pessoa do singular. 3 parágrafos."
+        f"Estrutura sugerida (carta longa que ocupa página inteira de revista A4):\n"
+        f"1) Saudação calorosa aos moradores do {condominio}\n"
+        f"2) Reflexão sobre o tema da carta conectando com a realidade do condomínio\n"
+        f"3) Comentário sobre a matéria de capa do mês como convite à leitura\n"
+        f"4) Menção à receita e aos eventos/notícias do condomínio quando houver\n"
+        f"5) Encerramento caloroso, assinado por {nome}\n\n"
+        f"Tom: caloroso, próximo, em primeira pessoa do singular. "
+        f"5 a 6 parágrafos densos. Total entre 350 e 500 palavras."
     )
 
     fallback = (
@@ -150,6 +152,191 @@ def gerar_carta_sindico(
     )
 
     return _gerar_carta(prompt, fallback)
+
+
+SIGNOS = [
+    ("Áries", "21/03–19/04"), ("Touro", "20/04–20/05"), ("Gêmeos", "21/05–20/06"),
+    ("Câncer", "21/06–22/07"), ("Leão", "23/07–22/08"), ("Virgem", "23/08–22/09"),
+    ("Libra", "23/09–22/10"), ("Escorpião", "23/10–21/11"), ("Sagitário", "22/11–21/12"),
+    ("Capricórnio", "22/12–19/01"), ("Aquário", "20/01–18/02"), ("Peixes", "19/02–20/03"),
+]
+
+
+def _gerar_json(prompt_user: str, fallback: Any, expected_keys: list[str] | None = None) -> Any:
+    """Roda prompt esperando JSON e dá parse seguro. Cai no fallback se falhar."""
+    cli = _client()
+    if cli is None:
+        print("[text_gen] OPENAI_API_KEY ausente — usando fallback JSON", flush=True)
+        return fallback
+
+    try:
+        resp = cli.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": SYSTEM_HUMANIZER + "\n\nResponda APENAS um JSON válido, sem texto extra antes ou depois."},
+                {"role": "user", "content": prompt_user},
+            ],
+            temperature=0.7,
+            max_tokens=1800,
+            response_format={"type": "json_object"},
+        )
+        import json
+        data = json.loads(resp.choices[0].message.content or "{}")
+    except Exception as e:  # noqa: BLE001
+        print(f"[text_gen] OpenAI/JSON falhou: {e} — usando fallback", flush=True)
+        return fallback
+
+    if expected_keys and not all(k in data for k in expected_keys):
+        print(f"[text_gen] resposta sem chaves esperadas {expected_keys} — usando fallback", flush=True)
+        return fallback
+
+    return data
+
+
+def _aplicar_clean_recursivo(obj: Any) -> Any:
+    """Aplica clean_text() em todas as strings dentro de um objeto JSON."""
+    if isinstance(obj, str):
+        return clean_text(obj)
+    if isinstance(obj, list):
+        return [_aplicar_clean_recursivo(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _aplicar_clean_recursivo(v) for k, v in obj.items()}
+    return obj
+
+
+def gerar_dicas_praticas(mes: int, ano: int) -> dict[str, Any]:
+    """6 dicas práticas para convivência condominial neste mês."""
+    mes_nome = MESES_PT[mes - 1]
+    prompt = (
+        f"Gere 6 dicas práticas de convivência condominial pra edição de {mes_nome} de {ano}. "
+        f"Tom: leve, direto, prático. Cada dica é uma situação real do dia a dia "
+        f"(barulho, lixo, áreas comuns, mudança, pets). Conecte com a estação do ano "
+        f"({mes_nome}) quando fizer sentido.\n\n"
+        f'Responda JSON: {{ "titulo_secao": "...", "intro": "...", "dicas": [{{"titulo":"...","texto":"..."}} x 6] }}'
+    )
+    fallback = {
+        "titulo_secao": f"Dicas para {mes_nome}",
+        "intro": "Pequenos hábitos que fazem o condomínio funcionar melhor.",
+        "dicas": [
+            {"titulo": f"Dica de {mes_nome}", "texto": "Aproveite o mês com responsabilidade na convivência condominial."} for _ in range(6)
+        ],
+    }
+    data = _gerar_json(prompt, fallback, expected_keys=["dicas"])
+    return _aplicar_clean_recursivo(data)
+
+
+def gerar_curiosidades(mes: int, ano: int) -> dict[str, Any]:
+    """4 curiosidades do setor condominial pro mês."""
+    mes_nome = MESES_PT[mes - 1]
+    prompt = (
+        f"Gere 4 curiosidades sobre o mercado/setor condominial brasileiro pra {mes_nome} de {ano}. "
+        f"Cada uma com um número/dado concreto e uma explicação curta. Conteúdo de quem entende "
+        f"de gestão condominial. Evite informações inventadas: use apenas fatos plausíveis e "
+        f"comuns no setor (inadimplência média, número de condôminos, gastos com energia, etc).\n\n"
+        f'JSON: {{ "intro": "...", "curiosidades": [{{"numero":"...","texto":"..."}} x 4] }}'
+    )
+    fallback = {
+        "intro": "Quatro dados pra contextualizar o mês no setor condominial.",
+        "curiosidades": [
+            {"numero": "—", "texto": "Curiosidade do setor condominial."} for _ in range(4)
+        ],
+    }
+    data = _gerar_json(prompt, fallback, expected_keys=["curiosidades"])
+    return _aplicar_clean_recursivo(data)
+
+
+def gerar_novidades(mes: int, ano: int) -> dict[str, Any]:
+    """6 novidades de mercado/legislação pro mês."""
+    mes_nome = MESES_PT[mes - 1]
+    prompt = (
+        f"Gere 6 novidades plausíveis de mercado, lei e tecnologia condominial pra {mes_nome} de {ano}. "
+        f"Mistura jurídico, tecnológico, financeiro e operacional. Use linguagem direta, "
+        f"sem jargão. Evite afirmações específicas demais (números exatos, nomes de leis "
+        f"reais que você não tem certeza). Foque em tendências e categorias.\n\n"
+        f'JSON: {{ "intro": "...", "noticias": [{{"categoria":"...","titulo":"...","resumo":"..."}} x 6] }}'
+    )
+    fallback = {
+        "intro": "Seis movimentos do mês no universo condominial.",
+        "noticias": [
+            {"categoria": "Mercado", "titulo": f"Novidade {i+1}", "resumo": "Tendência a observar."} for i in range(6)
+        ],
+    }
+    data = _gerar_json(prompt, fallback, expected_keys=["noticias"])
+    return _aplicar_clean_recursivo(data)
+
+
+def gerar_signos(mes: int, ano: int) -> dict[str, Any]:
+    """Previsões pros 12 signos pro mês."""
+    mes_nome = MESES_PT[mes - 1]
+    signos_lista = ", ".join(s[0] for s in SIGNOS)
+
+    prompt = (
+        f"Gere previsões astrológicas leves pros 12 signos pra {mes_nome} de {ano}. "
+        f"Tom: divertido, otimista, sem prometer coisas mirabolantes. 1 a 2 frases por signo, "
+        f"foco em convivência, autocuidado, dia a dia. Sem clichês de horóscopo de revista popular "
+        f"(nada de 'cuidado com inveja', etc).\n\n"
+        f"Signos: {signos_lista}.\n\n"
+        f'JSON: {{ "previsoes": {{ "Áries": "...", "Touro": "...", ... }} }}'
+    )
+    fallback = {
+        "previsoes": {nome: f"{mes_nome} convida a olhar pra dentro." for nome, _ in SIGNOS}
+    }
+    data = _gerar_json(prompt, fallback, expected_keys=["previsoes"])
+    return _aplicar_clean_recursivo(data)
+
+
+def gerar_agenda_cultural(mes: int, ano: int) -> dict[str, Any]:
+    """Sugestões de agenda cultural pro mês (em São Paulo, principalmente)."""
+    mes_nome = MESES_PT[mes - 1]
+    prompt = (
+        f"Gere sugestões de agenda cultural pra {mes_nome} de {ano}, com foco em São Paulo "
+        f"e cidades grandes do Brasil. 1 destaque (hero) + 12 cards secundários. "
+        f"Variedade: museus, shows, peças, festivais, gastronomia, esporte. Evite eventos "
+        f"reais específicos que você não tenha certeza absoluta — prefira categorias "
+        f"genéricas que combinam com o mês ('exposições do mês', 'circuito gastronômico').\n\n"
+        f'JSON: {{ "hero": {{"titulo":"...","subtitulo":"...","quando":"...","onde":"..."}}, '
+        f'"cards_secundarios": [{{"categoria":"...","titulo":"...","quando":"...","onde":"..."}} x 12] }}'
+    )
+    fallback = {
+        "hero": {
+            "titulo": f"Destaques de {mes_nome}",
+            "subtitulo": "Os melhores eventos da cidade neste mês.",
+            "quando": f"{mes_nome} {ano}",
+            "onde": "São Paulo",
+        },
+        "cards_secundarios": [
+            {"categoria": "Cultura", "titulo": f"Evento {i+1}", "quando": f"{mes_nome}", "onde": "São Paulo"} for i in range(12)
+        ],
+    }
+    data = _gerar_json(prompt, fallback, expected_keys=["cards_secundarios"])
+    return _aplicar_clean_recursivo(data)
+
+
+def gerar_materia_capa_completa(
+    titulo: str, subtitulo: str, mes: int, ano: int,
+) -> dict[str, Any]:
+    """Texto completo de matéria de capa em 8 blocos (preenche 2 páginas)."""
+    mes_nome = MESES_PT[mes - 1]
+    prompt = (
+        f"Escreva uma matéria de capa de revista mensal de condomínios pra {mes_nome} {ano}. "
+        f"Título: '{titulo}'. Subtítulo: '{subtitulo}'.\n\n"
+        f"Estrutura: 8 blocos curtos de texto (cada bloco com 80 a 120 palavras). "
+        f"Tom: jornalístico próximo, voz humana, em português brasileiro com acentos corretos. "
+        f"Nada de bullets ou listas. Sem travessões. Cada bloco aborda um ângulo diferente do tema. "
+        f"Use dados plausíveis (não invente números específicos). Cite tipos de fonte ('especialistas', "
+        f"'pesquisas do setor') sem nomes próprios reais.\n\n"
+        f'JSON: {{ "corpo_blocos": ["...", "...", ... 8 blocos] }}'
+    )
+    fallback = {
+        "corpo_blocos": [
+            f"Sobre {titulo}, vale lembrar que cada condomínio é único. "
+            f"O essencial é ouvir, dialogar e construir consensos a partir do que é comum. "
+            f"Em {mes_nome}, aproveite pra revisar os pequenos hábitos que fazem a "
+            f"diferença na convivência."
+        ] * 8
+    }
+    data = _gerar_json(prompt, fallback, expected_keys=["corpo_blocos"])
+    return _aplicar_clean_recursivo(data)
 
 
 def gerar_carta_gestor(
