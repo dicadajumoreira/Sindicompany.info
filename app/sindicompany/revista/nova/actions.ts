@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { isCondominioValido } from "@/lib/sindicompany/condominios";
-import { createRevista } from "@/lib/sindicompany/db";
+import { createRevista, type Genero, type RevistaInput } from "@/lib/sindicompany/db";
 
 async function requireAuth() {
   const store = await cookies();
@@ -15,52 +15,134 @@ async function requireAuth() {
   }
 }
 
-function backToFormWithError(message: string): never {
-  const q = new URLSearchParams({ error: message });
-  redirect(`/sindicompany/revista/nova?${q.toString()}`);
+function backToFormWithError(message: string, fields: FormData): never {
+  const params = new URLSearchParams({ error: message });
+  // Preserva os valores que ela já tinha digitado pra ela não perder no erro
+  for (const [k, v] of fields.entries()) {
+    if (typeof v === "string" && v) params.set(k, v);
+  }
+  redirect(`/sindicompany/revista/nova?${params.toString()}`);
+}
+
+function isValidDriveUrl(url: string): boolean {
+  if (!url) return true; // opcional
+  return /^https?:\/\/(drive|docs)\.google\.com\//.test(url);
+}
+
+function isValidImageUrl(url: string): boolean {
+  if (!url) return true;
+  return /^https?:\/\//.test(url);
+}
+
+function getStr(fd: FormData, key: string): string {
+  return String(fd.get(key) ?? "").trim();
+}
+
+function getBool(fd: FormData, key: string): boolean {
+  const v = fd.get(key);
+  return v === "on" || v === "true" || v === "1";
 }
 
 export async function novaRevistaAction(formData: FormData): Promise<void> {
   await requireAuth();
 
-  const condominio = String(formData.get("condominio") ?? "").trim();
-  const mesRaw = String(formData.get("mes") ?? "").trim();
-  const anoRaw = String(formData.get("ano") ?? "").trim();
+  const condominio = getStr(formData, "condominio");
+  const mesRaw = getStr(formData, "mes");
+  const anoRaw = getStr(formData, "ano");
 
   if (!condominio || !isCondominioValido(condominio)) {
-    backToFormWithError("Condomínio inválido.");
+    backToFormWithError("Condomínio inválido.", formData);
   }
 
   const mes = Number.parseInt(mesRaw, 10);
   const ano = Number.parseInt(anoRaw, 10);
   if (!Number.isInteger(mes) || mes < 1 || mes > 12) {
-    backToFormWithError("Mês inválido.");
+    backToFormWithError("Mês inválido.", formData);
   }
   if (!Number.isInteger(ano) || ano < 2025 || ano > 2030) {
-    backToFormWithError("Ano inválido.");
+    backToFormWithError("Ano inválido.", formData);
   }
+
+  const sindico_nome = getStr(formData, "sindico_nome");
+  const generoRaw = getStr(formData, "sindico_genero");
+  const sindico_genero: Genero | undefined =
+    generoRaw === "masculino" || generoRaw === "feminino" ? generoRaw : undefined;
+
+  if (!sindico_nome) {
+    backToFormWithError("Informe o nome do(a) síndico(a).", formData);
+  }
+  if (!sindico_genero) {
+    backToFormWithError("Selecione o gênero do(a) síndico(a).", formData);
+  }
+
+  const tem_gestor = getBool(formData, "tem_gestor");
+  const gestor_nome = getStr(formData, "gestor_nome");
+  if (tem_gestor && !gestor_nome) {
+    backToFormWithError("Marcou que tem gestor — informe o nome.", formData);
+  }
+
+  const drive_manutencao_url = getStr(formData, "drive_manutencao_url");
+  const drive_prestacao_url = getStr(formData, "drive_prestacao_url");
+  if (drive_manutencao_url && !isValidDriveUrl(drive_manutencao_url)) {
+    backToFormWithError("Link de manutenção precisa ser uma URL do Google Drive.", formData);
+  }
+  if (drive_prestacao_url && !isValidDriveUrl(drive_prestacao_url)) {
+    backToFormWithError("Link de prestação precisa ser uma URL do Google Drive.", formData);
+  }
+
+  const tem_advertencias = getBool(formData, "tem_advertencias");
+  const multas_advertencias_obs = getStr(formData, "multas_advertencias_obs");
+
+  const tem_eventos = getBool(formData, "tem_eventos");
+  const drive_eventos_url = getStr(formData, "drive_eventos_url");
+  if (tem_eventos && drive_eventos_url && !isValidDriveUrl(drive_eventos_url)) {
+    backToFormWithError("Link de eventos precisa ser do Google Drive.", formData);
+  }
+
+  const materia_capa_titulo = getStr(formData, "materia_capa_titulo");
+  const materia_capa_subtitulo = getStr(formData, "materia_capa_subtitulo");
+  const foto_capa_url = getStr(formData, "foto_capa_url");
+  if (foto_capa_url && !isValidImageUrl(foto_capa_url)) {
+    backToFormWithError("Foto de capa precisa ser uma URL válida.", formData);
+  }
+  const receita_titulo = getStr(formData, "receita_titulo");
+  const notas_editor = getStr(formData, "notas_editor");
+
+  const input: RevistaInput = {
+    condominio,
+    mes,
+    ano,
+    sindico_nome,
+    sindico_genero,
+    tem_gestor,
+    gestor_nome: tem_gestor ? gestor_nome : undefined,
+    drive_manutencao_url: drive_manutencao_url || undefined,
+    drive_prestacao_url: drive_prestacao_url || undefined,
+    tem_advertencias,
+    multas_advertencias_obs: tem_advertencias ? multas_advertencias_obs : undefined,
+    tem_eventos,
+    drive_eventos_url: tem_eventos ? drive_eventos_url || undefined : undefined,
+    materia_capa_titulo: materia_capa_titulo || undefined,
+    materia_capa_subtitulo: materia_capa_subtitulo || undefined,
+    foto_capa_url: foto_capa_url || undefined,
+    receita_titulo: receita_titulo || undefined,
+    notas_editor: notas_editor || undefined,
+  };
 
   let revista;
   try {
-    revista = await createRevista({ condominio, mes, ano });
+    revista = await createRevista(input);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "erro desconhecido";
     backToFormWithError(
-      `Não foi possível criar a edição. ${msg.includes("duplicate") ? "Já existe uma revista para esse condomínio/mês." : msg}`,
+      msg.includes("duplicate")
+        ? "Já existe uma revista para esse condomínio nesse mês."
+        : `Não foi possível criar a edição. ${msg}`,
+      formData,
     );
   }
 
-  // TODO Fase 4: disparar engine Python via fetch para o serviço de
-  // geração. Por ora, a revista fica em "em_producao" até a equipe
-  // anexar o PDF manualmente OU até a engine ser plugada.
-  //
-  // Plano: POST {ENGINE_URL}/generate com {revista_id, condominio, mes, ano}.
-  // O serviço Python:
-  //   1. baixa dados do Drive
-  //   2. renderiza com a engine
-  //   3. faz upload do PDF via Storage API
-  //   4. PATCH /api/sindicompany/revistas/{id} marcando como publicada
-
+  // TODO: disparar engine Python aqui (POST /generate)
   revalidatePath("/sindicompany/dashboard");
   redirect(`/sindicompany/revista/${revista.id}`);
 }

@@ -9,6 +9,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type RevistaStatus = "em_producao" | "publicada" | "erro";
+export type Genero = "masculino" | "feminino";
 
 export interface Revista {
   id: string;
@@ -20,8 +21,49 @@ export interface Revista {
   paginas: number | null;
   gerado_em: string | null;
   erro_mensagem: string | null;
+  // Liderança
+  sindico_nome: string | null;
+  sindico_genero: Genero | null;
+  tem_gestor: boolean;
+  gestor_nome: string | null;
+  // Conteúdo do condomínio
+  drive_manutencao_url: string | null;
+  drive_prestacao_url: string | null;
+  tem_advertencias: boolean;
+  multas_advertencias_obs: string | null;
+  tem_eventos: boolean;
+  drive_eventos_url: string | null;
+  // Editorial
+  materia_capa_titulo: string | null;
+  materia_capa_subtitulo: string | null;
+  foto_capa_url: string | null;
+  receita_sugerida: string | null;
+  receita_titulo: string | null;
+  notas_editor: string | null;
+  // Timestamps
   created_at: string;
   updated_at: string;
+}
+
+export interface RevistaInput {
+  condominio: string;
+  mes: number;
+  ano: number;
+  sindico_nome?: string;
+  sindico_genero?: Genero;
+  tem_gestor?: boolean;
+  gestor_nome?: string;
+  drive_manutencao_url?: string;
+  drive_prestacao_url?: string;
+  tem_advertencias?: boolean;
+  multas_advertencias_obs?: string;
+  tem_eventos?: boolean;
+  drive_eventos_url?: string;
+  materia_capa_titulo?: string;
+  materia_capa_subtitulo?: string;
+  foto_capa_url?: string;
+  receita_titulo?: string;
+  notas_editor?: string;
 }
 
 const TABLE = "revistas";
@@ -52,18 +94,12 @@ export async function getRevista(id: string): Promise<Revista | null> {
   return (data ?? null) as Revista | null;
 }
 
-export async function createRevista(input: {
-  condominio: string;
-  mes: number;
-  ano: number;
-}): Promise<Revista> {
+export async function createRevista(input: RevistaInput): Promise<Revista> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from(TABLE)
     .insert({
-      condominio: input.condominio,
-      mes: input.mes,
-      ano: input.ano,
+      ...input,
       status: "em_producao" as RevistaStatus,
     })
     .select()
