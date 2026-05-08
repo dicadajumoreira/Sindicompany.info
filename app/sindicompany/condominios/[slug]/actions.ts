@@ -89,7 +89,26 @@ async function maybeUploadFoto(
   }
 }
 
+function isNextControlError(e: unknown): boolean {
+  // redirect() / notFound() do Next throwam um erro com .digest começando com NEXT_
+  // Não devemos engolir; precisa rethrow pra Next executar o redirect.
+  if (!e || typeof e !== "object") return false;
+  const digest = (e as { digest?: unknown }).digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_");
+}
+
 export async function salvarCondoMetaAction(formData: FormData): Promise<void> {
+  const slug = getStr(formData, "slug");
+  try {
+    await salvarCondoMetaImpl(formData);
+  } catch (e) {
+    if (isNextControlError(e)) throw e;
+    console.error("[condo-meta] action failed:", e);
+    backWithError(slug, `Erro inesperado: ${describeError(e)}`);
+  }
+}
+
+async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   await requireAuth();
 
   const slug = getStr(formData, "slug");
