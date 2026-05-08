@@ -39,11 +39,18 @@ export default async function NovaEdicaoPage({
   const sp = await searchParams;
   const error = getStr(sp, "error");
 
-  // Defaults: mês atual+1 (próxima edição), ano corrente
+  // Defaults: lê da URL primeiro; senão, próxima edição (mês atual + 1).
   const now = new Date();
-  const defaultMes = Number(getStr(sp, "mes")) || now.getMonth() + 2 > 12 ? 1 : now.getMonth() + 2;
-  const defaultAno = Number(getStr(sp, "ano")) ||
-    (now.getMonth() + 2 > 12 ? now.getFullYear() + 1 : now.getFullYear());
+  const proxMes = now.getMonth() + 2 > 12 ? 1 : now.getMonth() + 2;
+  const proxAno = now.getMonth() + 2 > 12 ? now.getFullYear() + 1 : now.getFullYear();
+  const mesFromUrl = Number.parseInt(getStr(sp, "mes"), 10);
+  const anoFromUrl = Number.parseInt(getStr(sp, "ano"), 10);
+  const defaultMes = Number.isInteger(mesFromUrl) && mesFromUrl >= 1 && mesFromUrl <= 12
+    ? mesFromUrl
+    : proxMes;
+  const defaultAno = Number.isInteger(anoFromUrl) && anoFromUrl >= 2025 && anoFromUrl <= 2030
+    ? anoFromUrl
+    : proxAno;
 
   const condoSelecionado = getStr(sp, "condominio");
   const meta = condoSelecionado
