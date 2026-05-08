@@ -4,12 +4,20 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
-import { isCondominioValido } from "@/lib/sindicompany/condominios";
-import { getCondoMeta } from "@/lib/sindicompany/condominios-db";
+import { isCondominioValido, slugifyCondo } from "@/lib/sindicompany/condominios";
+import { getCondoMeta, uploadGestorFotoRevista } from "@/lib/sindicompany/condominios-db";
 import { createRevista, type RevistaInput } from "@/lib/sindicompany/db";
 import { getEditorial, editorialEstaPronto } from "@/lib/sindicompany/editoriais";
 import { dispatchGenerateRevista } from "@/lib/sindicompany/engine";
 import { describeError, detectMigrationMissing } from "@/lib/sindicompany/errors";
+
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB
+const ALLOWED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const PHOTO_EXT_BY_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 async function requireAuth() {
   const store = await cookies();
@@ -73,11 +81,13 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
   }
   const sindico_nome = meta.sindico_nome;
   const sindico_genero = meta.sindico_genero;
-  const tem_gestor = meta.tem_gestor;
-  const gestor_nome = meta.gestor_nome ?? "";
+
+  // Gestor agora é por edição (vem do form, não do cadastro do condo).
+  const tem_gestor = getBool(formData, "tem_gestor");
+  const gestor_nome = getStr(formData, "gestor_nome");
   if (tem_gestor && !gestor_nome) {
     backToFormWithError(
-      `O cadastro de "${condominio}" diz que tem gestor mas não tem nome. Edite em Condomínios.`,
+      "Marcou que tem gestor — informe o nome.",
       formData,
     );
   }
@@ -115,6 +125,37 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     );
   }
 
+  // Foto do gestor: novo upload sobrescreve, senão mantém a existente
+  // (caso ela tenha duplicado uma edição anterior).
+  let gestor_foto_url: string | undefined = getStr(formData, "gestor_foto_existente") || undefined;
+  if (tem_gestor) {
+    const file = formData.get("gestor_foto_file");
+    if (file instanceof File && file.size > 0) {
+      if (file.size > MAX_PHOTO_BYTES) {
+        backToFormWithError("Foto do gestor maior que 5MB.", formData);
+      }
+      if (!ALLOWED_PHOTO_TYPES.has(file.type)) {
+        backToFormWithError("Foto do gestor precisa ser JPG, PNG ou WebP.", formData);
+      }
+      try {
+        const buf = Buffer.from(await file.arrayBuffer());
+        const ext = PHOTO_EXT_BY_TYPE[file.type];
+        // Upload com placeholder de id; vamos atualizar com o id real após criar
+        gestor_foto_url = await uploadGestorFotoRevista(
+          slugifyCondo(condominio),
+          `pending-${Date.now()}`,
+          buf,
+          file.type,
+          ext,
+        );
+      } catch (e) {
+        backToFormWithError(`Falha ao subir foto do gestor: ${describeError(e)}`, formData);
+      }
+    }
+  } else {
+    gestor_foto_url = undefined;
+  }
+
   const input: RevistaInput = {
     condominio,
     mes,
@@ -123,6 +164,7 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     sindico_genero,
     tem_gestor,
     gestor_nome: tem_gestor ? gestor_nome : undefined,
+    gestor_foto_url: tem_gestor ? gestor_foto_url : undefined,
     drive_manutencao_url: drive_manutencao_url || undefined,
     drive_prestacao_url: drive_prestacao_url || undefined,
     tem_advertencias,

@@ -8,6 +8,7 @@ import { condoFromSlug, slugifyCondo } from "@/lib/sindicompany/condominios";
 import {
   upsertCondoMeta,
   uploadCondoFoto,
+  uploadCondoLogo,
   type CondoMetaInput,
 } from "@/lib/sindicompany/condominios-db";
 import type { Genero } from "@/lib/sindicompany/db";
@@ -36,11 +37,6 @@ function backWithError(slug: string, message: string): never {
 
 function getStr(fd: FormData, key: string): string {
   return String(fd.get(key) ?? "").trim();
-}
-
-function getBool(fd: FormData, key: string): boolean {
-  const v = fd.get(key);
-  return v === "on" || v === "true" || v === "1";
 }
 
 async function maybeUploadFoto(
@@ -72,6 +68,31 @@ async function maybeUploadFoto(
       );
     }
     backWithError(slug, `Falha ao subir foto do ${role}: ${msg}`);
+  }
+}
+
+async function maybeUploadLogo(
+  fd: FormData,
+  field: string,
+  slug: string,
+): Promise<string | null> {
+  const file = fd.get(field);
+  if (!(file instanceof File) || file.size === 0) return null;
+
+  if (file.size > MAX_PHOTO_BYTES) {
+    backWithError(slug, "Logo maior que 5MB.");
+  }
+  if (!ALLOWED_TYPES.has(file.type)) {
+    backWithError(slug, "Logo precisa ser JPG, PNG ou WebP.");
+  }
+
+  const buf = Buffer.from(await file.arrayBuffer());
+  const ext = EXT_BY_TYPE[file.type];
+  try {
+    return await uploadCondoLogo(slug, buf, file.type, ext);
+  } catch (e) {
+    const msg = describeError(e);
+    backWithError(slug, `Falha ao subir logo: ${msg}`);
   }
 }
 
@@ -111,28 +132,18 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   if (!sindico_nome) backWithError(slug, "Informe o nome do(a) síndico(a).");
   if (!sindico_genero) backWithError(slug, "Selecione o gênero do(a) síndico(a).");
 
-  const tem_gestor = getBool(formData, "tem_gestor");
-  const gestor_nome = getStr(formData, "gestor_nome");
-  if (tem_gestor && !gestor_nome) {
-    backWithError(slug, "Marcou que tem gestor — informe o nome.");
-  }
-
   const sindicoFotoExistente = getStr(formData, "sindico_foto_existente");
-  const gestorFotoExistente = getStr(formData, "gestor_foto_existente");
+  const logoExistente = getStr(formData, "logo_existente");
 
   const novaFotoSindico = await maybeUploadFoto(formData, "sindico_foto", slug, "sindico");
-  const novaFotoGestor = tem_gestor
-    ? await maybeUploadFoto(formData, "gestor_foto", slug, "gestor")
-    : null;
+  const novoLogo = await maybeUploadLogo(formData, "logo_file", slug);
 
   const input: CondoMetaInput = {
     nome,
     sindico_nome,
     sindico_genero,
     sindico_foto_path: novaFotoSindico ?? sindicoFotoExistente ?? null,
-    tem_gestor,
-    gestor_nome: tem_gestor ? gestor_nome : undefined,
-    gestor_foto_path: tem_gestor ? (novaFotoGestor ?? gestorFotoExistente ?? null) : null,
+    logo_url: novoLogo ?? logoExistente ?? null,
   };
 
   try {

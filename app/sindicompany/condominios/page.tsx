@@ -37,10 +37,11 @@ export default async function CondominiosPage() {
         <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2">
           Condomínios
         </div>
-        <h1 className="text-3xl font-bold text-onix-900">Cadastro de síndicos e gestores</h1>
+        <h1 className="text-3xl font-bold text-onix-900">Cadastro de condomínios</h1>
         <p className="text-sm text-g60 mt-2 max-w-xl">
-          Os dados aqui ficam salvos e são reaproveitados em todas as edições da revista.
-          Toda revista nova já vem pré-preenchida com o síndico e o gestor cadastrados.
+          Síndico(a) e logotipo de cada condomínio ficam salvos aqui e são
+          aplicados em todas as edições da revista. O gestor agora é cadastrado
+          por edição, em "Nova revista".
         </p>
       </header>
 
@@ -61,7 +62,7 @@ export default async function CondominiosPage() {
                 Síndico(a)
               </th>
               <th className="px-6 py-3 font-semibold text-xs uppercase tracking-wider text-mint-700">
-                Gestor
+                Logo
               </th>
               <th className="px-6 py-3"></th>
             </tr>
@@ -73,17 +74,15 @@ export default async function CondominiosPage() {
               const sindicoStatus = meta?.sindico_nome
                 ? meta.sindico_nome
                 : <span className="text-g60 italic">não cadastrado</span>;
-              const gestorStatus = !meta
-                ? <span className="text-g60 italic">—</span>
-                : meta.tem_gestor
-                  ? meta.gestor_nome ?? <span className="text-g60 italic">sem nome</span>
-                  : <span className="text-g60">não tem</span>;
+              const logoStatus = meta?.logo_url
+                ? <span className="text-mint-700">cadastrado</span>
+                : <span className="text-g60 italic">não cadastrado</span>;
 
               return (
                 <tr key={nome} className="border-b border-onix-100 last:border-0">
                   <td className="px-6 py-4 font-medium text-onix-900">{nome}</td>
                   <td className="px-6 py-4 text-onix-800">{sindicoStatus}</td>
-                  <td className="px-6 py-4 text-onix-800">{gestorStatus}</td>
+                  <td className="px-6 py-4 text-onix-800">{logoStatus}</td>
                   <td className="px-6 py-4 text-right">
                     <Link
                       href={`/sindicompany/condominios/${slug}`}

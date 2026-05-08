@@ -15,6 +15,9 @@ export interface CondoMeta {
   sindico_nome: string | null;
   sindico_genero: Genero | null;
   sindico_foto_path: string | null;
+  logo_url: string | null;
+  // Campos de gestor abaixo são deprecated em condo_meta — moved to revistas.
+  // Mantidos no schema só pra não quebrar dados antigos.
   tem_gestor: boolean;
   gestor_nome: string | null;
   gestor_foto_path: string | null;
@@ -26,9 +29,7 @@ export interface CondoMetaInput {
   sindico_nome?: string;
   sindico_genero?: Genero;
   sindico_foto_path?: string | null;
-  tem_gestor: boolean;
-  gestor_nome?: string;
-  gestor_foto_path?: string | null;
+  logo_url?: string | null;
 }
 
 export async function getCondoMeta(nome: string): Promise<CondoMeta | null> {
@@ -59,9 +60,7 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
         sindico_nome: input.sindico_nome ?? null,
         sindico_genero: input.sindico_genero ?? null,
         sindico_foto_path: input.sindico_foto_path ?? null,
-        tem_gestor: input.tem_gestor,
-        gestor_nome: input.tem_gestor ? input.gestor_nome ?? null : null,
-        gestor_foto_path: input.tem_gestor ? input.gestor_foto_path ?? null : null,
+        logo_url: input.logo_url ?? null,
       },
       { onConflict: "nome" },
     )
@@ -69,6 +68,41 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
     .single();
   if (error) throw error;
   return data as CondoMeta;
+}
+
+/** Sobe foto do gestor (atrelada a uma revista específica) e retorna URL pública. */
+export async function uploadGestorFotoRevista(
+  condoSlug: string,
+  revistaId: string,
+  bytes: Buffer,
+  contentType: string,
+  ext: string,
+): Promise<string> {
+  const path = `${condoSlug}/gestor-${revistaId}.${ext}`;
+  const supabase = createAdminClient();
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, bytes, { contentType, upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/** Sobe logotipo do condomínio e retorna URL pública. */
+export async function uploadCondoLogo(
+  slug: string,
+  bytes: Buffer,
+  contentType: string,
+  ext: string,
+): Promise<string> {
+  const path = `${slug}/logo-${Date.now()}.${ext}`;
+  const supabase = createAdminClient();
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, bytes, { contentType, upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
 }
 
 /** Sobe foto e retorna o storage path. */

@@ -49,9 +49,6 @@ export default async function EditarCondoPage({
   const sindicoFotoUrl = meta?.sindico_foto_path
     ? getCondoFotoPublicUrl(meta.sindico_foto_path)
     : null;
-  const gestorFotoUrl = meta?.gestor_foto_path
-    ? getCondoFotoPublicUrl(meta.gestor_foto_path)
-    : null;
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
@@ -82,7 +79,6 @@ export default async function EditarCondoPage({
       <form action={salvarCondoMetaAction} encType="multipart/form-data" className="space-y-8">
         <input type="hidden" name="slug" value={slugifyCondo(nome)} />
         <input type="hidden" name="sindico_foto_existente" value={meta?.sindico_foto_path ?? ""} />
-        <input type="hidden" name="gestor_foto_existente" value={meta?.gestor_foto_path ?? ""} />
 
         {/* ============ SÍNDICO ============ */}
         <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
@@ -153,61 +149,47 @@ export default async function EditarCondoPage({
           </Field>
         </section>
 
-        {/* ============ GESTOR ============ */}
+        {/* ============ LOGOTIPO DO CONDOMÍNIO ============ */}
         <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
-            Gestor de atendimento
+            Logotipo do condomínio
           </h2>
-
-          <Field label="O condomínio tem gestor?">
-            <label className="flex items-center gap-2 text-sm mt-1">
-              <input
-                type="checkbox"
-                name="tem_gestor"
-                value="on"
-                defaultChecked={meta?.tem_gestor ?? false}
-              />
-              Sim, tem gestor de atendimento
-            </label>
-          </Field>
-
-          <Field label="Nome do gestor">
-            <input
-              type="text"
-              name="gestor_nome"
-              defaultValue={meta?.gestor_nome ?? ""}
-              placeholder="Ex: Diego Leite"
-              className={inputCls}
-            />
-          </Field>
+          <p className="text-xs text-g60 -mt-3">
+            Vai aparecer no lugar do logo Sindicompany na capa e
+            contracapa da revista deste condomínio.
+          </p>
 
           <Field
-            label="Foto do gestor"
-            hint="Mesmas regras: JPG/PNG/WebP até 5MB."
+            label="Logo"
+            hint="JPG, PNG ou WebP transparente. Máx 5MB. Use o logo oficial do condomínio."
           >
-            {gestorFotoUrl && (
-              <div className="mb-3 flex items-center gap-3">
-                <Image
-                  src={gestorFotoUrl}
-                  alt={`Foto de ${meta?.gestor_nome ?? "gestor"}`}
-                  width={80}
-                  height={80}
-                  unoptimized
-                  className="rounded-full object-cover w-20 h-20 border border-onix-100"
+            <input type="hidden" name="logo_existente" value={meta?.logo_url ?? ""} />
+            {meta?.logo_url && (
+              <div className="mb-3 flex items-start gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={meta.logo_url}
+                  alt={`Logo de ${nome}`}
+                  className="rounded-lg object-contain bg-onix-50 w-32 h-20 border border-onix-100 p-2"
                 />
-                <span className="text-xs text-g60">
-                  Foto atual. Suba uma nova abaixo para substituir.
+                <span className="text-xs text-g60 mt-1">
+                  Logo atual. Suba um novo abaixo para substituir.
                 </span>
               </div>
             )}
             <input
               type="file"
-              name="gestor_foto"
+              name="logo_file"
               accept="image/jpeg,image/png,image/webp"
               className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
             />
           </Field>
         </section>
+
+        <p className="text-xs text-g60">
+          Gestor agora é cadastrado por edição (em "Nova revista"), porque
+          pode mudar de uma edição pra outra.
+        </p>
 
         <div className="flex gap-3 pt-2">
           <button

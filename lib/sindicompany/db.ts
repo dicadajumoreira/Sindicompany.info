@@ -26,6 +26,7 @@ export interface Revista {
   sindico_genero: Genero | null;
   tem_gestor: boolean;
   gestor_nome: string | null;
+  gestor_foto_url: string | null;
   // Conteúdo do condomínio
   drive_manutencao_url: string | null;
   drive_prestacao_url: string | null;
@@ -58,6 +59,7 @@ export interface RevistaInput {
   sindico_genero?: Genero;
   tem_gestor?: boolean;
   gestor_nome?: string;
+  gestor_foto_url?: string;
   drive_manutencao_url?: string;
   drive_prestacao_url?: string;
   tem_advertencias?: boolean;

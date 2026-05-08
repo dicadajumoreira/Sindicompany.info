@@ -64,7 +64,6 @@ export default async function NovaEdicaoPage({
   const meta = condoSelecionado
     ? await getCondoMeta(condoSelecionado).catch(() => null)
     : null;
-  const condoTemGestor = !!meta?.tem_gestor;
 
   const editorial = await getEditorial(defaultMes, defaultAno).catch(() => null);
   const editorialOk = editorialEstaPronto(editorial);
@@ -280,66 +279,85 @@ export default async function NovaEdicaoPage({
             </Field>
           </div>
 
-          {/* --- Carta do gestor (só aparece se o condo tem gestor cadastrado) --- */}
-          {condoTemGestor && (
-            <div className="space-y-3 pt-4 border-t border-onix-100">
-              <div>
-                <h3 className="text-sm font-semibold text-onix-900">
-                  Carta do gestor{meta?.gestor_nome ? ` — ${meta.gestor_nome}` : ""}
-                </h3>
+          {/* --- Gestor (cadastro + carta, agora por edição) --- */}
+          <div className="space-y-3 pt-4 border-t border-onix-100">
+            <div>
+              <h3 className="text-sm font-semibold text-onix-900">Gestor desta edição</h3>
+              <p className="text-xs text-g60 mt-0.5">
+                Pode mudar de uma edição pra outra. Marque abaixo só se houver
+                gestor; se desmarcar, a carta do gestor não sai na revista.
+              </p>
+            </div>
+
+            <Field label="O condomínio tem gestor nesta edição?">
+              <label className="flex items-center gap-2 text-sm mt-1">
+                <input type="checkbox" name="tem_gestor" value="on"
+                       defaultChecked={v("tem_gestor") === "on"} />
+                Sim, tem gestor de atendimento
+              </label>
+            </Field>
+
+            <Field label="Nome do gestor">
+              <input type="text" name="gestor_nome"
+                     defaultValue={v("gestor_nome")}
+                     placeholder="Ex: Diego Leite"
+                     className={inputCls} />
+            </Field>
+
+            <Field
+              label="Foto do gestor (opcional)"
+              hint="JPG/PNG/WebP até 5MB. Aparece junto da carta na revista."
+            >
+              {fonte?.gestor_foto_url && (
+                <div className="mb-2 flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={fonte.gestor_foto_url}
+                    alt="Foto atual do gestor"
+                    className="rounded-full object-cover w-16 h-16 border border-onix-100"
+                  />
+                  <input type="hidden" name="gestor_foto_existente" value={fonte.gestor_foto_url} />
+                  <span className="text-xs text-g60">
+                    Foto da edição duplicada. Suba uma nova abaixo para trocar.
+                  </span>
+                </div>
+              )}
+              <input
+                type="file"
+                name="gestor_foto_file"
+                accept="image/jpeg,image/png,image/webp"
+                className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+              />
+            </Field>
+
+            {temaGestor ? (
+              <div className="rounded-lg bg-sand-50 border border-onix-100 px-4 py-3 text-sm" style={{background:"#F7EFE9"}}>
+                <div className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-1">
+                  Tema deste mês (vem do editorial mensal)
+                </div>
+                <div className="font-medium text-onix-900">{temaGestor}</div>
               </div>
-
-              {temaGestor ? (
-                <div className="rounded-lg bg-sand-50 border border-onix-100 px-4 py-3 text-sm" style={{background:"#F7EFE9"}}>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-1">
-                    Tema deste mês (vem do editorial mensal)
-                  </div>
-                  <div className="font-medium text-onix-900">{temaGestor}</div>
-                </div>
-              ) : (
-                <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
-                  Tema da carta ainda não foi definido para esta edição.{" "}
-                  <Link
-                    href={`/sindicompany/editorial/${String(defaultMes).padStart(2, "0")}-${defaultAno}`}
-                    className="font-semibold underline"
-                  >
-                    Definir editorial mensal →
-                  </Link>
-                </div>
-              )}
-
-              <Field label="Texto da carta (opcional)"
-                     hint="Se deixar em branco, a engine escreve uma carta baseada no tema.">
-                <textarea name="carta_gestor_texto" rows={6}
-                          defaultValue={v("carta_gestor_texto")}
-                          placeholder="Escreva a carta do gestor aqui, ou deixe em branco para o sistema sugerir."
-                          className={inputCls} />
-              </Field>
-            </div>
-          )}
-
-          {!condoSelecionado && (
-            <div className="pt-4 border-t border-onix-100 text-xs text-g60">
-              Carta do gestor aparece aqui depois que você selecionar um condomínio
-              (e só se ele tiver gestor cadastrado).
-            </div>
-          )}
-
-          {condoSelecionado && !condoTemGestor && (
-            <div className="pt-4 border-t border-onix-100 text-xs text-g60">
-              {meta
-                ? `${condoSelecionado} não tem gestor cadastrado — a carta do gestor não vai sair nesta edição.`
-                : `${condoSelecionado} ainda não foi cadastrado — `}
-              {!meta && (
+            ) : (
+              <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+                Tema da carta ainda não foi definido para esta edição.{" "}
                 <Link
-                  href={`/sindicompany/condominios`}
-                  className="text-mint-700 hover:underline"
+                  href={`/sindicompany/editorial/${String(defaultMes).padStart(2, "0")}-${defaultAno}`}
+                  className="font-semibold underline"
                 >
-                  abrir cadastro
+                  Definir editorial mensal →
                 </Link>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+
+            <Field label="Texto da carta do gestor (opcional)"
+                   hint="Se deixar em branco, a engine escreve uma carta baseada no tema.">
+              <textarea name="carta_gestor_texto" rows={6}
+                        defaultValue={v("carta_gestor_texto")}
+                        placeholder="Escreva a carta do gestor aqui, ou deixe em branco para o sistema sugerir."
+                        className={inputCls} />
+            </Field>
+          </div>
+
         </section>
 
         {/* ============ CONTEÚDO DO CONDOMÍNIO ============ */}

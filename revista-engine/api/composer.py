@@ -64,6 +64,38 @@ def _cargo_sindico(condo_meta: dict[str, Any] | None) -> str:
     return "Síndica" if g == "feminino" else "Síndico"
 
 
+def _build_chamadas(revista: dict[str, Any], editorial: dict[str, Any] | None, condo: dict[str, Any] | None) -> list[str]:
+    """Constrói as chamadas de 'Nesta Edição' baseado nos dados do mês."""
+    ed = editorial or {}
+    chamadas: list[str] = []
+
+    # 1. Carta do(a) síndico(a)
+    sindico_titulo = "Síndica" if (condo or {}).get("sindico_genero") == "feminino" else "Síndico"
+    if ed.get("carta_sindico_tema"):
+        chamadas.append(f"Carta do(a) {sindico_titulo} · {ed['carta_sindico_tema']}")
+    else:
+        chamadas.append(f"Carta do(a) {sindico_titulo}")
+
+    # 2. Matéria de capa
+    if ed.get("materia_capa_titulo"):
+        chamadas.append(f"Matéria de capa · {ed['materia_capa_titulo']}")
+
+    # 3. Receita do mês
+    if ed.get("receita_titulo"):
+        chamadas.append(f"Receita do mês · {ed['receita_titulo']}")
+
+    # 4. Eventos (se a edição teve)
+    if revista.get("tem_eventos"):
+        chamadas.append("Nosso condomínio · Eventos do mês")
+
+    # 5. Advertências (se houver)
+    if revista.get("tem_advertencias"):
+        chamadas.append("Advertências e multas")
+
+    # Cap em 4 chamadas pra não estourar a capa
+    return chamadas[:4]
+
+
 def build_inputs_from_db(
     revista: dict[str, Any],
     editorial: dict[str, Any] | None,
@@ -83,6 +115,10 @@ def build_inputs_from_db(
         cover_inputs["subtitulo"] = ed["materia_capa_subtitulo"]
     if ed.get("foto_capa_url"):
         cover_inputs["foto_capa"] = ed["foto_capa_url"]
+    cover_inputs["chamadas"] = _build_chamadas(revista, editorial, condo)
+    # Logo do condomínio substitui o Sindicompany na capa, se cadastrado.
+    if (condo or {}).get("logo_url"):
+        cover_inputs["logo_url"] = condo["logo_url"]
 
     # ---- S02 Carta do Síndico
     letter_inputs = dict(LETTER_DEFAULT)
@@ -98,6 +134,21 @@ def build_inputs_from_db(
     if condo and condo.get("sindico_foto_path"):
         # Path relativo no bucket público — engine espera URL pública ou caminho local.
         letter_inputs["foto_sindico"] = condo["sindico_foto_path"]
+
+    # ---- S02B Carta do Gestor (só se a revista marcar tem_gestor)
+    gestor_letter_inputs: dict[str, Any] | None = None
+    if revista.get("tem_gestor") and revista.get("gestor_nome"):
+        gestor_letter_inputs = dict(LETTER_DEFAULT)
+        gestor_letter_inputs["nome_sindico"] = revista["gestor_nome"]
+        gestor_letter_inputs["cargo"] = "Gestor de atendimento"
+        gestor_letter_inputs["genero"] = "masculino"
+        gestor_letter_inputs["mes_ano"] = _mes_ano(revista)
+        if ed.get("carta_gestor_tema"):
+            gestor_letter_inputs["titulo"] = ed["carta_gestor_tema"]
+        if revista.get("carta_gestor_texto"):
+            gestor_letter_inputs["texto"] = revista["carta_gestor_texto"]
+        if revista.get("gestor_foto_url"):
+            gestor_letter_inputs["foto_sindico"] = revista["gestor_foto_url"]
 
     # ---- S03 Agenda Cultural
     agenda_inputs = dict(AGENDA_DEFAULT)
@@ -140,11 +191,19 @@ def build_inputs_from_db(
     life_inputs = dict(LIFE_DEFAULT)
     horoscope_inputs = dict(HOROSCOPE_DEFAULT)
     colophon_inputs = dict(COLOPHON_DEFAULT)
-    back_cover_inputs = {"proxima_edicao_label": f"Próxima edição: {MESES[(int(revista['mes'])) % 12].lower()} {revista['ano'] if int(revista['mes']) < 12 else int(revista['ano'])+1}"}
+    back_cover_inputs: dict[str, Any] = {
+        "proxima_edicao_label": f"Próxima edição: {MESES[(int(revista['mes'])) % 12].lower()} {revista['ano'] if int(revista['mes']) < 12 else int(revista['ano'])+1}"
+    }
+    if (condo or {}).get("logo_url"):
+        back_cover_inputs["logo_url"] = condo["logo_url"]
 
-    return [
+    sequence: list[tuple[str, Any, dict[str, Any]]] = [
         ("S01 Capa",                   Cover(),                cover_inputs),
         ("S02 Carta do Síndico",       Letter(),               letter_inputs),
+    ]
+    if gestor_letter_inputs is not None:
+        sequence.append(("S02B Carta do Gestor", Letter(), gestor_letter_inputs))
+    sequence.extend([
         ("S03 Agenda Cultural",        CulturalAgenda(),       agenda_inputs),
         ("S04 Matéria de Capa",        CoverStory(),           cover_story_inputs),
         ("S05 Dicas Práticas",         Tips(),                 tips_inputs),
@@ -159,7 +218,8 @@ def build_inputs_from_db(
         ("S13 Signos do Mês",          Horoscope(),            horoscope_inputs),
         ("S14 Expediente",             Colophon(),             colophon_inputs),
         ("S15 Contracapa",             BackCover(),            back_cover_inputs),
-    ]
+    ])
+    return sequence
 
 
 def render_pdf_bytes(sequence: list[tuple[str, Any, dict[str, Any]]]) -> tuple[bytes, int]:
