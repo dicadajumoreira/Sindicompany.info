@@ -21,6 +21,9 @@ from typing import Any
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+# Modelo com web search built-in da OpenAI (lança em 2025) — usado pra
+# seções que precisam de dados reais (agenda cultural, novidades).
+SEARCH_MODEL = os.environ.get("OPENAI_SEARCH_MODEL", "gpt-4o-search-preview")
 
 # Caracteres que a editora pediu pra remover de qualquer texto:
 #   — em dash, – en dash, ‒ figure dash, ― horizontal bar
@@ -187,32 +190,57 @@ SIGNOS = [
 ]
 
 
-def _gerar_json(prompt_user: str, fallback: Any, expected_keys: list[str] | None = None) -> Any:
-    """Roda prompt esperando JSON e dá parse seguro. Cai no fallback se falhar."""
+def _gerar_json(
+    prompt_user: str,
+    fallback: Any,
+    expected_keys: list[str] | None = None,
+    *,
+    use_web_search: bool = False,
+) -> Any:
+    """Roda prompt esperando JSON e dá parse seguro.
+
+    use_web_search: True usa o modelo gpt-4o-search-preview que pesquisa
+    na web. Útil pra agenda cultural, novidades, etc.
+    """
     cli = _client()
     if cli is None:
         print("[text_gen] OPENAI_API_KEY ausente — usando fallback JSON", flush=True)
         return fallback
 
+    model = SEARCH_MODEL if use_web_search else MODEL
+    print(f"[text_gen] chamando {model} (web_search={use_web_search})", flush=True)
+
     try:
-        resp = cli.chat.completions.create(
-            model=MODEL,
-            messages=[
-                {"role": "system", "content": SYSTEM_HUMANIZER + "\n\nResponda APENAS um JSON válido, sem texto extra antes ou depois."},
+        kwargs: dict[str, Any] = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": SYSTEM_HUMANIZER + "\n\nResponda APENAS um JSON válido, sem texto extra antes ou depois, nada de ```json."},
                 {"role": "user", "content": prompt_user},
             ],
-            temperature=0.7,
-            max_tokens=1800,
-            response_format={"type": "json_object"},
-        )
+        }
+        # Modelos search-preview não aceitam temperature ou response_format
+        if not use_web_search:
+            kwargs["temperature"] = 0.7
+            kwargs["max_tokens"] = 1800
+            kwargs["response_format"] = {"type": "json_object"}
+
+        resp = cli.chat.completions.create(**kwargs)
+        raw = (resp.choices[0].message.content or "").strip()
+        print(f"[text_gen] resposta {len(raw)} chars", flush=True)
+
         import json
-        data = json.loads(resp.choices[0].message.content or "{}")
+        # Modelos search-preview às vezes envolvem em ```json ... ```
+        cleaned = raw
+        if cleaned.startswith("```"):
+            # remove primeira linha (```json) e última linha (```)
+            cleaned = "\n".join(cleaned.split("\n")[1:-1])
+        data = json.loads(cleaned or "{}")
     except Exception as e:  # noqa: BLE001
-        print(f"[text_gen] OpenAI/JSON falhou: {e} — usando fallback", flush=True)
+        print(f"[text_gen] OpenAI/JSON falhou: {type(e).__name__}: {e}", flush=True)
         return fallback
 
     if expected_keys and not all(k in data for k in expected_keys):
-        print(f"[text_gen] resposta sem chaves esperadas {expected_keys} — usando fallback", flush=True)
+        print(f"[text_gen] resposta sem chaves esperadas {expected_keys}: tem {list(data.keys())[:5]}", flush=True)
         return fallback
 
     return data
@@ -274,14 +302,18 @@ def gerar_curiosidades(mes: int, ano: int) -> dict[str, Any]:
 
 
 def gerar_novidades(mes: int, ano: int) -> dict[str, Any]:
-    """6 novidades de mercado/legislação pro mês."""
+    """6 novidades reais de mercado/legislação pro mês (via web search)."""
     mes_nome = MESES_PT[mes - 1]
     prompt = (
-        f"Gere 6 novidades plausíveis de mercado, lei e tecnologia condominial pra {mes_nome} de {ano}. "
-        f"Mistura jurídico, tecnológico, financeiro e operacional. Use linguagem direta, "
-        f"sem jargão. Evite afirmações específicas demais. Cada notícia tem uma data dentro de "
-        f"{mes_nome} {ano}, um título, um resumo e uma fonte plausível.\n\n"
-        f'JSON: {{ "intro": "...", "noticias": [{{"data":"DD/MM","titulo":"...","resumo":"...","fonte":"..."}} x 6] }}'
+        f"Pesquise NA WEB notícias REAIS de {mes_nome} de {ano} sobre o setor "
+        f"condominial brasileiro: legislação (leis, decretos, súmulas STJ), "
+        f"tecnologia (apps, automação), mercado (juros, inadimplência, taxas), "
+        f"sustentabilidade. Use portais especializados (SíndicoNet, Folha "
+        f"Condomínios, Direcional Condomínios, ABADI, blogs jurídicos).\n\n"
+        f"Selecione 6 notícias com data, título, resumo (1-2 frases) e fonte "
+        f"verificável. Apenas fatos publicados, nada inventado.\n\n"
+        f'JSON estrito: {{ "intro": "Resumo do mês no setor", '
+        f'"noticias": [{{"data":"DD/MM","titulo":"...","resumo":"...","fonte":"Veículo"}} x 6] }}'
     )
     fallback = {
         "intro": "Seis movimentos do mês no universo condominial.",
@@ -295,7 +327,8 @@ def gerar_novidades(mes: int, ano: int) -> dict[str, Any]:
             for i in range(6)
         ],
     }
-    data = _gerar_json(prompt, fallback, expected_keys=["noticias"])
+    # Novidades também usam web search (legislações, mercado em tempo real)
+    data = _gerar_json(prompt, fallback, expected_keys=["noticias"], use_web_search=True)
     return _aplicar_clean_recursivo(data)
 
 
@@ -324,16 +357,20 @@ def gerar_signos(mes: int, ano: int) -> dict[str, Any]:
 
 
 def gerar_agenda_cultural(mes: int, ano: int) -> dict[str, Any]:
-    """Sugestões de agenda cultural pro mês (em São Paulo, principalmente)."""
+    """Agenda cultural com eventos reais via web search."""
     mes_nome = MESES_PT[mes - 1]
     prompt = (
-        f"Gere sugestões de agenda cultural pra {mes_nome} de {ano}, com foco em São Paulo "
-        f"e cidades grandes do Brasil. Variedade: museus, shows, peças, festivais, gastronomia, esporte. "
-        f"Evite eventos reais específicos que você não tenha certeza absoluta — prefira categorias "
-        f"genéricas que combinam com o mês.\n\n"
-        f"Estrutura: 1 destaque (hero) + 12 cards secundários.\n\n"
-        f'JSON: {{ '
-        f'"hero": {{"categoria":"...","titulo":"...","sinopse":"...","data":"...","local":"..."}}, '
+        f"Pesquise NA WEB (em portais como Veja SP, Catraca Livre, Quero na Cena, "
+        f"Folha de São Paulo - Guia, Time Out São Paulo, sites de teatros e museus, "
+        f"Netflix/Globoplay/Prime Video pra estreias) eventos culturais REAIS "
+        f"acontecendo em São Paulo em {mes_nome} de {ano}.\n\n"
+        f"Categorias: shows, peças, exposições, cinema, festivais, gastronomia, "
+        f"streaming. Use eventos com datas e locais reais.\n\n"
+        f"Retorne 1 hero + 12 cards. Para cada um, traga categoria, título, "
+        f"descrição curta (1 frase), data (DD/MM ou intervalo), local. "
+        f"O hero é o evento mais importante do mês.\n\n"
+        f'JSON estrito (sem markdown, sem texto antes/depois): {{ '
+        f'"hero": {{"categoria":"Cinema/Teatro/etc.","titulo":"...","sinopse":"...","data":"DD/MM","local":"..."}}, '
         f'"cards_secundarios": [{{"categoria":"...","titulo":"...","descricao_curta":"...","data":"DD/MM","local":"..."}} x 12] '
         f'}}'
     )
@@ -356,7 +393,7 @@ def gerar_agenda_cultural(mes: int, ano: int) -> dict[str, Any]:
             for i in range(12)
         ],
     }
-    data = _gerar_json(prompt, fallback, expected_keys=["cards_secundarios"])
+    data = _gerar_json(prompt, fallback, expected_keys=["cards_secundarios"], use_web_search=True)
     return _aplicar_clean_recursivo(data)
 
 
