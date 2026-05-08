@@ -16,6 +16,11 @@ from typing import Any
 # Garante import do package engine + dos scripts de preview (defaults)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from api.text_gen import (
+    clean_text,
+    gerar_carta_gestor,
+    gerar_carta_sindico,
+)
 from engine.theme import load_theme
 from engine.sections import (
     BackCover, Colophon, Cover, CoverStory, CulturalAgenda, Horoscope,
@@ -129,10 +134,12 @@ def build_inputs_from_db(
     letter_inputs["mes_ano"] = _mes_ano(revista)
     if ed.get("carta_sindico_tema"):
         letter_inputs["titulo"] = ed["carta_sindico_tema"]
+    # Texto: editora forneceu? aplica clean_text. Senão, gera com IA humanizada.
     if revista.get("carta_sindico_texto"):
-        letter_inputs["texto"] = revista["carta_sindico_texto"]
+        letter_inputs["texto"] = clean_text(revista["carta_sindico_texto"])
+    else:
+        letter_inputs["texto"] = gerar_carta_sindico(condo or {}, ed, revista)
     if condo and condo.get("sindico_foto_path"):
-        # Path relativo no bucket público — engine espera URL pública ou caminho local.
         letter_inputs["foto_sindico"] = condo["sindico_foto_path"]
 
     # ---- S02B Carta do Gestor (só se a revista marcar tem_gestor)
@@ -146,7 +153,9 @@ def build_inputs_from_db(
         if ed.get("carta_gestor_tema"):
             gestor_letter_inputs["titulo"] = ed["carta_gestor_tema"]
         if revista.get("carta_gestor_texto"):
-            gestor_letter_inputs["texto"] = revista["carta_gestor_texto"]
+            gestor_letter_inputs["texto"] = clean_text(revista["carta_gestor_texto"])
+        else:
+            gestor_letter_inputs["texto"] = gerar_carta_gestor(condo or {}, ed, revista)
         if revista.get("gestor_foto_url"):
             gestor_letter_inputs["foto_sindico"] = revista["gestor_foto_url"]
 

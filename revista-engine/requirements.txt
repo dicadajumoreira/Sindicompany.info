@@ -5,6 +5,9 @@ Pillow>=10.0
 # Supabase (DB + Storage) — usado pelo api/generate.py
 supabase>=2.5.0
 
+# Geração de texto (cartas personalizadas)
+openai>=1.50.0
+
 # Drive integration (frente futura)
 gdown>=5.0.0
 google-api-python-client>=2.100.0
