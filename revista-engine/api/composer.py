@@ -288,10 +288,12 @@ def build_inputs_from_db(
             capa = baixar_capa_manutencao(drive_url, tmpdir) if pastas else None
         if pastas:
             # Cada subpasta vira uma manutenção. Título = nome da pasta.
+            # Passa TODAS as fotos da subpasta — a S3 escolhe o layout
+            # baseado em quantas: 1-2 → small, 3-5 → large, 6+ → hero.
             maint_inputs["manutencoes"] = [
                 {
                     "titulo": p["nome_pasta"],
-                    "foto": p["foto_path"],
+                    "fotos": p.get("fotos") or ([p["foto_path"]] if p.get("foto_path") else []),
                     "descricao": "",
                 }
                 for p in pastas
@@ -309,7 +311,11 @@ def build_inputs_from_db(
         pastas_ev = baixar_pastas_manutencao(drive_eventos_url, tmpdir_ev)
         if pastas_ev:
             events_inputs["eventos"] = [
-                {"titulo": p["nome_pasta"], "foto": p["foto_path"], "descricao": ""}
+                {
+                    "titulo": p["nome_pasta"],
+                    "fotos": p.get("fotos") or ([p["foto_path"]] if p.get("foto_path") else []),
+                    "descricao": "",
+                }
                 for p in pastas_ev
             ]
 

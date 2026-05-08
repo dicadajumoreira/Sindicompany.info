@@ -111,7 +111,7 @@ def baixar_pastas_manutencao(drive_url: str, dest: Path) -> list[dict[str, Any]]
             out.append(
                 {
                     "nome_pasta": sub.name,
-                    "foto_path": str(imagens[0].absolute()),
+                    "fotos": [_path_to_url(p) for p in imagens],
                 }
             )
         print(f"[drive] {len(out)} subpastas com fotos: {[o['nome_pasta'] for o in out]}", flush=True)
@@ -126,8 +126,8 @@ def baixar_pastas_manutencao(drive_url: str, dest: Path) -> list[dict[str, Any]]
         for img in imagens_diretas:
             out.append(
                 {
-                    "nome_pasta": img.stem,  # filename sem extensão
-                    "foto_path": str(img.absolute()),
+                    "nome_pasta": img.stem,
+                    "fotos": [_path_to_url(img)],
                 }
             )
         print(f"[drive] {len(out)} fotos diretas (sem subpastas): {[o['nome_pasta'] for o in out[:5]]}...", flush=True)
@@ -135,6 +135,13 @@ def baixar_pastas_manutencao(drive_url: str, dest: Path) -> list[dict[str, Any]]
 
     print(f"[drive] root '{root.name}' sem subpastas e sem imagens diretas", flush=True)
     return out
+
+
+def _path_to_url(p: Path) -> str:
+    """Converte path absoluto em file:// URL com encoding correto.
+    Necessário pra paths com espaços/acentos (ex: 'Pintura da fachada/foto.jpg')
+    funcionarem como background-image url() no WeasyPrint."""
+    return p.absolute().as_uri()
 
 
 def _coletar_pastas(root: Path) -> list[dict[str, Any]]:
@@ -155,7 +162,7 @@ def _coletar_pastas(root: Path) -> list[dict[str, Any]]:
             out.append(
                 {
                     "nome_pasta": sub.name,
-                    "foto_path": str(imagens[0].absolute()),
+                    "fotos": [_path_to_url(p) for p in imagens],
                 }
             )
         return out
@@ -166,7 +173,7 @@ def _coletar_pastas(root: Path) -> list[dict[str, Any]]:
     )
     for img in imagens_diretas:
         out.append(
-            {"nome_pasta": img.stem, "foto_path": str(img.absolute())}
+            {"nome_pasta": img.stem, "fotos": [_path_to_url(img)]}
         )
     return out
 
@@ -234,7 +241,7 @@ def baixar_capa_manutencao_zip(zip_url: str, dest: Path) -> str | None:
         p for p in root.iterdir()
         if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
     )
-    return str(imgs[0].absolute()) if imgs else None
+    return _path_to_url(imgs[0]) if imgs else None
 
 
 def baixar_capa_manutencao(drive_url: str, dest: Path) -> str | None:
@@ -258,5 +265,5 @@ def baixar_capa_manutencao(drive_url: str, dest: Path) -> str | None:
                 if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
             )
             if imgs:
-                return str(imgs[0].absolute())
+                return _path_to_url(imgs[0])
     return None
