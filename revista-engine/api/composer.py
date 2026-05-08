@@ -321,9 +321,10 @@ def build_inputs_from_db(
     numbers_inputs = dict(NUMBERS_DEFAULT)
     numbers_inputs["mes_referencia"] = mes_ano
 
-    # Preferência: arquivo direto cadastrado no condomínio (PNG/JPG/PDF).
+    # Preferência: arquivo direto cadastrado nesta revista (PNG/JPG/PDF).
+    # Cada edição tem o seu — números mudam mês a mês.
     # Fallback: link de Drive da revista (legado).
-    prestacao_arquivo = cd.get("prestacao_arquivo_url")
+    prestacao_arquivo = revista.get("prestacao_arquivo_url")
     drive_prestacao = revista.get("drive_prestacao_url")
     if prestacao_arquivo or drive_prestacao:
         numbers_inputs["dashboard_url"] = prestacao_arquivo or drive_prestacao

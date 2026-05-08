@@ -186,47 +186,6 @@ export default async function EditarCondoPage({
           </Field>
         </section>
 
-        {/* ============ DASHBOARD DE PRESTAÇÃO DE CONTAS ============ */}
-        <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
-            Dashboard de prestação de contas
-          </h2>
-          <p className="text-xs text-g60 -mt-3">
-            Print do dashboard ou PDF do balancete mensal. A IA lê o arquivo
-            e preenche &quot;Nossos Números&quot; (receita, despesas, fundo
-            de reserva e inadimplência) na revista deste condomínio.
-            Atualize aqui mês a mês.
-          </p>
-
-          <Field
-            label="Arquivo (imagem ou PDF)"
-            hint="JPG, PNG, WebP ou PDF. Máx 15MB. O arquivo anterior será substituído."
-          >
-            <input type="hidden" name="prestacao_existente" value={meta?.prestacao_arquivo_url ?? ""} />
-            {meta?.prestacao_arquivo_url && (
-              <div className="mb-3 flex items-start gap-3">
-                <a
-                  href={meta.prestacao_arquivo_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-mint-700 underline underline-offset-2"
-                >
-                  Ver arquivo atual
-                </a>
-                <span className="text-xs text-g60 mt-0.5">
-                  Suba um novo abaixo para substituir.
-                </span>
-              </div>
-            )}
-            <input
-              type="file"
-              name="prestacao_file"
-              accept="image/jpeg,image/png,image/webp,application/pdf"
-              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
-            />
-          </Field>
-        </section>
-
         <p className="text-xs text-g60">
           Gestor agora é cadastrado por edição (em &quot;Nova revista&quot;), porque
           pode mudar de uma edição pra outra.
