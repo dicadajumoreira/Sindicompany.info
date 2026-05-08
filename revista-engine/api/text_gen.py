@@ -199,51 +199,65 @@ def _gerar_json(
 ) -> Any:
     """Roda prompt esperando JSON e dá parse seguro.
 
-    use_web_search: True usa o modelo gpt-4o-search-preview que pesquisa
-    na web. Útil pra agenda cultural, novidades, etc.
+    use_web_search: True tenta primeiro o modelo gpt-4o-search-preview
+    (com web search built-in). Se a conta não tiver acesso, cai no
+    modelo padrão sem search.
     """
     cli = _client()
     if cli is None:
         print("[text_gen] OPENAI_API_KEY ausente — usando fallback JSON", flush=True)
         return fallback
 
-    model = SEARCH_MODEL if use_web_search else MODEL
-    print(f"[text_gen] chamando {model} (web_search={use_web_search})", flush=True)
+    # Tenta search-preview se pedido; em caso de erro (acesso, model not
+    # found, etc), reativa modelo regular.
+    models_to_try = [(SEARCH_MODEL, True)] if use_web_search else []
+    models_to_try.append((MODEL, False))
 
-    try:
-        kwargs: dict[str, Any] = {
-            "model": model,
-            "messages": [
-                {"role": "system", "content": SYSTEM_HUMANIZER + "\n\nResponda APENAS um JSON válido, sem texto extra antes ou depois, nada de ```json."},
-                {"role": "user", "content": prompt_user},
-            ],
-        }
-        # Modelos search-preview não aceitam temperature ou response_format
-        if not use_web_search:
-            kwargs["temperature"] = 0.7
-            kwargs["max_tokens"] = 1800
-            kwargs["response_format"] = {"type": "json_object"}
+    last_error = None
+    for model, with_search in models_to_try:
+        print(f"[text_gen] chamando {model} (web_search={with_search})", flush=True)
+        try:
+            kwargs: dict[str, Any] = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": SYSTEM_HUMANIZER + "\n\nResponda APENAS um JSON válido, sem texto antes/depois e sem markdown."},
+                    {"role": "user", "content": prompt_user},
+                ],
+            }
+            # Modelos search-preview não aceitam temperature, response_format ou max_tokens da mesma forma
+            if not with_search:
+                kwargs["temperature"] = 0.7
+                kwargs["max_tokens"] = 1800
+                kwargs["response_format"] = {"type": "json_object"}
 
-        resp = cli.chat.completions.create(**kwargs)
-        raw = (resp.choices[0].message.content or "").strip()
-        print(f"[text_gen] resposta {len(raw)} chars", flush=True)
+            resp = cli.chat.completions.create(**kwargs)
+            raw = (resp.choices[0].message.content or "").strip()
+            print(f"[text_gen] resposta {len(raw)} chars de {model}", flush=True)
 
-        import json
-        # Modelos search-preview às vezes envolvem em ```json ... ```
-        cleaned = raw
-        if cleaned.startswith("```"):
-            # remove primeira linha (```json) e última linha (```)
-            cleaned = "\n".join(cleaned.split("\n")[1:-1])
-        data = json.loads(cleaned or "{}")
-    except Exception as e:  # noqa: BLE001
-        print(f"[text_gen] OpenAI/JSON falhou: {type(e).__name__}: {e}", flush=True)
-        return fallback
+            import json
+            # search-preview às vezes envolve em ```json ... ```
+            cleaned = raw
+            if cleaned.startswith("```"):
+                cleaned = "\n".join(cleaned.split("\n")[1:-1])
+            data = json.loads(cleaned or "{}")
 
-    if expected_keys and not all(k in data for k in expected_keys):
-        print(f"[text_gen] resposta sem chaves esperadas {expected_keys}: tem {list(data.keys())[:5]}", flush=True)
-        return fallback
+            if expected_keys and not all(k in data for k in expected_keys):
+                print(
+                    f"[text_gen] {model}: faltam chaves {expected_keys} (tem {list(data.keys())[:5]})",
+                    flush=True,
+                )
+                last_error = "missing-keys"
+                continue  # tenta próximo modelo
 
-    return data
+            return data
+
+        except Exception as e:  # noqa: BLE001
+            print(f"[text_gen] {model} falhou: {type(e).__name__}: {str(e)[:200]}", flush=True)
+            last_error = str(e)
+            continue  # tenta próximo modelo
+
+    print(f"[text_gen] todos os modelos falharam (último erro: {last_error}) — fallback", flush=True)
+    return fallback
 
 
 def _aplicar_clean_recursivo(obj: Any) -> Any:
