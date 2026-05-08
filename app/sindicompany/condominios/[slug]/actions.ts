@@ -11,6 +11,7 @@ import {
   type CondoMetaInput,
 } from "@/lib/sindicompany/condominios-db";
 import type { Genero } from "@/lib/sindicompany/db";
+import { describeError } from "@/lib/sindicompany/errors";
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -40,21 +41,6 @@ function getStr(fd: FormData, key: string): string {
 function getBool(fd: FormData, key: string): boolean {
   const v = fd.get(key);
   return v === "on" || v === "true" || v === "1";
-}
-
-function describeError(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  if (typeof e === "string") return e;
-  if (e && typeof e === "object") {
-    const obj = e as Record<string, unknown>;
-    if (typeof obj.message === "string") return obj.message;
-    try {
-      return JSON.stringify(e);
-    } catch {
-      return "erro desconhecido";
-    }
-  }
-  return "erro desconhecido";
 }
 
 async function maybeUploadFoto(

@@ -7,6 +7,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { isCondominioValido } from "@/lib/sindicompany/condominios";
 import { getCondoMeta } from "@/lib/sindicompany/condominios-db";
 import { createRevista, type RevistaInput } from "@/lib/sindicompany/db";
+import { describeError, detectMigrationMissing } from "@/lib/sindicompany/errors";
 
 async function requireAuth() {
   const store = await cookies();
@@ -146,11 +147,14 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
   try {
     revista = await createRevista(input);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "erro desconhecido";
+    console.error("[revista] createRevista failed:", e);
+    const msg = describeError(e);
+    if (msg.toLowerCase().includes("duplicate")) {
+      backToFormWithError("Já existe uma revista para esse condomínio nesse mês.", formData);
+    }
+    const migrationHint = detectMigrationMissing(msg);
     backToFormWithError(
-      msg.includes("duplicate")
-        ? "Já existe uma revista para esse condomínio nesse mês."
-        : `Não foi possível criar a edição. ${msg}`,
+      migrationHint ? migrationHint : `Não foi possível criar a edição. ${msg}`,
       formData,
     );
   }
