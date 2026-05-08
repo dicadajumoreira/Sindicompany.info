@@ -100,50 +100,21 @@ export default async function NovaEdicaoPage({
           </div>
         </section>
 
-        {/* ============ LIDERANÇA ============ */}
-        <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
+        {/* ============ LIDERANÇA (vem do cadastro do condomínio) ============ */}
+        <section className="bg-white rounded-xl border border-onix-100 p-6">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-2">
             2 · Liderança
           </h2>
-
-          <Field label="Nome do(a) síndico(a)">
-            <input type="text" name="sindico_nome" required
-                   defaultValue={v("sindico_nome")}
-                   placeholder="Ex: Juliana Moreira"
-                   className={inputCls} />
-          </Field>
-
-          <Field label="Gênero">
-            <div className="flex gap-4 mt-1">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="radio" name="sindico_genero" value="feminino" required
-                       defaultChecked={v("sindico_genero") === "feminino"} />
-                Síndica
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="radio" name="sindico_genero" value="masculino"
-                       defaultChecked={v("sindico_genero") === "masculino"} />
-                Síndico
-              </label>
-            </div>
-          </Field>
-
-          <Field label="Existe gestor de atendimento no condomínio?">
-            <div className="flex gap-4 mt-1">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="tem_gestor" value="on"
-                       defaultChecked={v("tem_gestor") === "on"} />
-                Sim, tem gestor
-              </label>
-            </div>
-          </Field>
-
-          <Field label="Nome do gestor (se aplicável)">
-            <input type="text" name="gestor_nome"
-                   defaultValue={v("gestor_nome")}
-                   placeholder="Ex: Diego Leite"
-                   className={inputCls} />
-          </Field>
+          <p className="text-sm text-onix-800">
+            O(a) síndico(a) e o gestor são puxados automaticamente do cadastro
+            do condomínio. Confira se o cadastro está atualizado antes de gerar.
+          </p>
+          <Link
+            href="/sindicompany/condominios"
+            className="text-sm text-mint-700 hover:underline mt-2 inline-block"
+          >
+            Editar cadastros de condomínios →
+          </Link>
         </section>
 
         {/* ============ CONTEÚDO DO CONDOMÍNIO ============ */}

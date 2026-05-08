@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { isCondominioValido } from "@/lib/sindicompany/condominios";
-import { createRevista, type Genero, type RevistaInput } from "@/lib/sindicompany/db";
+import { getCondoMeta } from "@/lib/sindicompany/condominios-db";
+import { createRevista, type RevistaInput } from "@/lib/sindicompany/db";
 
 async function requireAuth() {
   const store = await cookies();
@@ -63,22 +64,24 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     backToFormWithError("Ano inválido.", formData);
   }
 
-  const sindico_nome = getStr(formData, "sindico_nome");
-  const generoRaw = getStr(formData, "sindico_genero");
-  const sindico_genero: Genero | undefined =
-    generoRaw === "masculino" || generoRaw === "feminino" ? generoRaw : undefined;
-
-  if (!sindico_nome) {
-    backToFormWithError("Informe o nome do(a) síndico(a).", formData);
+  // Liderança vem do cadastro do condomínio (condominios_meta).
+  const meta = await getCondoMeta(condominio).catch(() => null);
+  if (!meta || !meta.sindico_nome || !meta.sindico_genero) {
+    backToFormWithError(
+      `Cadastre o(a) síndico(a) de "${condominio}" antes de gerar a revista. ` +
+        `Vá em Condomínios → ${condominio}.`,
+      formData,
+    );
   }
-  if (!sindico_genero) {
-    backToFormWithError("Selecione o gênero do(a) síndico(a).", formData);
-  }
-
-  const tem_gestor = getBool(formData, "tem_gestor");
-  const gestor_nome = getStr(formData, "gestor_nome");
+  const sindico_nome = meta.sindico_nome;
+  const sindico_genero = meta.sindico_genero;
+  const tem_gestor = meta.tem_gestor;
+  const gestor_nome = meta.gestor_nome ?? "";
   if (tem_gestor && !gestor_nome) {
-    backToFormWithError("Marcou que tem gestor — informe o nome.", formData);
+    backToFormWithError(
+      `O cadastro de "${condominio}" diz que tem gestor mas não tem nome. Edite em Condomínios.`,
+      formData,
+    );
   }
 
   const drive_manutencao_url = getStr(formData, "drive_manutencao_url");
