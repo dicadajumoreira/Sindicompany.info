@@ -88,6 +88,25 @@ export async function uploadGestorFotoRevista(
   return data.publicUrl;
 }
 
+/** Sobe o arquivo de prestação de contas (imagem ou PDF) atrelado a
+ *  uma revista. A engine baixa pela URL pública e roda Vision/OCR. */
+export async function uploadPrestacaoArquivo(
+  condoSlug: string,
+  revistaId: string,
+  bytes: Buffer,
+  contentType: string,
+  ext: string,
+): Promise<string> {
+  const path = `${condoSlug}/prestacao-${revistaId}.${ext}`;
+  const supabase = createAdminClient();
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, bytes, { contentType, upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
 /** Sobe logotipo do condomínio e retorna URL pública. */
 export async function uploadCondoLogo(
   slug: string,

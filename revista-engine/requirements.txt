@@ -17,3 +17,6 @@ google-auth-oauthlib>=1.2.0
 # Auxiliares
 markdown>=3.5
 pyyaml>=6.0
+
+# Rasterização de PDF da prestação de contas pra Vision OCR
+pypdfium2>=4.30.0

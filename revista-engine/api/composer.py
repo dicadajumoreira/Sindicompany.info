@@ -24,7 +24,7 @@ from api.image_gen import (
     gerar_foto_materia_capa,
     gerar_foto_receita,
 )
-from api.numeros_parser import parse_nossos_numeros
+from api.numeros_parser import parse_nossos_numeros, parse_nossos_numeros_arquivo
 from api.text_gen import (
     clean_text,
     gerar_agenda_cultural,
@@ -321,19 +321,30 @@ def build_inputs_from_db(
     numbers_inputs = dict(NUMBERS_DEFAULT)
     numbers_inputs["mes_referencia"] = mes_ano
 
+    # Preferência: arquivo direto (PNG/JPG/PDF do form). Fallback: Drive.
+    prestacao_arquivo = revista.get("prestacao_arquivo_url")
     drive_prestacao = revista.get("drive_prestacao_url")
-    if drive_prestacao:
-        # Link clicável pro dashboard completo no rodapé da S11
-        numbers_inputs["dashboard_url"] = drive_prestacao
+    # Link clicável pro dashboard completo: usa o arquivo direto ou o
+    # link do Drive (o que estiver presente).
+    if prestacao_arquivo or drive_prestacao:
+        numbers_inputs["dashboard_url"] = prestacao_arquivo or drive_prestacao
+
+    nums = None
+    if prestacao_arquivo:
+        import tempfile
+        tmp_num = Path(tempfile.mkdtemp(prefix=f"numeros_{revista.get('id','')[:8]}_"))
+        nums = parse_nossos_numeros_arquivo(prestacao_arquivo, tmp_num)
+    elif drive_prestacao:
         import tempfile
         tmp_num = Path(tempfile.mkdtemp(prefix=f"numeros_{revista.get('id','')[:8]}_"))
         nums = parse_nossos_numeros(drive_prestacao, tmp_num)
-        if nums and nums.get("kpis"):
-            numbers_inputs["kpis"] = nums["kpis"]
-            if nums.get("principais_despesas"):
-                numbers_inputs["principais_despesas"] = nums["principais_despesas"]
-            if nums.get("historico"):
-                numbers_inputs["historico"] = nums["historico"]
+
+    if nums and nums.get("kpis"):
+        numbers_inputs["kpis"] = nums["kpis"]
+        if nums.get("principais_despesas"):
+            numbers_inputs["principais_despesas"] = nums["principais_despesas"]
+        if nums.get("historico"):
+            numbers_inputs["historico"] = nums["historico"]
 
     # ---- S12 Advertências (só renderiza se a edição teve)
     warnings_inputs = dict(WARNINGS_DEFAULT)

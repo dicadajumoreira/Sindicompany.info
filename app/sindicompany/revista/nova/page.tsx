@@ -375,11 +375,29 @@ export default async function NovaEdicaoPage({
           </Field>
 
           <Field label="Link da pasta de prestação de contas (Google Drive)"
-                 hint="A engine extrai os números pra 'Nossos Números' (KPIs e despesas).">
+                 hint="Opcional. Se preferir, suba a imagem ou PDF abaixo.">
             <input type="url" name="drive_prestacao_url"
                    defaultValue={v("drive_prestacao_url")}
                    placeholder="https://drive.google.com/drive/folders/..."
                    className={inputCls} />
+          </Field>
+
+          <Field label="Dashboard de prestação (imagem ou PDF)"
+                 hint="Print do dashboard ou PDF do balancete. A IA lê e preenche 'Nossos Números' (receita, despesas, fundo de reserva, inadimplência).">
+            {fonte?.prestacao_arquivo_url && (
+              <div className="mb-2 flex items-center gap-3">
+                <input type="hidden" name="prestacao_arquivo_existente" value={fonte.prestacao_arquivo_url} />
+                <span className="text-xs text-g60">
+                  Arquivo da edição duplicada será reutilizado. Suba um novo abaixo para trocar.
+                </span>
+              </div>
+            )}
+            <input
+              type="file"
+              name="prestacao_arquivo_file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+            />
           </Field>
 
           <Field label="O condomínio teve advertências/multas neste mês?">
