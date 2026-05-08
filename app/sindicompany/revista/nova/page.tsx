@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { CONDOMINIOS } from "@/lib/sindicompany/condominios";
 import { getCondoMeta } from "@/lib/sindicompany/condominios-db";
+import { getRevista } from "@/lib/sindicompany/db";
 import {
   getEditorial,
   editorialEstaPronto,
@@ -39,20 +40,27 @@ export default async function NovaEdicaoPage({
   const sp = await searchParams;
   const error = getStr(sp, "error");
 
-  // Defaults: lê da URL primeiro; senão, próxima edição (mês atual + 1).
+  // Modo "duplicar": copia os campos editáveis de uma revista existente.
+  const duplicarId = getStr(sp, "duplicar");
+  const fonte = duplicarId ? await getRevista(duplicarId).catch(() => null) : null;
+
+  // Defaults: lê da URL primeiro; senão, fonte da duplicação (mês+1);
+  // senão, próxima edição (mês atual + 1).
   const now = new Date();
   const proxMes = now.getMonth() + 2 > 12 ? 1 : now.getMonth() + 2;
   const proxAno = now.getMonth() + 2 > 12 ? now.getFullYear() + 1 : now.getFullYear();
+  const fonteMes = fonte ? (fonte.mes + 1 > 12 ? 1 : fonte.mes + 1) : null;
+  const fonteAno = fonte ? (fonte.mes + 1 > 12 ? fonte.ano + 1 : fonte.ano) : null;
   const mesFromUrl = Number.parseInt(getStr(sp, "mes"), 10);
   const anoFromUrl = Number.parseInt(getStr(sp, "ano"), 10);
   const defaultMes = Number.isInteger(mesFromUrl) && mesFromUrl >= 1 && mesFromUrl <= 12
     ? mesFromUrl
-    : proxMes;
+    : fonteMes ?? proxMes;
   const defaultAno = Number.isInteger(anoFromUrl) && anoFromUrl >= 2025 && anoFromUrl <= 2030
     ? anoFromUrl
-    : proxAno;
+    : fonteAno ?? proxAno;
 
-  const condoSelecionado = getStr(sp, "condominio");
+  const condoSelecionado = getStr(sp, "condominio") || fonte?.condominio || "";
   const meta = condoSelecionado
     ? await getCondoMeta(condoSelecionado).catch(() => null)
     : null;
@@ -66,7 +74,17 @@ export default async function NovaEdicaoPage({
   const temaGestor = editorial?.carta_gestor_tema ?? sugCartaGestor?.tema ?? "";
   const editorialSlug = formatMesAno(defaultMes, defaultAno);
 
-  const v = (k: string, fallback = "") => getStr(sp, k, fallback);
+  // URL → fonte (quando duplicando) → fallback. Booleans viram "on"/"".
+  const v = (k: string, fallback = "") => {
+    const fromUrl = getStr(sp, k);
+    if (fromUrl) return fromUrl;
+    if (fonte) {
+      const val = (fonte as unknown as Record<string, unknown>)[k];
+      if (typeof val === "string" && val) return val;
+      if (typeof val === "boolean") return val ? "on" : "";
+    }
+    return fallback;
+  };
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
@@ -87,6 +105,18 @@ export default async function NovaEdicaoPage({
           (e baixa as fotos do Drive) pra montar as 16 seções da revista.
         </p>
       </header>
+
+      {fonte && (
+        <div className="mb-5 rounded-lg border border-onix-100 bg-onix-50 px-4 py-3 text-sm text-onix-900">
+          <strong>Duplicando edição</strong> de{" "}
+          <span className="font-medium">{fonte.condominio}</span> ·{" "}
+          <span className="tabular-nums">
+            {String(fonte.mes).padStart(2, "0")}/{fonte.ano}
+          </span>
+          . Os campos abaixo já vieram preenchidos — ajuste o que mudou e
+          escolha o novo mês/condomínio.
+        </div>
+      )}
 
       {error && (
         <div className="mb-5 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-900">

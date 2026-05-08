@@ -178,6 +178,12 @@ export default async function DashboardPage({
                       >
                         Abrir →
                       </Link>
+                      <Link
+                        href={`/sindicompany/revista/nova?duplicar=${r.id}`}
+                        className="text-xs text-mint-700 hover:text-mint-700 hover:underline"
+                      >
+                        Duplicar
+                      </Link>
                       <DeleteRevistaButton
                         id={r.id}
                         label={`${formatEdicao(r.mes, r.ano)} — ${r.condominio}`}
