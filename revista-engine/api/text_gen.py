@@ -261,6 +261,75 @@ def _gerar_json(
     return fallback
 
 
+def _gerar_json_vision(
+    prompt_user: str,
+    image_paths: list[str],
+    fallback: Any,
+    expected_keys: list[str] | None = None,
+) -> Any:
+    """Roda prompt + uma ou mais imagens no GPT-4o Vision esperando JSON.
+
+    Usado pra extrair números de um print de dashboard (PNG/JPG) que a
+    editora coloca na pasta de prestação de contas.
+    """
+    cli = _client()
+    if cli is None:
+        print("[text_gen] OPENAI_API_KEY ausente — usando fallback JSON (vision)", flush=True)
+        return fallback
+
+    import base64
+    import json
+    import mimetypes
+
+    # Modelos sem 'mini' veem imagens com mais detalhes; gpt-4o-mini é ok
+    # pra dashboards simples e mais barato.
+    vision_model = os.environ.get("OPENAI_VISION_MODEL", "gpt-4o")
+
+    content: list[dict[str, Any]] = [{"type": "text", "text": prompt_user}]
+    for p in image_paths:
+        try:
+            with open(p, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("ascii")
+            mime = mimetypes.guess_type(p)[0] or "image/png"
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:{mime};base64,{b64}", "detail": "high"},
+            })
+        except Exception as e:  # noqa: BLE001
+            print(f"[text_gen] falhou lendo imagem {p}: {e}", flush=True)
+            continue
+
+    if len(content) == 1:
+        # Nenhuma imagem foi lida com sucesso
+        return fallback
+
+    print(f"[text_gen] chamando {vision_model} com {len(content)-1} imagem(ns)", flush=True)
+    try:
+        resp = cli.chat.completions.create(
+            model=vision_model,
+            messages=[
+                {"role": "system", "content": "Você extrai dados financeiros estruturados de dashboards. Responda APENAS um JSON válido, sem texto antes/depois e sem markdown."},
+                {"role": "user", "content": content},
+            ],
+            temperature=0.2,
+            max_tokens=2000,
+            response_format={"type": "json_object"},
+        )
+        raw = (resp.choices[0].message.content or "").strip()
+        print(f"[text_gen] vision retornou {len(raw)} chars", flush=True)
+        cleaned = raw
+        if cleaned.startswith("```"):
+            cleaned = "\n".join(cleaned.split("\n")[1:-1])
+        data = json.loads(cleaned or "{}")
+        if expected_keys and not all(k in data for k in expected_keys):
+            print(f"[text_gen] vision: faltam chaves {expected_keys}", flush=True)
+            return fallback
+        return data
+    except Exception as e:  # noqa: BLE001
+        print(f"[text_gen] vision falhou: {type(e).__name__}: {str(e)[:200]}", flush=True)
+        return fallback
+
+
 def _aplicar_clean_recursivo(obj: Any) -> Any:
     """Aplica clean_text() em todas as strings dentro de um objeto JSON."""
     if isinstance(obj, str):
