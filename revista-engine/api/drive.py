@@ -14,6 +14,8 @@ link" no Drive. Não usa OAuth nem service account.
 from __future__ import annotations
 
 import re
+import urllib.request
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -133,6 +135,106 @@ def baixar_pastas_manutencao(drive_url: str, dest: Path) -> list[dict[str, Any]]
 
     print(f"[drive] root '{root.name}' sem subpastas e sem imagens diretas", flush=True)
     return out
+
+
+def _coletar_pastas(root: Path) -> list[dict[str, Any]]:
+    """Dado um diretório com (sub)pastas + fotos, devolve a lista no
+    formato que a S3 (Nosso Condomínio) espera. Mesma lógica usada
+    pra Drive: subpastas → cards; sem subpastas → cada foto vira card."""
+    out: list[dict[str, Any]] = []
+    subpastas = [p for p in sorted(root.iterdir()) if p.is_dir()]
+    if subpastas:
+        for sub in subpastas:
+            imagens = sorted(
+                p for p in sub.rglob("*")
+                if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
+            )
+            if not imagens:
+                print(f"[zip] subpasta '{sub.name}' sem imagens", flush=True)
+                continue
+            out.append(
+                {
+                    "nome_pasta": sub.name,
+                    "foto_path": str(imagens[0].absolute()),
+                }
+            )
+        return out
+
+    imagens_diretas = sorted(
+        p for p in root.iterdir()
+        if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
+    )
+    for img in imagens_diretas:
+        out.append(
+            {"nome_pasta": img.stem, "foto_path": str(img.absolute())}
+        )
+    return out
+
+
+def baixar_pastas_manutencao_zip(zip_url: str, dest: Path) -> list[dict[str, Any]]:
+    """Baixa um ZIP via HTTP, descompacta e devolve a mesma estrutura
+    de baixar_pastas_manutencao(). Cada subpasta dentro do ZIP vira um
+    card de manutenção, usando o nome da pasta como título."""
+    if not zip_url:
+        return []
+
+    dest.mkdir(parents=True, exist_ok=True)
+    zip_path = dest / "manutencao.zip"
+
+    try:
+        req = urllib.request.Request(zip_url, headers={"User-Agent": "revista-engine/1.0"})
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            zip_path.write_bytes(resp.read())
+        print(f"[zip] baixado {zip_path.stat().st_size} bytes de {zip_url[:80]}...", flush=True)
+    except Exception as e:  # noqa: BLE001
+        print(f"[zip] download falhou: {type(e).__name__}: {e}", flush=True)
+        return []
+
+    extract_dir = dest / "extracted"
+    extract_dir.mkdir(exist_ok=True)
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            # Filtra entries: ignora arquivos de macOS (__MACOSX, .DS_Store)
+            members = [
+                m for m in zf.namelist()
+                if not m.startswith("__MACOSX/")
+                and not m.endswith("/.DS_Store")
+                and not m.endswith("/Thumbs.db")
+            ]
+            zf.extractall(extract_dir, members=members)
+        print(f"[zip] extraídos {len(members)} membros em {extract_dir}", flush=True)
+    except zipfile.BadZipFile as e:
+        print(f"[zip] arquivo não é um ZIP válido: {e}", flush=True)
+        return []
+    except Exception as e:  # noqa: BLE001
+        print(f"[zip] extração falhou: {type(e).__name__}: {e}", flush=True)
+        return []
+
+    # Se o ZIP encapsulou tudo numa pasta-mãe (caso típico do macOS),
+    # desce um nível.
+    entries = [p for p in extract_dir.iterdir() if not p.name.startswith(".")]
+    if len(entries) == 1 and entries[0].is_dir():
+        root = entries[0]
+    else:
+        root = extract_dir
+
+    pastas = _coletar_pastas(root)
+    print(f"[zip] {len(pastas)} card(s): {[p['nome_pasta'] for p in pastas[:8]]}", flush=True)
+    return pastas
+
+
+def baixar_capa_manutencao_zip(zip_url: str, dest: Path) -> str | None:
+    """Pega a primeira imagem na raiz do ZIP já extraído (capa do caderno)."""
+    extract_dir = dest / "extracted"
+    if not extract_dir.exists():
+        return None
+    entries = [p for p in extract_dir.iterdir() if not p.name.startswith(".")]
+    root = entries[0] if (len(entries) == 1 and entries[0].is_dir()) else extract_dir
+    imgs = sorted(
+        p for p in root.iterdir()
+        if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
+    )
+    return str(imgs[0].absolute()) if imgs else None
 
 
 def baixar_capa_manutencao(drive_url: str, dest: Path) -> str | None:

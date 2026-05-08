@@ -108,6 +108,24 @@ export async function uploadPrestacaoArquivo(
   return data.publicUrl;
 }
 
+/** Sobe o ZIP de fotos de manutenção atrelado a uma revista. O ZIP
+ *  contém subpastas (cada uma = card de manutenção) com fotos dentro.
+ *  A engine baixa, descompacta e usa os nomes das pastas como títulos. */
+export async function uploadManutencaoZip(
+  condoSlug: string,
+  revistaId: string,
+  bytes: Buffer,
+): Promise<string> {
+  const path = `${condoSlug}/manutencao-${revistaId}.zip`;
+  const supabase = createAdminClient();
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, bytes, { contentType: "application/zip", upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
 /** Sobe logotipo do condomínio e retorna URL pública. */
 export async function uploadCondoLogo(
   slug: string,

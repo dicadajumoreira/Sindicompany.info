@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { isCondominioValido, slugifyCondo } from "@/lib/sindicompany/condominios";
-import { getCondoMeta, uploadGestorFotoRevista, uploadPrestacaoArquivo } from "@/lib/sindicompany/condominios-db";
+import { getCondoMeta, uploadGestorFotoRevista, uploadManutencaoZip, uploadPrestacaoArquivo } from "@/lib/sindicompany/condominios-db";
 import { createRevista, type RevistaInput } from "@/lib/sindicompany/db";
 import { getEditorial, editorialEstaPronto } from "@/lib/sindicompany/editoriais";
 import { dispatchGenerateRevista } from "@/lib/sindicompany/engine";
@@ -29,6 +29,14 @@ const PRESTACAO_EXT_BY_TYPE: Record<string, string> = {
   "image/webp": "webp",
   "application/pdf": "pdf",
 };
+
+const MAX_MANUTENCAO_ZIP_BYTES = 200 * 1024 * 1024; // 200MB (muitas fotos)
+const ALLOWED_MANUTENCAO_ZIP_TYPES = new Set([
+  "application/zip",
+  "application/x-zip-compressed",
+  "application/octet-stream", // alguns navegadores enviam zip como octet-stream
+  "multipart/x-zip",
+]);
 
 async function requireAuth() {
   const store = await cookies();
@@ -103,13 +111,11 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     );
   }
 
+  // drive_manutencao_url legado: aceito ainda pra revistas antigas, mas o
+  // form novo usa ZIP. drive_prestacao_url removido.
   const drive_manutencao_url = getStr(formData, "drive_manutencao_url");
-  const drive_prestacao_url = getStr(formData, "drive_prestacao_url");
   if (drive_manutencao_url && !isValidDriveUrl(drive_manutencao_url)) {
     backToFormWithError("Link de manutenção precisa ser uma URL do Google Drive.", formData);
-  }
-  if (drive_prestacao_url && !isValidDriveUrl(drive_prestacao_url)) {
-    backToFormWithError("Link de prestação precisa ser uma URL do Google Drive.", formData);
   }
 
   const tem_advertencias = getBool(formData, "tem_advertencias");
@@ -167,6 +173,33 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     gestor_foto_url = undefined;
   }
 
+  // ZIP de fotos de manutenção. Se já tem da edição duplicada, mantém;
+  // novo upload sobrescreve.
+  let manutencao_zip_url: string | undefined =
+    getStr(formData, "manutencao_zip_existente") || undefined;
+  {
+    const file = formData.get("manutencao_zip_file");
+    if (file instanceof File && file.size > 0) {
+      if (file.size > MAX_MANUTENCAO_ZIP_BYTES) {
+        backToFormWithError("ZIP de manutenção maior que 200MB.", formData);
+      }
+      const isZipExt = file.name.toLowerCase().endsWith(".zip");
+      if (!ALLOWED_MANUTENCAO_ZIP_TYPES.has(file.type) && !isZipExt) {
+        backToFormWithError("Arquivo precisa ser .zip.", formData);
+      }
+      try {
+        const buf = Buffer.from(await file.arrayBuffer());
+        manutencao_zip_url = await uploadManutencaoZip(
+          slugifyCondo(condominio),
+          `pending-${Date.now()}`,
+          buf,
+        );
+      } catch (e) {
+        backToFormWithError(`Falha ao subir ZIP de manutenção: ${describeError(e)}`, formData);
+      }
+    }
+  }
+
   // Arquivo de prestação de contas desta edição (imagem ou PDF). Se já tem
   // da edição duplicada, mantém; novo upload sobrescreve.
   let prestacao_arquivo_url: string | undefined =
@@ -206,7 +239,7 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     gestor_nome: tem_gestor ? gestor_nome : undefined,
     gestor_foto_url: tem_gestor ? gestor_foto_url : undefined,
     drive_manutencao_url: drive_manutencao_url || undefined,
-    drive_prestacao_url: drive_prestacao_url || undefined,
+    manutencao_zip_url: manutencao_zip_url || undefined,
     prestacao_arquivo_url: prestacao_arquivo_url || undefined,
     tem_advertencias,
     multas_advertencias_obs: tem_advertencias ? multas_advertencias_obs : undefined,

@@ -17,14 +17,19 @@ from typing import Any
 # Garante import do package engine + dos scripts de preview (defaults)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from api.drive import baixar_capa_manutencao, baixar_pastas_manutencao
+from api.drive import (
+    baixar_capa_manutencao,
+    baixar_capa_manutencao_zip,
+    baixar_pastas_manutencao,
+    baixar_pastas_manutencao_zip,
+)
 from api.image_gen import (
     gerar_foto_agenda_hero,
     gerar_foto_lifestyle,
     gerar_foto_materia_capa,
     gerar_foto_receita,
 )
-from api.numeros_parser import parse_nossos_numeros, parse_nossos_numeros_arquivo
+from api.numeros_parser import parse_nossos_numeros_arquivo
 from api.text_gen import (
     clean_text,
     gerar_agenda_cultural,
@@ -269,11 +274,18 @@ def build_inputs_from_db(
     maint_inputs["mes_referencia"] = mes_ano
     maint_inputs["nome_condominio"] = condominio
 
+    # Preferência: ZIP de manutenção subido pela editora. Fallback: link Drive (legado).
+    zip_url = revista.get("manutencao_zip_url")
     drive_url = revista.get("drive_manutencao_url")
-    if drive_url:
+    if zip_url or drive_url:
         import tempfile
         tmpdir = Path(tempfile.mkdtemp(prefix=f"manut_{revista.get('id','')[:8]}_"))
-        pastas = baixar_pastas_manutencao(drive_url, tmpdir)
+        if zip_url:
+            pastas = baixar_pastas_manutencao_zip(zip_url, tmpdir)
+            capa = baixar_capa_manutencao_zip(zip_url, tmpdir) if pastas else None
+        else:
+            pastas = baixar_pastas_manutencao(drive_url, tmpdir)
+            capa = baixar_capa_manutencao(drive_url, tmpdir) if pastas else None
         if pastas:
             # Cada subpasta vira uma manutenção. Título = nome da pasta.
             maint_inputs["manutencoes"] = [
@@ -284,8 +296,6 @@ def build_inputs_from_db(
                 }
                 for p in pastas
             ]
-            # Foto de capa do caderno = primeira imagem na raiz da pasta
-            capa = baixar_capa_manutencao(drive_url, tmpdir)
             if capa:
                 maint_inputs["foto_capa_caderno"] = capa
 
@@ -321,23 +331,17 @@ def build_inputs_from_db(
     numbers_inputs = dict(NUMBERS_DEFAULT)
     numbers_inputs["mes_referencia"] = mes_ano
 
-    # Preferência: arquivo direto cadastrado nesta revista (PNG/JPG/PDF).
-    # Cada edição tem o seu — números mudam mês a mês.
-    # Fallback: link de Drive da revista (legado).
+    # Arquivo direto (PNG/JPG/PDF) cadastrado pela editora no form da
+    # revista. Cada edição tem o seu (números mudam mês a mês).
     prestacao_arquivo = revista.get("prestacao_arquivo_url")
-    drive_prestacao = revista.get("drive_prestacao_url")
-    if prestacao_arquivo or drive_prestacao:
-        numbers_inputs["dashboard_url"] = prestacao_arquivo or drive_prestacao
+    if prestacao_arquivo:
+        numbers_inputs["dashboard_url"] = prestacao_arquivo
 
     nums = None
     if prestacao_arquivo:
         import tempfile
         tmp_num = Path(tempfile.mkdtemp(prefix=f"numeros_{revista.get('id','')[:8]}_"))
         nums = parse_nossos_numeros_arquivo(prestacao_arquivo, tmp_num)
-    elif drive_prestacao:
-        import tempfile
-        tmp_num = Path(tempfile.mkdtemp(prefix=f"numeros_{revista.get('id','')[:8]}_"))
-        nums = parse_nossos_numeros(drive_prestacao, tmp_num)
 
     if nums and nums.get("kpis"):
         numbers_inputs["kpis"] = nums["kpis"]

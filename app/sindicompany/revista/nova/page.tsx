@@ -366,20 +366,26 @@ export default async function NovaEdicaoPage({
             4 · Conteúdo do condomínio
           </h2>
 
-          <Field label="Link da pasta de fotos de manutenção (Google Drive)"
-                 hint="A engine baixa todas as fotos das subpastas pra montar 'Nosso Condomínio'.">
-            <input type="url" name="drive_manutencao_url"
-                   defaultValue={v("drive_manutencao_url")}
-                   placeholder="https://drive.google.com/drive/folders/..."
-                   className={inputCls} />
-          </Field>
-
-          <Field label="Link da pasta de prestação de contas (Google Drive)"
-                 hint="Opcional. Se preferir, suba o arquivo (imagem ou PDF) abaixo.">
-            <input type="url" name="drive_prestacao_url"
-                   defaultValue={v("drive_prestacao_url")}
-                   placeholder="https://drive.google.com/drive/folders/..."
-                   className={inputCls} />
+          <Field label="Fotos de manutenção (arquivo .zip)"
+                 hint="ZIP com subpastas. O nome da subpasta vira o título do card; as fotos dentro são usadas nas páginas. A engine descompacta automaticamente.">
+            {fonte?.manutencao_zip_url && (
+              <div className="mb-2 flex items-center gap-3">
+                <input type="hidden" name="manutencao_zip_existente" value={fonte.manutencao_zip_url} />
+                <a href={fonte.manutencao_zip_url} target="_blank" rel="noopener noreferrer"
+                   className="text-xs font-medium text-mint-700 underline underline-offset-2">
+                  Ver ZIP da edição duplicada
+                </a>
+                <span className="text-xs text-g60">
+                  Suba um novo abaixo para trocar.
+                </span>
+              </div>
+            )}
+            <input
+              type="file"
+              name="manutencao_zip_file"
+              accept=".zip,application/zip,application/x-zip-compressed"
+              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+            />
           </Field>
 
           <Field label="Dashboard de prestação (imagem ou PDF)"
