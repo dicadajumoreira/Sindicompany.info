@@ -8,6 +8,7 @@ import { isCondominioValido } from "@/lib/sindicompany/condominios";
 import { getCondoMeta } from "@/lib/sindicompany/condominios-db";
 import { createRevista, type RevistaInput } from "@/lib/sindicompany/db";
 import { getEditorial, editorialEstaPronto } from "@/lib/sindicompany/editoriais";
+import { dispatchGenerateRevista } from "@/lib/sindicompany/engine";
 import { describeError, detectMigrationMissing } from "@/lib/sindicompany/errors";
 
 async function requireAuth() {
@@ -150,7 +151,10 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     );
   }
 
-  // TODO: disparar engine Python aqui (POST /generate)
+  // Dispara a engine via GitHub Actions (fire and forget). Mesmo que
+  // o dispatch falhe, a revista fica gravada e dá pra reprocessar.
+  await dispatchGenerateRevista(revista.id);
+
   revalidatePath("/sindicompany/dashboard");
   redirect(`/sindicompany/revista/${revista.id}`);
 }

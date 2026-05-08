@@ -1,15 +1,16 @@
-# Dependências mínimas atuais (testes não precisam de nada externo)
+# Engine de PDF
+weasyprint>=63.0
+Pillow>=10.0
 
-# Para próxima frente (Drive integration)
+# Supabase (DB + Storage) — usado pelo api/generate.py
+supabase>=2.5.0
+
+# Drive integration (frente futura)
 gdown>=5.0.0
 google-api-python-client>=2.100.0
 google-auth-httplib2>=0.2.0
 google-auth-oauthlib>=1.2.0
 
-# Para frente seguinte (renderização)
-playwright>=1.40.0
+# Auxiliares
 markdown>=3.5
 pyyaml>=6.0
-
-# Dev
-# (testes atualmente não usam pytest — script standalone)

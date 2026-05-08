@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { getRevista, formatEdicao } from "@/lib/sindicompany/db";
 import { RevistaProgress } from "./progress";
-import { cancelarRevistaAction } from "./actions";
+import { cancelarRevistaAction, regerarRevistaAction } from "./actions";
 
 const STATUS_LABELS = {
   em_producao: "Em produção",
@@ -125,10 +125,15 @@ export default async function RevistaPage({
           <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-900">
             <strong>Falha na geração:</strong>{" "}
             {revista.erro_mensagem ?? "sem detalhes"}
-            <div className="mt-2 text-xs opacity-80">
-              Você pode duplicar essa edição no painel pra tentar de novo
-              quando a engine estiver online.
-            </div>
+            <form action={regerarRevistaAction} className="mt-3">
+              <input type="hidden" name="id" value={revista.id} />
+              <button
+                type="submit"
+                className="rounded-lg bg-onix-900 text-white px-4 py-2 text-sm font-medium hover:bg-onix-800"
+              >
+                Tentar gerar de novo
+              </button>
+            </form>
           </div>
         )}
 
