@@ -42,6 +42,21 @@ function getBool(fd: FormData, key: string): boolean {
   return v === "on" || v === "true" || v === "1";
 }
 
+function describeError(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === "string") return e;
+  if (e && typeof e === "object") {
+    const obj = e as Record<string, unknown>;
+    if (typeof obj.message === "string") return obj.message;
+    try {
+      return JSON.stringify(e);
+    } catch {
+      return "erro desconhecido";
+    }
+  }
+  return "erro desconhecido";
+}
+
 async function maybeUploadFoto(
   fd: FormData,
   field: string,
@@ -60,7 +75,18 @@ async function maybeUploadFoto(
 
   const buf = Buffer.from(await file.arrayBuffer());
   const ext = EXT_BY_TYPE[file.type];
-  return uploadCondoFoto(slug, role, buf, file.type, ext);
+  try {
+    return await uploadCondoFoto(slug, role, buf, file.type, ext);
+  } catch (e) {
+    const msg = describeError(e);
+    if (/bucket.*not.*found|not.*found.*bucket/i.test(msg)) {
+      backWithError(
+        slug,
+        "Bucket de fotos não existe. Rode a migration 20260509 no Supabase.",
+      );
+    }
+    backWithError(slug, `Falha ao subir foto do ${role}: ${msg}`);
+  }
 }
 
 export async function salvarCondoMetaAction(formData: FormData): Promise<void> {
@@ -107,7 +133,13 @@ export async function salvarCondoMetaAction(formData: FormData): Promise<void> {
   try {
     await upsertCondoMeta(input);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "erro desconhecido";
+    const msg = describeError(e);
+    if (/relation.*condominios_meta.*does not exist|table.*condominios_meta/i.test(msg)) {
+      backWithError(
+        slug,
+        "Tabela condominios_meta ainda não existe. Rode a migration 20260509 no Supabase.",
+      );
+    }
     backWithError(slug, `Não foi possível salvar. ${msg}`);
   }
 
