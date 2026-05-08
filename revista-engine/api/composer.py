@@ -18,6 +18,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from api.drive import baixar_capa_manutencao, baixar_pastas_manutencao
+from api.image_gen import gerar_foto_materia_capa, gerar_foto_receita
 from api.text_gen import (
     clean_text,
     gerar_agenda_cultural,
@@ -194,7 +195,7 @@ def build_inputs_from_db(
         "cards_secundarios": agenda_ai.get("cards_secundarios", AGENDA_DEFAULT["cards_secundarios"]),
     }
 
-    # ---- S04 Matéria de Capa — corpo gerado por AI
+    # ---- S04 Matéria de Capa — corpo gerado por AI, foto via DALL-E se faltar
     cover_story_inputs = dict(COVER_STORY_DEFAULT)
     cover_story_inputs["mes_referencia"] = mes_ano
     titulo_capa = ed.get("materia_capa_titulo") or COVER_STORY_DEFAULT["manchete"]
@@ -203,6 +204,12 @@ def build_inputs_from_db(
     cover_story_inputs["subtitulo"] = subtitulo_capa
     if ed.get("foto_capa_url"):
         cover_story_inputs["foto_principal"] = ed["foto_capa_url"]
+    else:
+        # Editora não subiu foto: gera com DALL-E e usa também na capa S01
+        foto_ai = gerar_foto_materia_capa(titulo_capa, subtitulo_capa)
+        if foto_ai:
+            cover_story_inputs["foto_principal"] = foto_ai
+            cover_inputs["foto_capa"] = foto_ai
     materia_ai = gerar_materia_capa_completa(titulo_capa, subtitulo_capa, mes_int, ano_int)
     raw_blocos = materia_ai.get("corpo_blocos") or []
     # Normaliza: a IA pode retornar strings simples ou dicts. A seção
@@ -280,13 +287,19 @@ def build_inputs_from_db(
                 for p in pastas_ev
             ]
 
-    # ---- S10 Receita
+    # ---- S10 Receita (foto via DALL-E)
     recipe_inputs = dict(RECIPE_DEFAULT)
     recipe_inputs["mes_referencia"] = mes_ano
     if ed.get("receita_titulo"):
         recipe_inputs["titulo_receita"] = ed["receita_titulo"]
     if ed.get("receita_descricao"):
         recipe_inputs["intro"] = ed["receita_descricao"]
+    foto_receita_ai = gerar_foto_receita(
+        recipe_inputs.get("titulo_receita", ""),
+        recipe_inputs.get("intro", ""),
+    )
+    if foto_receita_ai:
+        recipe_inputs["foto_receita"] = foto_receita_ai
 
     # ---- S11 Nossos Números (Drive prestação ainda pendente)
     numbers_inputs = dict(NUMBERS_DEFAULT)
