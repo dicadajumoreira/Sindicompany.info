@@ -32,20 +32,67 @@ export function describeError(e: unknown): string {
  */
 export function detectMigrationMissing(rawMessage: string): string | null {
   const m = rawMessage.toLowerCase();
-  if (/column\s+(["']?\w+["']?)\s+does not exist/.test(m) || m.includes("could not find the")) {
-    return "Faltam colunas no banco. Rode as migrations 20260508 e 20260510 no SQL Editor do Supabase.";
+
+  // Coluna inexistente: tenta achar o nome e indicar a migration certa.
+  const colMatch =
+    m.match(/column\s+["']?([a-z0-9_.]+)["']?\s+does not exist/) ||
+    m.match(/could not find the\s+["']?([a-z0-9_]+)["']?\s+column/);
+  if (colMatch) {
+    const col = colMatch[1].split(".").pop()!;
+    const mig = COLUMN_TO_MIGRATION[col];
+    if (mig) {
+      return `Coluna '${col}' não existe. Rode a migration ${mig} no SQL Editor do Supabase.`;
+    }
+    return `Coluna '${col}' não existe no banco. Verifique se rodou todas as migrations em supabase/migrations/.`;
   }
+
   if (m.includes("relation") && m.includes("does not exist")) {
     if (m.includes("condominios_meta")) {
       return "Tabela condominios_meta não existe. Rode a migration 20260509 no Supabase.";
+    }
+    if (m.includes("editoriais_mensais")) {
+      return "Tabela editoriais_mensais não existe. Rode a migration 20260511 no Supabase.";
     }
     if (m.includes("revistas")) {
       return "Tabela revistas não existe. Rode a migration 20260507 no Supabase.";
     }
     return "Uma tabela não existe ainda no banco. Rode as migrations pendentes em supabase/migrations/.";
   }
+
   if (m.includes("bucket not found") || m.includes("not found bucket")) {
-    return "Bucket de storage não existe. Verifique as migrations 20260507 (revistas-pdfs) e 20260509 (condominios-fotos).";
+    return "Bucket de storage não existe. Verifique as migrations 20260507 (revistas-pdfs), 20260509 (condominios-fotos) e 20260512 (editoriais-fotos).";
   }
+
   return null;
 }
+
+// Mapa coluna -> migration que cria. Mantém em sincronia com supabase/migrations/.
+const COLUMN_TO_MIGRATION: Record<string, string> = {
+  // 20260508
+  sindico_nome: "20260508_revistas_form.sql",
+  sindico_genero: "20260508_revistas_form.sql",
+  tem_gestor: "20260508_revistas_form.sql",
+  gestor_nome: "20260508_revistas_form.sql",
+  drive_manutencao_url: "20260508_revistas_form.sql",
+  drive_prestacao_url: "20260508_revistas_form.sql",
+  tem_advertencias: "20260508_revistas_form.sql",
+  multas_advertencias_obs: "20260508_revistas_form.sql",
+  tem_eventos: "20260508_revistas_form.sql",
+  drive_eventos_url: "20260508_revistas_form.sql",
+  materia_capa_titulo: "20260508_revistas_form.sql",
+  materia_capa_subtitulo: "20260508_revistas_form.sql",
+  foto_capa_url: "20260508_revistas_form.sql",
+  receita_sugerida: "20260508_revistas_form.sql",
+  receita_titulo: "20260508_revistas_form.sql",
+  notas_editor: "20260508_revistas_form.sql",
+  // 20260510
+  carta_sindico_tema: "20260510_revistas_cartas.sql",
+  carta_sindico_texto: "20260510_revistas_cartas.sql",
+  carta_gestor_tema: "20260510_revistas_cartas.sql",
+  carta_gestor_texto: "20260510_revistas_cartas.sql",
+  // 20260513
+  logo_url: "20260513_logo_e_gestor_revista.sql",
+  gestor_foto_url: "20260513_logo_e_gestor_revista.sql",
+  // 20260514
+  prestacao_arquivo_url: "20260514_prestacao_arquivo.sql",
+};
