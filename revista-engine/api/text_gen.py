@@ -146,19 +146,44 @@ def gerar_carta_sindico(
     )
 
     fallback = (
-        f"Queridos moradores do {condominio}, esta edição de {mes_nome} traz {titulo_carta} "
-        f"como tema central. A matéria de capa fala sobre {materia_capa}, e na receita do mês "
-        f"você encontra {receita}. Boa leitura, {nome}."
+        f"Queridos moradores do {condominio}, é com alegria que escrevo essa carta "
+        f"para abrir nossa edição de {mes_nome}. {titulo_carta} é o tema que escolhemos "
+        f"para guiar este mês, e ele tem tudo a ver com a forma como vivemos juntos por aqui.\n\n"
+        f"Cada edição é uma oportunidade de olhar pro condomínio com novos olhos. {mes_nome} "
+        f"traz suas próprias particularidades, e a matéria de capa, que fala sobre {materia_capa}, "
+        f"convida todos nós a refletir sobre como podemos construir uma convivência mais leve "
+        f"e mais humana no nosso dia a dia. São conversas simples, mas que fazem diferença.\n\n"
+        f"Como gosto sempre de lembrar, condomínio bom é aquele em que todo mundo se sente "
+        f"em casa. Isso não acontece sozinho. Acontece quando cada morador faz a sua parte, "
+        f"quando a gestão escuta, quando os funcionários são tratados com respeito, quando "
+        f"as crianças podem brincar sem medo e quando os mais velhos encontram aqui um lugar "
+        f"de acolhimento. É um trabalho coletivo, contínuo, que vale a pena.\n\n"
+        f"Aproveitem também a receita do mês, {receita}, que vem para a mesa com o sabor "
+        f"de quem conhece a estação. E na agenda cultural vocês encontram sugestões para "
+        f"sair do prédio e descobrir o que a cidade tem oferecido por aí.\n\n"
+        f"Boa leitura, e um abraço para todas as famílias do {condominio}.\n\n"
+        f"{nome}"
     )
 
     return _gerar_carta(prompt, fallback)
 
 
+# Slugs precisam bater EXATAMENTE com o que a seção horoscope.py espera
+# (aries, touro, gemeos, cancer, leao, virgem, libra, escorpiao,
+#  sagitario, capricornio, aquario, peixes).
 SIGNOS = [
-    ("Áries", "21/03–19/04"), ("Touro", "20/04–20/05"), ("Gêmeos", "21/05–20/06"),
-    ("Câncer", "21/06–22/07"), ("Leão", "23/07–22/08"), ("Virgem", "23/08–22/09"),
-    ("Libra", "23/09–22/10"), ("Escorpião", "23/10–21/11"), ("Sagitário", "22/11–21/12"),
-    ("Capricórnio", "22/12–19/01"), ("Aquário", "20/01–18/02"), ("Peixes", "19/02–20/03"),
+    ("aries", "Áries", "21/03–19/04"),
+    ("touro", "Touro", "20/04–20/05"),
+    ("gemeos", "Gêmeos", "21/05–20/06"),
+    ("cancer", "Câncer", "21/06–22/07"),
+    ("leao", "Leão", "23/07–22/08"),
+    ("virgem", "Virgem", "23/08–22/09"),
+    ("libra", "Libra", "23/09–22/10"),
+    ("escorpiao", "Escorpião", "23/10–21/11"),
+    ("sagitario", "Sagitário", "22/11–21/12"),
+    ("capricornio", "Capricórnio", "22/12–19/01"),
+    ("aquario", "Aquário", "20/01–18/02"),
+    ("peixes", "Peixes", "19/02–20/03"),
 ]
 
 
@@ -212,13 +237,14 @@ def gerar_dicas_praticas(mes: int, ano: int) -> dict[str, Any]:
         f"Tom: leve, direto, prático. Cada dica é uma situação real do dia a dia "
         f"(barulho, lixo, áreas comuns, mudança, pets). Conecte com a estação do ano "
         f"({mes_nome}) quando fizer sentido.\n\n"
-        f'Responda JSON: {{ "titulo_secao": "...", "intro": "...", "dicas": [{{"titulo":"...","texto":"..."}} x 6] }}'
+        f'Responda JSON: {{ "titulo_secao": "...", "intro": "...", "dicas": [{{"titulo":"...","corpo":"..."}} x 6] }}'
     )
     fallback = {
         "titulo_secao": f"Dicas para {mes_nome}",
         "intro": "Pequenos hábitos que fazem o condomínio funcionar melhor.",
         "dicas": [
-            {"titulo": f"Dica de {mes_nome}", "texto": "Aproveite o mês com responsabilidade na convivência condominial."} for _ in range(6)
+            {"titulo": f"Dica {i+1} de {mes_nome}", "corpo": "Aproveite o mês com responsabilidade na convivência."}
+            for i in range(6)
         ],
     }
     data = _gerar_json(prompt, fallback, expected_keys=["dicas"])
@@ -230,15 +256,17 @@ def gerar_curiosidades(mes: int, ano: int) -> dict[str, Any]:
     mes_nome = MESES_PT[mes - 1]
     prompt = (
         f"Gere 4 curiosidades sobre o mercado/setor condominial brasileiro pra {mes_nome} de {ano}. "
-        f"Cada uma com um número/dado concreto e uma explicação curta. Conteúdo de quem entende "
+        f"Cada uma com um número/dado concreto e um contexto curto. Conteúdo de quem entende "
         f"de gestão condominial. Evite informações inventadas: use apenas fatos plausíveis e "
-        f"comuns no setor (inadimplência média, número de condôminos, gastos com energia, etc).\n\n"
-        f'JSON: {{ "intro": "...", "curiosidades": [{{"numero":"...","texto":"..."}} x 4] }}'
+        f"comuns no setor (inadimplência média, número de condôminos, gastos com energia, etc). "
+        f"Para cada curiosidade, atribua uma fonte plausível (ex: 'Sindicato da Habitação', "
+        f"'pesquisa setorial 2024').\n\n"
+        f'JSON: {{ "intro": "...", "curiosidades": [{{"fato":"...","contexto":"...","fonte":"..."}} x 4] }}'
     )
     fallback = {
         "intro": "Quatro dados pra contextualizar o mês no setor condominial.",
         "curiosidades": [
-            {"numero": "—", "texto": "Curiosidade do setor condominial."} for _ in range(4)
+            {"fato": "Setor", "contexto": "Curiosidade do setor condominial.", "fonte": "Pesquisa setorial"} for _ in range(4)
         ],
     }
     data = _gerar_json(prompt, fallback, expected_keys=["curiosidades"])
@@ -251,14 +279,20 @@ def gerar_novidades(mes: int, ano: int) -> dict[str, Any]:
     prompt = (
         f"Gere 6 novidades plausíveis de mercado, lei e tecnologia condominial pra {mes_nome} de {ano}. "
         f"Mistura jurídico, tecnológico, financeiro e operacional. Use linguagem direta, "
-        f"sem jargão. Evite afirmações específicas demais (números exatos, nomes de leis "
-        f"reais que você não tem certeza). Foque em tendências e categorias.\n\n"
-        f'JSON: {{ "intro": "...", "noticias": [{{"categoria":"...","titulo":"...","resumo":"..."}} x 6] }}'
+        f"sem jargão. Evite afirmações específicas demais. Cada notícia tem uma data dentro de "
+        f"{mes_nome} {ano}, um título, um resumo e uma fonte plausível.\n\n"
+        f'JSON: {{ "intro": "...", "noticias": [{{"data":"DD/MM","titulo":"...","resumo":"...","fonte":"..."}} x 6] }}'
     )
     fallback = {
         "intro": "Seis movimentos do mês no universo condominial.",
         "noticias": [
-            {"categoria": "Mercado", "titulo": f"Novidade {i+1}", "resumo": "Tendência a observar."} for i in range(6)
+            {
+                "data": f"{(i+1)*4:02d}/{mes:02d}",
+                "titulo": f"Novidade {i+1}",
+                "resumo": "Tendência a observar.",
+                "fonte": "Mercado",
+            }
+            for i in range(6)
         ],
     }
     data = _gerar_json(prompt, fallback, expected_keys=["noticias"])
@@ -266,20 +300,24 @@ def gerar_novidades(mes: int, ano: int) -> dict[str, Any]:
 
 
 def gerar_signos(mes: int, ano: int) -> dict[str, Any]:
-    """Previsões pros 12 signos pro mês."""
+    """Previsões pros 12 signos pro mês.
+
+    A seção horoscope.py espera previsoes com chaves slugificadas
+    sem acento: aries, touro, gemeos, cancer, leao, virgem, libra,
+    escorpiao, sagitario, capricornio, aquario, peixes.
+    """
     mes_nome = MESES_PT[mes - 1]
-    signos_lista = ", ".join(s[0] for s in SIGNOS)
+    keys = ", ".join(slug for slug, _, _ in SIGNOS)
 
     prompt = (
         f"Gere previsões astrológicas leves pros 12 signos pra {mes_nome} de {ano}. "
         f"Tom: divertido, otimista, sem prometer coisas mirabolantes. 1 a 2 frases por signo, "
-        f"foco em convivência, autocuidado, dia a dia. Sem clichês de horóscopo de revista popular "
-        f"(nada de 'cuidado com inveja', etc).\n\n"
-        f"Signos: {signos_lista}.\n\n"
-        f'JSON: {{ "previsoes": {{ "Áries": "...", "Touro": "...", ... }} }}'
+        f"foco em convivência, autocuidado, dia a dia. Sem clichês de horóscopo de revista popular.\n\n"
+        f"As chaves do JSON precisam ser EXATAMENTE: {keys} (sem acentos).\n\n"
+        f'JSON: {{ "previsoes": {{ "aries": "...", "touro": "...", ..., "peixes": "..." }} }}'
     )
     fallback = {
-        "previsoes": {nome: f"{mes_nome} convida a olhar pra dentro." for nome, _ in SIGNOS}
+        "previsoes": {slug: f"{mes_nome} convida a olhar pra dentro com calma." for slug, _, _ in SIGNOS}
     }
     data = _gerar_json(prompt, fallback, expected_keys=["previsoes"])
     return _aplicar_clean_recursivo(data)
@@ -290,22 +328,32 @@ def gerar_agenda_cultural(mes: int, ano: int) -> dict[str, Any]:
     mes_nome = MESES_PT[mes - 1]
     prompt = (
         f"Gere sugestões de agenda cultural pra {mes_nome} de {ano}, com foco em São Paulo "
-        f"e cidades grandes do Brasil. 1 destaque (hero) + 12 cards secundários. "
-        f"Variedade: museus, shows, peças, festivais, gastronomia, esporte. Evite eventos "
-        f"reais específicos que você não tenha certeza absoluta — prefira categorias "
-        f"genéricas que combinam com o mês ('exposições do mês', 'circuito gastronômico').\n\n"
-        f'JSON: {{ "hero": {{"titulo":"...","subtitulo":"...","quando":"...","onde":"..."}}, '
-        f'"cards_secundarios": [{{"categoria":"...","titulo":"...","quando":"...","onde":"..."}} x 12] }}'
+        f"e cidades grandes do Brasil. Variedade: museus, shows, peças, festivais, gastronomia, esporte. "
+        f"Evite eventos reais específicos que você não tenha certeza absoluta — prefira categorias "
+        f"genéricas que combinam com o mês.\n\n"
+        f"Estrutura: 1 destaque (hero) + 12 cards secundários.\n\n"
+        f'JSON: {{ '
+        f'"hero": {{"categoria":"...","titulo":"...","sinopse":"...","data":"...","local":"..."}}, '
+        f'"cards_secundarios": [{{"categoria":"...","titulo":"...","descricao_curta":"...","data":"DD/MM","local":"..."}} x 12] '
+        f'}}'
     )
     fallback = {
         "hero": {
+            "categoria": "Cultura",
             "titulo": f"Destaques de {mes_nome}",
-            "subtitulo": "Os melhores eventos da cidade neste mês.",
-            "quando": f"{mes_nome} {ano}",
-            "onde": "São Paulo",
+            "sinopse": f"Os melhores eventos da cidade em {mes_nome} de {ano}.",
+            "data": f"{mes_nome} {ano}",
+            "local": "São Paulo",
         },
         "cards_secundarios": [
-            {"categoria": "Cultura", "titulo": f"Evento {i+1}", "quando": f"{mes_nome}", "onde": "São Paulo"} for i in range(12)
+            {
+                "categoria": "Cultura",
+                "titulo": f"Evento cultural {i+1}",
+                "descricao_curta": "Programação do mês.",
+                "data": f"{(i+1)*2:02d}/{mes:02d}",
+                "local": "São Paulo",
+            }
+            for i in range(12)
         ],
     }
     data = _gerar_json(prompt, fallback, expected_keys=["cards_secundarios"])
@@ -323,17 +371,22 @@ def gerar_materia_capa_completa(
         f"Estrutura: 8 blocos curtos de texto (cada bloco com 80 a 120 palavras). "
         f"Tom: jornalístico próximo, voz humana, em português brasileiro com acentos corretos. "
         f"Nada de bullets ou listas. Sem travessões. Cada bloco aborda um ângulo diferente do tema. "
-        f"Use dados plausíveis (não invente números específicos). Cite tipos de fonte ('especialistas', "
-        f"'pesquisas do setor') sem nomes próprios reais.\n\n"
-        f'JSON: {{ "corpo_blocos": ["...", "...", ... 8 blocos] }}'
+        f"Use dados plausíveis (não invente números específicos).\n\n"
+        f'JSON: {{ "corpo_blocos": [{{"tipo":"paragrafo","texto":"..."}} x 8] }}'
     )
     fallback = {
         "corpo_blocos": [
-            f"Sobre {titulo}, vale lembrar que cada condomínio é único. "
-            f"O essencial é ouvir, dialogar e construir consensos a partir do que é comum. "
-            f"Em {mes_nome}, aproveite pra revisar os pequenos hábitos que fazem a "
-            f"diferença na convivência."
-        ] * 8
+            {
+                "tipo": "paragrafo",
+                "texto": (
+                    f"Sobre {titulo}, vale lembrar que cada condomínio é único. "
+                    f"O essencial é ouvir, dialogar e construir consensos a partir do que é comum. "
+                    f"Em {mes_nome}, aproveite pra revisar os pequenos hábitos que fazem a "
+                    f"diferença na convivência."
+                ),
+            }
+            for _ in range(8)
+        ]
     }
     data = _gerar_json(prompt, fallback, expected_keys=["corpo_blocos"])
     return _aplicar_clean_recursivo(data)

@@ -201,8 +201,17 @@ def build_inputs_from_db(
     if ed.get("foto_capa_url"):
         cover_story_inputs["foto_principal"] = ed["foto_capa_url"]
     materia_ai = gerar_materia_capa_completa(titulo_capa, subtitulo_capa, mes_int, ano_int)
-    if materia_ai.get("corpo_blocos"):
-        cover_story_inputs["corpo_blocos"] = materia_ai["corpo_blocos"]
+    raw_blocos = materia_ai.get("corpo_blocos") or []
+    # Normaliza: a IA pode retornar strings simples ou dicts. A seção
+    # cover_story.py exige lista de dicts com {tipo, texto, ...}.
+    blocos: list[dict[str, Any]] = []
+    for b in raw_blocos:
+        if isinstance(b, dict) and b.get("texto"):
+            blocos.append(b if b.get("tipo") else {"tipo": "paragrafo", **b})
+        elif isinstance(b, str) and b.strip():
+            blocos.append({"tipo": "paragrafo", "texto": b.strip()})
+    if blocos:
+        cover_story_inputs["corpo_blocos"] = blocos
 
     # ---- S05 Dicas Práticas — geradas por mês
     dicas_ai = gerar_dicas_praticas(mes_int, ano_int)
