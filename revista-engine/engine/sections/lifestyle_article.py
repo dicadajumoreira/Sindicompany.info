@@ -16,6 +16,8 @@ Inputs:
 
 from __future__ import annotations
 
+import re
+
 from .base import Section
 
 
@@ -80,6 +82,8 @@ class LifestyleArticle(Section):
         paragrafos = [p.strip() for p in corpo.split("\n\n") if p.strip()]
         if not paragrafos:
             paragrafos = [corpo] if corpo else []
+        paragrafos = [_strip_inline_citations(p) for p in paragrafos]
+        paragrafos = [p for p in paragrafos if p]
 
         body_html = "\n".join(
             f'<p class="life__p">{_escape(p)}</p>' for p in paragrafos
@@ -237,6 +241,26 @@ class LifestyleArticle(Section):
   }}
 </style>
 """
+
+
+# Remove citações inline geradas pela IA: ([texto](url)), [texto](url),
+# (https://...) e URLs nuas. As fontes aparecem só no rodapé "Fontes".
+_RE_PAREN_LINK = re.compile(r"\s*\(\[[^\]]+\]\([^)]+\)\)")
+_RE_INLINE_LINK = re.compile(r"\s*\[([^\]]+)\]\([^)]+\)")
+_RE_PAREN_URL = re.compile(r"\s*\((?:https?://|www\.)[^\s)]+\)")
+_RE_BARE_URL = re.compile(r"\s*https?://\S+")
+
+
+def _strip_inline_citations(text: str) -> str:
+    if not text:
+        return text
+    out = _RE_PAREN_LINK.sub("", text)
+    out = _RE_INLINE_LINK.sub(r" \1", out)
+    out = _RE_PAREN_URL.sub("", out)
+    out = _RE_BARE_URL.sub("", out)
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    out = re.sub(r"\s+([.,;:!?])", r"\1", out)
+    return out.strip()
 
 
 def _escape(s: str) -> str:

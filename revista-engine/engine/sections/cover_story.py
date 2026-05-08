@@ -22,6 +22,8 @@ Inputs (Doc 01 §3 S04):
 
 from __future__ import annotations
 
+import re
+
 from .base import Section
 
 
@@ -305,9 +307,9 @@ class CoverStory(Section):
         for b in blocos:
             tipo = (b.get("tipo") or "paragrafo").strip().lower()
             if tipo == "paragrafo":
-                out.append(f'<p class="story__p">{_escape(b.get("texto", ""))}</p>')
+                out.append(f'<p class="story__p">{_escape(_strip_inline_citations(b.get("texto", "")))}</p>')
             elif tipo == "intertitulo":
-                out.append(f'<h2 class="story__intertitulo">{_escape(b.get("texto", ""))}</h2>')
+                out.append(f'<h2 class="story__intertitulo">{_escape(_strip_inline_citations(b.get("texto", "")))}</h2>')
             elif tipo == "pull_quote":
                 autor = b.get("autor", "").strip()
                 autor_html = (
@@ -316,7 +318,7 @@ class CoverStory(Section):
                 )
                 out.append(
                     f'<blockquote class="story__pull-quote">'
-                    f'{_escape(b.get("texto", ""))}{autor_html}</blockquote>'
+                    f'{_escape(_strip_inline_citations(b.get("texto", "")))}{autor_html}</blockquote>'
                 )
             elif tipo == "dado_box":
                 out.append(f"""
@@ -329,6 +331,25 @@ class CoverStory(Section):
                 # Foto secundária — placeholder por ora
                 pass  # Sem foto real por enquanto
         return "\n".join(out)
+
+
+# Remove citações inline geradas pela IA (markdown links e URLs nuas).
+_RE_PAREN_LINK = re.compile(r"\s*\(\[[^\]]+\]\([^)]+\)\)")
+_RE_INLINE_LINK = re.compile(r"\s*\[([^\]]+)\]\([^)]+\)")
+_RE_PAREN_URL = re.compile(r"\s*\((?:https?://|www\.)[^\s)]+\)")
+_RE_BARE_URL = re.compile(r"\s*https?://\S+")
+
+
+def _strip_inline_citations(text: str) -> str:
+    if not text:
+        return text
+    out = _RE_PAREN_LINK.sub("", text)
+    out = _RE_INLINE_LINK.sub(r" \1", out)
+    out = _RE_PAREN_URL.sub("", out)
+    out = _RE_BARE_URL.sub("", out)
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    out = re.sub(r"\s+([.,;:!?])", r"\1", out)
+    return out.strip()
 
 
 def _escape(s: str) -> str:

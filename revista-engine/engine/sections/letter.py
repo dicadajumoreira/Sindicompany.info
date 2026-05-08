@@ -22,6 +22,8 @@ Regras (Doc 01):
 
 from __future__ import annotations
 
+import re
+
 from .base import A4, MOBILE, Section
 
 
@@ -119,6 +121,8 @@ class Letter(Section):
         paragrafos = [p.strip() for p in texto.split("\n\n") if p.strip()]
         if not paragrafos:
             paragrafos = [texto] if texto else []
+        paragrafos = [_strip_inline_citations(p) for p in paragrafos]
+        paragrafos = [p for p in paragrafos if p]
 
         # Primeiro parágrafo recebe drop cap
         body_html_parts = []
@@ -271,6 +275,25 @@ class Letter(Section):
   }}
 </style>
 """
+
+
+# Remove citações inline geradas pela IA (markdown links e URLs nuas).
+_RE_PAREN_LINK = re.compile(r"\s*\(\[[^\]]+\]\([^)]+\)\)")
+_RE_INLINE_LINK = re.compile(r"\s*\[([^\]]+)\]\([^)]+\)")
+_RE_PAREN_URL = re.compile(r"\s*\((?:https?://|www\.)[^\s)]+\)")
+_RE_BARE_URL = re.compile(r"\s*https?://\S+")
+
+
+def _strip_inline_citations(text: str) -> str:
+    if not text:
+        return text
+    out = _RE_PAREN_LINK.sub("", text)
+    out = _RE_INLINE_LINK.sub(r" \1", out)
+    out = _RE_PAREN_URL.sub("", out)
+    out = _RE_BARE_URL.sub("", out)
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    out = re.sub(r"\s+([.,;:!?])", r"\1", out)
+    return out.strip()
 
 
 def _escape(s: str) -> str:

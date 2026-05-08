@@ -334,6 +334,10 @@ def gerar_novidades(mes: int, ano: int) -> dict[str, Any]:
         f"curto e direto (no máx 60 caracteres), resumo de UMA frase só (no máx "
         f"120 caracteres) e veículo. Categorize cada uma com badge: "
         f"LEGISLAÇÃO, MERCADO, NOVIDADE ou TECNOLOGIA.\n\n"
+        f"REGRA CRÍTICA: 'titulo' e 'resumo' devem conter SOMENTE prosa "
+        f"limpa. Sem URLs, sem markdown links [texto](url), sem citações "
+        f"inline tipo '([uol.com.br](https://...))'. O nome do veículo vai "
+        f"APENAS no campo 'fonte'.\n\n"
         f'JSON estrito: {{ "intro": "Resumo do mês para condôminos", '
         f'"noticias": [{{"badge":"LEGISLAÇÃO","data":"DD/MM","titulo":"...","resumo":"...","fonte":"UOL/G1/Folha/R7"}} x 6] }}'
     )
@@ -392,6 +396,9 @@ def gerar_agenda_cultural(mes: int, ano: int) -> dict[str, Any]:
         f"(consulte Quero na Cena, Veja SP, Catraca Livre, sites de teatros)\n\n"
         f"Selecione 1 destaque (hero) + 15 cards. Cada item com data real, local "
         f"(quando aplicável) e descrição curta de 1 frase. Use SEMPRE títulos reais.\n\n"
+        f"REGRA CRÍTICA: 'titulo', 'sinopse' e 'descricao_curta' devem ser "
+        f"prosa limpa. Sem URLs, sem markdown [texto](url), sem citações "
+        f"inline tipo '([site.com](https://...))'. Não cite veículos no texto.\n\n"
         f'JSON estrito (sem markdown): {{ '
         f'"hero": {{"categoria":"NETFLIX/CINEMA/TEATRO/STREAMING","titulo":"Título real","sinopse":"...","data":"DD/MM","local":"..."}}, '
         f'"cards_secundarios": [{{"categoria":"...","titulo":"Título real","descricao_curta":"...","data":"DD/MM","local":"..."}} x 15] '
@@ -438,6 +445,10 @@ def gerar_materia_capa_completa(
         f"diferente. Sempre conecte com o cotidiano do condomínio.\n\n"
         f"INCLUA também 3 a 5 fontes (nome do veículo + ano), tipo "
         f"'UOL · 2025', 'G1 · 2024', 'Folha de São Paulo · 2025'.\n\n"
+        f"REGRA CRÍTICA: o campo 'texto' de cada bloco deve conter SOMENTE "
+        f"prosa limpa. NÃO inclua URLs, links em markdown como [texto](url) "
+        f"nem citações inline tipo '([uol.com.br](https://...))'. As fontes "
+        f"vão APENAS no campo separado 'fontes'.\n\n"
         f'JSON: {{ "corpo_blocos": [{{"tipo":"paragrafo","texto":"..."}} x 8], '
         f'"fontes": ["UOL · 2025", "G1 · 2024", ... 3-5 itens] }}'
     )

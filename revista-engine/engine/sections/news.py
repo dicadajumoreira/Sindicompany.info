@@ -16,6 +16,8 @@ Inputs:
 
 from __future__ import annotations
 
+import re
+
 from .base import Section
 
 
@@ -271,13 +273,32 @@ class News(Section):
           </span>
           <span class="news-card__data">{_escape(n.get('data', ''))}</span>
         </div>
-        <h3 class="news-card__titulo">{_escape(n.get('titulo', ''))}</h3>
-        <p class="news-card__resumo">{_escape(n.get('resumo', ''))}</p>
+        <h3 class="news-card__titulo">{_escape(_strip_inline_citations(n.get('titulo', '')))}</h3>
+        <p class="news-card__resumo">{_escape(_strip_inline_citations(n.get('resumo', '')))}</p>
         <div class="news-card__fonte">
           <span class="news-card__fonte-label">Fonte</span>
           <span class="news-card__fonte-text">{_escape(n.get('fonte', ''))}</span>
         </div>
       </article>"""
+
+
+# Remove citações inline geradas pela IA (markdown links e URLs nuas).
+_RE_PAREN_LINK = re.compile(r"\s*\(\[[^\]]+\]\([^)]+\)\)")
+_RE_INLINE_LINK = re.compile(r"\s*\[([^\]]+)\]\([^)]+\)")
+_RE_PAREN_URL = re.compile(r"\s*\((?:https?://|www\.)[^\s)]+\)")
+_RE_BARE_URL = re.compile(r"\s*https?://\S+")
+
+
+def _strip_inline_citations(text: str) -> str:
+    if not text:
+        return text
+    out = _RE_PAREN_LINK.sub("", text)
+    out = _RE_INLINE_LINK.sub(r" \1", out)
+    out = _RE_PAREN_URL.sub("", out)
+    out = _RE_BARE_URL.sub("", out)
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    out = re.sub(r"\s+([.,;:!?])", r"\1", out)
+    return out.strip()
 
 
 def _escape(s: str) -> str:

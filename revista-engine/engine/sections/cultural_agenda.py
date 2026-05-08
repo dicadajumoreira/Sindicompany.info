@@ -13,6 +13,8 @@ Inputs (Doc 01 §3 S03):
 
 from __future__ import annotations
 
+import re
+
 from .base import Section
 
 
@@ -363,8 +365,8 @@ class CulturalAgenda(Section):
             {_escape(cat) or 'DESTAQUE'}
           </span>
         </span>
-        <h2 class="agenda-hero__titulo">{_escape(hero.get('titulo',''))}</h2>
-        <p class="agenda-hero__sinopse">{_escape(hero.get('sinopse',''))}</p>
+        <h2 class="agenda-hero__titulo">{_escape(_strip_inline_citations(hero.get('titulo','')))}</h2>
+        <p class="agenda-hero__sinopse">{_escape(_strip_inline_citations(hero.get('sinopse','')))}</p>
         {f'<div class="agenda-hero__data">{_escape(data)}</div>' if data else ''}
       </div>
     </article>
@@ -387,11 +389,30 @@ class CulturalAgenda(Section):
           <span class="badge" style="background:{bg};color:{fg}">{_escape(cat) or '—'}</span>
           {f'<span class="agenda-card__data">{_escape(data)}</span>' if data else ''}
         </div>
-        <h3 class="agenda-card__titulo">{_escape(c.get('titulo',''))}</h3>
-        <p class="agenda-card__desc">{_escape(c.get('descricao_curta','') or c.get('descricao',''))}</p>
+        <h3 class="agenda-card__titulo">{_escape(_strip_inline_citations(c.get('titulo','')))}</h3>
+        <p class="agenda-card__desc">{_escape(_strip_inline_citations(c.get('descricao_curta','') or c.get('descricao','')))}</p>
         {f'<div class="agenda-card__local">{_escape(local)}</div>' if local else ''}
       </article>""")
         return "\n".join(items)
+
+
+# Remove citações inline geradas pela IA (markdown links e URLs nuas).
+_RE_PAREN_LINK = re.compile(r"\s*\(\[[^\]]+\]\([^)]+\)\)")
+_RE_INLINE_LINK = re.compile(r"\s*\[([^\]]+)\]\([^)]+\)")
+_RE_PAREN_URL = re.compile(r"\s*\((?:https?://|www\.)[^\s)]+\)")
+_RE_BARE_URL = re.compile(r"\s*https?://\S+")
+
+
+def _strip_inline_citations(text: str) -> str:
+    if not text:
+        return text
+    out = _RE_PAREN_LINK.sub("", text)
+    out = _RE_INLINE_LINK.sub(r" \1", out)
+    out = _RE_PAREN_URL.sub("", out)
+    out = _RE_BARE_URL.sub("", out)
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    out = re.sub(r"\s+([.,;:!?])", r"\1", out)
+    return out.strip()
 
 
 def _escape(s: str) -> str:
