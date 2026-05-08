@@ -88,9 +88,43 @@ export async function uploadGestorFotoRevista(
   return data.publicUrl;
 }
 
+/** Cria um signed upload URL pra que o navegador suba direto pro Storage,
+ *  sem passar pela Server Action (Vercel limita request body a 4.5–50MB).
+ *  Retorna o token + path + URL pública final que o form vai persistir. */
+export async function createPrestacaoUploadIntent(
+  condoSlug: string,
+  revistaId: string,
+  ext: string,
+): Promise<{ token: string; path: string; publicUrl: string }> {
+  const path = `${condoSlug}/prestacao-${revistaId}.${ext}`;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUploadUrl(path, { upsert: true });
+  if (error) throw error;
+  const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return { token: data.token, path, publicUrl: pub.publicUrl };
+}
+
+/** Mesma ideia pro ZIP de manutenção (arquivo grande, 100MB+). */
+export async function createManutencaoZipUploadIntent(
+  condoSlug: string,
+  revistaId: string,
+): Promise<{ token: string; path: string; publicUrl: string }> {
+  const path = `${condoSlug}/manutencao-${revistaId}.zip`;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUploadUrl(path, { upsert: true });
+  if (error) throw error;
+  const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return { token: data.token, path, publicUrl: pub.publicUrl };
+}
+
 /** Sobe o arquivo de prestação de contas (imagem ou PDF) atrelado a
- *  uma revista específica. Cada edição tem o seu (números mudam mês
- *  a mês). A engine baixa pela URL pública e roda Vision/OCR. */
+ *  uma revista específica. Mantido para fluxos que ainda usam upload
+ *  via Server Action (testes locais e arquivos pequenos). O fluxo
+ *  preferido é o cliente direto via createPrestacaoUploadIntent. */
 export async function uploadPrestacaoArquivo(
   condoSlug: string,
   revistaId: string,

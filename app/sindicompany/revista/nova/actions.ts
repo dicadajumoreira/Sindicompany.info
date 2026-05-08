@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { isCondominioValido, slugifyCondo } from "@/lib/sindicompany/condominios";
-import { getCondoMeta, uploadGestorFotoRevista, uploadManutencaoZip, uploadPrestacaoArquivo } from "@/lib/sindicompany/condominios-db";
+import { getCondoMeta, uploadGestorFotoRevista } from "@/lib/sindicompany/condominios-db";
 import { createRevista, type RevistaInput } from "@/lib/sindicompany/db";
 import { getEditorial, editorialEstaPronto } from "@/lib/sindicompany/editoriais";
 import { dispatchGenerateRevista } from "@/lib/sindicompany/engine";
@@ -18,25 +18,6 @@ const PHOTO_EXT_BY_TYPE: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
-
-const MAX_PRESTACAO_BYTES = 15 * 1024 * 1024; // 15MB (PDF pode ser maior)
-const ALLOWED_PRESTACAO_TYPES = new Set([
-  "image/jpeg", "image/png", "image/webp", "application/pdf",
-]);
-const PRESTACAO_EXT_BY_TYPE: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "application/pdf": "pdf",
-};
-
-const MAX_MANUTENCAO_ZIP_BYTES = 200 * 1024 * 1024; // 200MB (muitas fotos)
-const ALLOWED_MANUTENCAO_ZIP_TYPES = new Set([
-  "application/zip",
-  "application/x-zip-compressed",
-  "application/octet-stream", // alguns navegadores enviam zip como octet-stream
-  "multipart/x-zip",
-]);
 
 async function requireAuth() {
   const store = await cookies();
@@ -173,61 +154,14 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     gestor_foto_url = undefined;
   }
 
-  // ZIP de fotos de manutenção. Se já tem da edição duplicada, mantém;
-  // novo upload sobrescreve.
-  let manutencao_zip_url: string | undefined =
-    getStr(formData, "manutencao_zip_existente") || undefined;
-  {
-    const file = formData.get("manutencao_zip_file");
-    if (file instanceof File && file.size > 0) {
-      if (file.size > MAX_MANUTENCAO_ZIP_BYTES) {
-        backToFormWithError("ZIP de manutenção maior que 200MB.", formData);
-      }
-      const isZipExt = file.name.toLowerCase().endsWith(".zip");
-      if (!ALLOWED_MANUTENCAO_ZIP_TYPES.has(file.type) && !isZipExt) {
-        backToFormWithError("Arquivo precisa ser .zip.", formData);
-      }
-      try {
-        const buf = Buffer.from(await file.arrayBuffer());
-        manutencao_zip_url = await uploadManutencaoZip(
-          slugifyCondo(condominio),
-          `pending-${Date.now()}`,
-          buf,
-        );
-      } catch (e) {
-        backToFormWithError(`Falha ao subir ZIP de manutenção: ${describeError(e)}`, formData);
-      }
-    }
-  }
-
-  // Arquivo de prestação de contas desta edição (imagem ou PDF). Se já tem
-  // da edição duplicada, mantém; novo upload sobrescreve.
-  let prestacao_arquivo_url: string | undefined =
-    getStr(formData, "prestacao_arquivo_existente") || undefined;
-  {
-    const file = formData.get("prestacao_arquivo_file");
-    if (file instanceof File && file.size > 0) {
-      if (file.size > MAX_PRESTACAO_BYTES) {
-        backToFormWithError("Arquivo de prestação maior que 15MB.", formData);
-      }
-      if (!ALLOWED_PRESTACAO_TYPES.has(file.type)) {
-        backToFormWithError("Arquivo de prestação precisa ser JPG, PNG, WebP ou PDF.", formData);
-      }
-      try {
-        const buf = Buffer.from(await file.arrayBuffer());
-        const ext = PRESTACAO_EXT_BY_TYPE[file.type];
-        prestacao_arquivo_url = await uploadPrestacaoArquivo(
-          slugifyCondo(condominio),
-          `pending-${Date.now()}`,
-          buf,
-          file.type,
-          ext,
-        );
-      } catch (e) {
-        backToFormWithError(`Falha ao subir arquivo de prestação: ${describeError(e)}`, formData);
-      }
-    }
-  }
+  // Os arquivos (ZIP de manutenção, dashboard de prestação) são subidos
+  // direto do navegador pro Supabase Storage via signed URL. O form só
+  // recebe a URL pública resultante. Isso evita o limite de body do
+  // Server Action (Vercel cap em 4.5MB-50MB).
+  const manutencao_zip_url =
+    getStr(formData, "manutencao_zip_url_uploaded") || undefined;
+  const prestacao_arquivo_url =
+    getStr(formData, "prestacao_arquivo_url_uploaded") || undefined;
 
   const input: RevistaInput = {
     condominio,

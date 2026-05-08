@@ -16,6 +16,7 @@ import {
 } from "@/lib/sindicompany/sugestoes";
 import { novaRevistaAction } from "./actions";
 import { CondoSelect, MesSelect, AnoInput } from "./condo-select";
+import { DirectUploadField } from "./upload-field";
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -367,46 +368,24 @@ export default async function NovaEdicaoPage({
           </h2>
 
           <Field label="Fotos de manutenção (arquivo .zip)"
-                 hint="ZIP com subpastas. O nome da subpasta vira o título do card; as fotos dentro são usadas nas páginas. A engine descompacta automaticamente.">
-            {fonte?.manutencao_zip_url && (
-              <div className="mb-2 flex items-center gap-3">
-                <input type="hidden" name="manutencao_zip_existente" value={fonte.manutencao_zip_url} />
-                <a href={fonte.manutencao_zip_url} target="_blank" rel="noopener noreferrer"
-                   className="text-xs font-medium text-mint-700 underline underline-offset-2">
-                  Ver ZIP da edição duplicada
-                </a>
-                <span className="text-xs text-g60">
-                  Suba um novo abaixo para trocar.
-                </span>
-              </div>
-            )}
-            <input
-              type="file"
-              name="manutencao_zip_file"
+                 hint="ZIP com subpastas. O nome da subpasta vira o título do card; as fotos dentro são usadas nas páginas. Upload direto pro Storage (não passa pela função, então aceita arquivos grandes).">
+            <DirectUploadField
+              kind="manutencao_zip"
+              hiddenInputName="manutencao_zip_url_uploaded"
+              initialUrl={fonte?.manutencao_zip_url ?? undefined}
               accept=".zip,application/zip,application/x-zip-compressed"
-              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+              maxBytes={500 * 1024 * 1024}
             />
           </Field>
 
           <Field label="Dashboard de prestação (imagem ou PDF)"
-                 hint="Print do dashboard ou PDF do balancete deste mês. A IA lê e preenche 'Nossos Números' (receita, despesas, fundo de reserva, inadimplência).">
-            {fonte?.prestacao_arquivo_url && (
-              <div className="mb-2 flex items-center gap-3">
-                <input type="hidden" name="prestacao_arquivo_existente" value={fonte.prestacao_arquivo_url} />
-                <a href={fonte.prestacao_arquivo_url} target="_blank" rel="noopener noreferrer"
-                   className="text-xs font-medium text-mint-700 underline underline-offset-2">
-                  Ver arquivo da edição duplicada
-                </a>
-                <span className="text-xs text-g60">
-                  Suba um novo abaixo para trocar.
-                </span>
-              </div>
-            )}
-            <input
-              type="file"
-              name="prestacao_arquivo_file"
+                 hint="Print do dashboard ou PDF do balancete deste mês. A IA lê e preenche 'Nossos Números'. Upload direto pro Storage.">
+            <DirectUploadField
+              kind="prestacao"
+              hiddenInputName="prestacao_arquivo_url_uploaded"
+              initialUrl={fonte?.prestacao_arquivo_url ?? undefined}
               accept="image/jpeg,image/png,image/webp,application/pdf"
-              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+              maxBytes={50 * 1024 * 1024}
             />
           </Field>
 
