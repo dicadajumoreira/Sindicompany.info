@@ -112,3 +112,17 @@ def gerar_foto_receita(titulo: str, descricao: str = "") -> str | None:
         f"Brazilian editorial magazine aesthetic. Photorealistic, no text, no logos."
     )
     return _gerar_imagem(prompt, size="1792x1024")
+
+
+def gerar_foto_agenda_hero(titulo: str, categoria: str = "") -> str | None:
+    """Gera foto pro destaque (hero) da agenda cultural."""
+    if not titulo:
+        return None
+    prompt = (
+        f"Editorial photograph for cultural section, theme: '{titulo}'. "
+        f"Category: {categoria}. Style: high-end Brazilian magazine, candid, "
+        f"natural lighting, cinematic, real-world setting (theater stage, "
+        f"cinema, museum, gastronomic event, concert). Photorealistic, "
+        f"hyper-detailed, warm tones, no text, no logos, no graphic art."
+    )
+    return _gerar_imagem(prompt, size="1792x1024")

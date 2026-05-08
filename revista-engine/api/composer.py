@@ -18,7 +18,11 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from api.drive import baixar_capa_manutencao, baixar_pastas_manutencao
-from api.image_gen import gerar_foto_materia_capa, gerar_foto_receita
+from api.image_gen import (
+    gerar_foto_agenda_hero,
+    gerar_foto_materia_capa,
+    gerar_foto_receita,
+)
 from api.text_gen import (
     clean_text,
     gerar_agenda_cultural,
@@ -187,11 +191,18 @@ def build_inputs_from_db(
     mes_int = int(revista["mes"])
     ano_int = int(revista["ano"])
 
-    # ---- S03 Agenda Cultural — gerada por mês via AI
+    # ---- S03 Agenda Cultural — gerada por mês via AI + foto hero via DALL-E
     agenda_ai = gerar_agenda_cultural(mes_int, ano_int)
+    hero = dict(agenda_ai.get("hero", AGENDA_DEFAULT["hero"]))
+    foto_hero = gerar_foto_agenda_hero(
+        hero.get("titulo", ""),
+        hero.get("categoria", ""),
+    )
+    if foto_hero:
+        hero["foto"] = foto_hero
     agenda_inputs = {
         "mes_referencia": mes_ano,
-        "hero": agenda_ai.get("hero", AGENDA_DEFAULT["hero"]),
+        "hero": hero,
         "cards_secundarios": agenda_ai.get("cards_secundarios", AGENDA_DEFAULT["cards_secundarios"]),
     }
 
@@ -211,6 +222,9 @@ def build_inputs_from_db(
             cover_story_inputs["foto_principal"] = foto_ai
             cover_inputs["foto_capa"] = foto_ai
     materia_ai = gerar_materia_capa_completa(titulo_capa, subtitulo_capa, mes_int, ano_int)
+    raw_fontes = materia_ai.get("fontes") or []
+    if isinstance(raw_fontes, list) and raw_fontes:
+        cover_story_inputs["fontes"] = [str(f) for f in raw_fontes if f]
     raw_blocos = materia_ai.get("corpo_blocos") or []
     # Normaliza: a IA pode retornar strings simples ou dicts. A seção
     # cover_story.py exige lista de dicts com {tipo, texto, ...}.

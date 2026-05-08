@@ -331,14 +331,17 @@ def gerar_novidades(mes: int, ano: int) -> dict[str, Any]:
         f"São Paulo, R7. Pode complementar com SíndicoNet e Direcional Condomínios. "
         f"Apenas notícias REAIS publicadas, com fonte verificável.\n\n"
         f"Selecione 6 notícias com data (dentro de {mes_nome}/{ano}), título "
-        f"original, resumo (1-2 frases) e veículo.\n\n"
+        f"curto e direto (no máx 60 caracteres), resumo de UMA frase só (no máx "
+        f"120 caracteres) e veículo. Categorize cada uma com badge: "
+        f"LEGISLAÇÃO, MERCADO, NOVIDADE ou TECNOLOGIA.\n\n"
         f'JSON estrito: {{ "intro": "Resumo do mês para condôminos", '
-        f'"noticias": [{{"data":"DD/MM","titulo":"...","resumo":"...","fonte":"UOL/G1/Folha/R7"}} x 6] }}'
+        f'"noticias": [{{"badge":"LEGISLAÇÃO","data":"DD/MM","titulo":"...","resumo":"...","fonte":"UOL/G1/Folha/R7"}} x 6] }}'
     )
     fallback = {
         "intro": "Seis movimentos do mês no universo condominial.",
         "noticias": [
             {
+                "badge": ["NOVIDADE", "LEGISLAÇÃO", "MERCADO", "TECNOLOGIA"][i % 4],
                 "data": f"{(i+1)*4:02d}/{mes:02d}",
                 "titulo": f"Novidade {i+1}",
                 "resumo": "Tendência a observar.",
@@ -433,7 +436,10 @@ def gerar_materia_capa_completa(
         f"próximo, voz humana, português brasileiro com acentos corretos. "
         f"Nada de bullets, nada de travessões. Cada bloco aborda um ângulo "
         f"diferente. Sempre conecte com o cotidiano do condomínio.\n\n"
-        f'JSON: {{ "corpo_blocos": [{{"tipo":"paragrafo","texto":"..."}} x 8] }}'
+        f"INCLUA também 3 a 5 fontes (nome do veículo + ano), tipo "
+        f"'UOL · 2025', 'G1 · 2024', 'Folha de São Paulo · 2025'.\n\n"
+        f'JSON: {{ "corpo_blocos": [{{"tipo":"paragrafo","texto":"..."}} x 8], '
+        f'"fontes": ["UOL · 2025", "G1 · 2024", ... 3-5 itens] }}'
     )
     fallback = {
         "corpo_blocos": [
@@ -447,7 +453,8 @@ def gerar_materia_capa_completa(
                 ),
             }
             for _ in range(8)
-        ]
+        ],
+        "fontes": ["UOL", "G1", "Folha de São Paulo"],
     }
     data = _gerar_json(prompt, fallback, expected_keys=["corpo_blocos"], use_web_search=True)
     return _aplicar_clean_recursivo(data)
