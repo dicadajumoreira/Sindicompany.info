@@ -532,8 +532,26 @@ def _gerar_json(
             # search-preview às vezes envolve em ```json ... ```
             cleaned = raw
             if cleaned.startswith("```"):
-                cleaned = "\n".join(cleaned.split("\n")[1:-1])
-            data = json.loads(cleaned or "{}")
+                # Remove fences (```json e ``` finais)
+                lines = cleaned.split("\n")
+                if len(lines) >= 2:
+                    cleaned = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+
+            # Defesa: se a IA respondeu texto livre ('Sorry...', 'I cannot...'),
+            # cleaned não começa com { nem [. Pula direto pro próximo modelo
+            # (ou fallback) sem tentar parsear.
+            cleaned = cleaned.strip()
+            if not cleaned or not cleaned.lstrip().startswith(("{", "[")):
+                print(f"[text_gen] {model}: resposta não-JSON ({cleaned[:80]!r})", flush=True)
+                last_error = "non-json-response"
+                continue
+
+            try:
+                data = json.loads(cleaned)
+            except json.JSONDecodeError as je:
+                print(f"[text_gen] {model}: JSONDecodeError {je} — pulando", flush=True)
+                last_error = f"json-decode: {je}"
+                continue
 
             if expected_keys and not all(k in data for k in expected_keys):
                 print(
@@ -612,8 +630,18 @@ def _gerar_json_vision(
         print(f"[text_gen] vision retornou {len(raw)} chars", flush=True)
         cleaned = raw
         if cleaned.startswith("```"):
-            cleaned = "\n".join(cleaned.split("\n")[1:-1])
-        data = json.loads(cleaned or "{}")
+            lines = cleaned.split("\n")
+            if len(lines) >= 2:
+                cleaned = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+        cleaned = cleaned.strip()
+        if not cleaned or not cleaned.lstrip().startswith(("{", "[")):
+            print(f"[text_gen] vision: resposta não-JSON ({cleaned[:80]!r})", flush=True)
+            return fallback
+        try:
+            data = json.loads(cleaned)
+        except json.JSONDecodeError as je:
+            print(f"[text_gen] vision: JSONDecodeError {je} — fallback", flush=True)
+            return fallback
         if expected_keys and not all(k in data for k in expected_keys):
             print(f"[text_gen] vision: faltam chaves {expected_keys}", flush=True)
             return fallback
