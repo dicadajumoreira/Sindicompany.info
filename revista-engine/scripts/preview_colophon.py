@@ -23,15 +23,16 @@ DEFAULT_INPUTS = {
     "cargo_sindico": "Síndica · CEO Sindicompany",
     "editor_responsavel": "Equipe Editorial Sindicompany",
     "equipe_condominio": [
-        "Diego Leite · Gestor de atendimento",
-        "Equipe administrativa do condomínio",
-        "Conselho fiscal e consultivo",
+        "Zeladoria | Gerência",
+        "Equipe Manutenção",
+        "Equipe de Limpeza",
+        "Equipe de Portaria",
+        "Equipe Administrativa",
     ],
     "equipe_sindicompany": [
-        "Direção editorial · Sindicompany",
-        "Pauta e produção · Equipe de redação",
-        "Diagramação e arte · Estúdio interno",
-        "Revisão · Skill Humanizer + revisão pt-BR",
+        "Direção editorial",
+        "Pauta e Produção",
+        "Diagramação e Arte",
     ],
     "creditos_extras": [
         {

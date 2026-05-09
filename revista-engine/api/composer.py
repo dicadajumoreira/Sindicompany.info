@@ -415,13 +415,27 @@ def build_inputs_from_db(
     if cd.get("sindico_nome"):
         colophon_inputs["nome_sindico"] = cd["sindico_nome"]
         colophon_inputs["cargo_sindico"] = _cargo_sindico(condo)
-    # Equipe do condomínio: se tem gestor preenchido, inclui. Senão,
-    # equipe vai vazia (não usa o default fixo, que tem 'Gestor de
-    # atendimento' hardcoded e vazaria pra revistas sem gestor).
+    # Equipe do condomínio: lista fixa padrão. Se houver gestor
+    # preenchido, ele entra como primeiro item; senão usa só os papéis
+    # genéricos abaixo.
     equipe: list[str] = []
     if revista.get("tem_gestor") and revista.get("gestor_nome"):
-        equipe.append(f"{revista['gestor_nome']} (Gestor de atendimento)")
+        equipe.append(f"{revista['gestor_nome']} · Gestor de atendimento")
+    equipe.extend([
+        "Zeladoria | Gerência",
+        "Equipe Manutenção",
+        "Equipe de Limpeza",
+        "Equipe de Portaria",
+        "Equipe Administrativa",
+    ])
     colophon_inputs["equipe_condominio"] = equipe
+
+    # Equipe Sindicompany: lista fixa, sem 'Skill Humanizer'.
+    colophon_inputs["equipe_sindicompany"] = [
+        "Direção editorial",
+        "Pauta e Produção",
+        "Diagramação e Arte",
+    ]
 
     # ---- S15 Contracapa
     proximo_mes = (int(revista["mes"]) % 12) + 1
