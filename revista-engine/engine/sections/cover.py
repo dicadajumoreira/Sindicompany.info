@@ -82,7 +82,7 @@ class Cover(Section):
             chamada_size = 13
             chamada_label_size = 9
             padding = 56
-            logo_w = 140
+            logo_w = 397   # até metade da página A4 (794/2)
         else:  # mobile
             edicao_size = 11
             manchete_size = 52
@@ -90,16 +90,19 @@ class Cover(Section):
             chamada_size = 14
             chamada_label_size = 10
             padding = 40
-            logo_w = 130
+            logo_w = 270   # ~metade da página mobile (540/2)
 
         # Logo do condomínio (se cadastrado) substitui o Sindicompany.
         # A editora deve subir um logo que funcione em fundo escuro
         # (transparente ou com cores claras).
         logo_url = (inputs.get("logo_url") or "").strip()
         if logo_url:
+            # Logo do condomínio: respeita até metade da página em largura
+            # e limita altura pra não estourar layout em logos verticais.
             logo_svg = (
                 f'<img src="{_escape(logo_url)}" alt="Logo" '
-                f'style="height:{logo_w}px;width:auto;object-fit:contain;" />'
+                f'style="max-width:100%;max-height:{int(logo_w * 0.95)}px;'
+                f'width:auto;height:auto;object-fit:contain;" />'
             )
         else:
             logo_svg = theme.logo_svg("white")
