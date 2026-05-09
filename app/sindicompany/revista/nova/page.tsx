@@ -367,7 +367,7 @@ export default async function NovaEdicaoPage({
             4 · Conteúdo do condomínio
           </h2>
 
-          <Field label="Fotos de manutenção (arquivo .zip)"
+          <Field label='Fotos do "Nosso Condomínio" (arquivo .zip)'
                  hint="ZIP com subpastas. O nome da subpasta vira o título do card; as fotos dentro são usadas nas páginas. Upload direto pro Storage (não passa pela função, então aceita arquivos grandes).">
             <DirectUploadField
               kind="manutencao_zip"
