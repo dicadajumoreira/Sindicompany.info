@@ -407,12 +407,13 @@ def build_inputs_from_db(
     if cd.get("sindico_nome"):
         colophon_inputs["nome_sindico"] = cd["sindico_nome"]
         colophon_inputs["cargo_sindico"] = _cargo_sindico(condo)
-    # Equipe do condomínio: se tem gestor, inclui; senão, vazio.
-    equipe = []
+    # Equipe do condomínio: se tem gestor preenchido, inclui. Senão,
+    # equipe vai vazia (não usa o default fixo, que tem 'Gestor de
+    # atendimento' hardcoded e vazaria pra revistas sem gestor).
+    equipe: list[str] = []
     if revista.get("tem_gestor") and revista.get("gestor_nome"):
         equipe.append(f"{revista['gestor_nome']} (Gestor de atendimento)")
-    if equipe:
-        colophon_inputs["equipe_condominio"] = equipe
+    colophon_inputs["equipe_condominio"] = equipe
 
     # ---- S15 Contracapa
     proximo_mes = (int(revista["mes"]) % 12) + 1
