@@ -415,6 +415,10 @@ def build_inputs_from_db(
     if cd.get("sindico_nome"):
         colophon_inputs["nome_sindico"] = cd["sindico_nome"]
         colophon_inputs["cargo_sindico"] = _cargo_sindico(condo)
+    # Label dinâmico do bloco de crédito conforme gênero do(a) síndico(a)
+    colophon_inputs["label_sindico"] = (
+        "Síndica" if (cd.get("sindico_genero") == "feminino") else "Síndico"
+    )
     # Equipe do condomínio: lista fixa padrão. Se houver gestor
     # preenchido, ele entra como primeiro item; senão usa só os papéis
     # genéricos abaixo.
@@ -436,6 +440,38 @@ def build_inputs_from_db(
         "Pauta e Produção",
         "Diagramação e Arte",
     ]
+
+    # Fontes de pesquisa: agrega tudo que foi citado nesta edição
+    # (matéria de capa, lifestyle, novidades, agenda cultural). Vira o
+    # bloco "Fontes de Pesquisa" no expediente, em vez do "Colaboradores"
+    # genérico do default.
+    fontes_set: list[str] = []
+    def _add_fonte(s: Any) -> None:
+        s = str(s or "").strip()
+        if s and s not in fontes_set:
+            fontes_set.append(s)
+    for f in (cover_story_inputs.get("fontes") or []):
+        _add_fonte(f)
+    for f in (life_inputs.get("fontes") or []):
+        _add_fonte(f)
+    for n in (news_inputs.get("noticias") or []):
+        if isinstance(n, dict):
+            _add_fonte(n.get("fonte"))
+    # Agenda cultural não tem 'fontes' explícitas no schema atual,
+    # mas a IA é instruída a pesquisar nesses portais — listamos como
+    # base editorial recorrente quando há agenda cultural na edição.
+    if agenda_inputs.get("cards_secundarios"):
+        for portal in ("AdoroCinema", "Veja SP", "Catraca Livre"):
+            _add_fonte(portal)
+
+    if fontes_set:
+        colophon_inputs["creditos_extras"] = [
+            {"titulo": "Fontes de Pesquisa", "nomes": fontes_set}
+        ]
+    else:
+        # Sem fontes coletadas: remove o bloco de extras pra não vazar
+        # placeholders ('Colaboradores · Fotos de manutenção · …').
+        colophon_inputs["creditos_extras"] = []
 
     # ---- S15 Contracapa
     proximo_mes = (int(revista["mes"]) % 12) + 1

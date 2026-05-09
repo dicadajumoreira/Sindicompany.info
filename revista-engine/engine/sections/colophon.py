@@ -52,6 +52,8 @@ class Colophon(Section):
         ano = inputs.get("ano_edicao", 0)
         sindico = (inputs.get("nome_sindico") or "").strip()
         cargo_sindico = (inputs.get("cargo_sindico") or "Síndico(a) Profissional").strip()
+        # Label do bloco de crédito ('Síndico' ou 'Síndica' conforme gênero)
+        label_sindico = (inputs.get("label_sindico") or "Síndico").strip()
         equipe_condo = list(inputs.get("equipe_condominio") or [])
         equipe_sc = list(inputs.get("equipe_sindicompany") or [])
         extras = list(inputs.get("creditos_extras") or [])
@@ -60,7 +62,7 @@ class Colophon(Section):
 
         # Créditos obrigatórios (3) + extras
         creditos = [
-            ("Síndico", [f"{sindico} · {cargo_sindico}" if sindico else "—"]),
+            (label_sindico, [f"{sindico} · {cargo_sindico}" if sindico else "—"]),
             ("Equipe do Condomínio", equipe_condo or [f"Equipe administrativa · {condo}"]),
             ("Equipe Sindicompany",  equipe_sc or [
                 "Direção editorial",
