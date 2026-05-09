@@ -158,6 +158,8 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
   // Server Action (Vercel cap em 4.5MB-50MB).
   const manutencao_zip_url =
     getStr(formData, "manutencao_zip_url_uploaded") || undefined;
+  const manutencao_capa_url =
+    getStr(formData, "manutencao_capa_url_uploaded") || undefined;
   const prestacao_arquivo_url =
     getStr(formData, "prestacao_arquivo_url_uploaded") || undefined;
 
@@ -172,6 +174,7 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     gestor_foto_url: tem_gestor ? gestor_foto_url : undefined,
     drive_manutencao_url: drive_manutencao_url || undefined,
     manutencao_zip_url: manutencao_zip_url || undefined,
+    manutencao_capa_url: manutencao_capa_url || undefined,
     prestacao_arquivo_url: prestacao_arquivo_url || undefined,
     tem_advertencias,
     multas_advertencias_obs: tem_advertencias ? multas_advertencias_obs : undefined,

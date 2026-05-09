@@ -121,6 +121,22 @@ export async function createManutencaoZipUploadIntent(
   return { token: data.token, path, publicUrl: pub.publicUrl };
 }
 
+/** Capa manual da seção 'Nosso Condomínio' (S08). Aceita imagem (JPG/PNG/WebP). */
+export async function createManutencaoCapaUploadIntent(
+  condoSlug: string,
+  revistaId: string,
+  ext: string,
+): Promise<{ token: string; path: string; publicUrl: string }> {
+  const path = `${condoSlug}/manutencao-capa-${revistaId}.${ext}`;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUploadUrl(path, { upsert: true });
+  if (error) throw error;
+  const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return { token: data.token, path, publicUrl: pub.publicUrl };
+}
+
 /** Mesma ideia pro ZIP de eventos. */
 export async function createEventosZipUploadIntent(
   condoSlug: string,

@@ -30,6 +30,7 @@ export interface Revista {
   // Conteúdo do condomínio
   drive_manutencao_url: string | null;
   manutencao_zip_url: string | null;
+  manutencao_capa_url: string | null;
   drive_prestacao_url: string | null;
   prestacao_arquivo_url: string | null;
   tem_advertencias: boolean;
@@ -65,6 +66,7 @@ export interface RevistaInput {
   gestor_foto_url?: string;
   drive_manutencao_url?: string;
   manutencao_zip_url?: string;
+  manutencao_capa_url?: string;
   prestacao_arquivo_url?: string;
   tem_advertencias?: boolean;
   multas_advertencias_obs?: string;

@@ -378,6 +378,17 @@ export default async function NovaEdicaoPage({
             />
           </Field>
 
+          <Field label="Capa do caderno 'Nosso Condomínio' (imagem)"
+                 hint="Foto que abre a seção. Se não subir, a engine escolhe automaticamente uma foto do ZIP.">
+            <DirectUploadField
+              kind="manutencao_capa"
+              hiddenInputName="manutencao_capa_url_uploaded"
+              initialUrl={fonte?.manutencao_capa_url ?? undefined}
+              accept="image/jpeg,image/png,image/webp"
+              maxBytes={20 * 1024 * 1024}
+            />
+          </Field>
+
           <Field label="Dashboard de prestação (imagem ou PDF)"
                  hint="Print do dashboard ou PDF do balancete deste mês. A IA lê e preenche 'Nossos Números'. Upload direto pro Storage.">
             <DirectUploadField

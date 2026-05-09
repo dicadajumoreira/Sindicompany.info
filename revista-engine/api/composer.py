@@ -305,6 +305,12 @@ def build_inputs_from_db(
             if capa:
                 maint_inputs["foto_capa_caderno"] = capa
 
+    # Capa manual (subida pela editora no form) sobrescreve a capa
+    # auto-selecionada do ZIP.
+    capa_manual = revista.get("manutencao_capa_url")
+    if capa_manual:
+        maint_inputs["foto_capa_caderno"] = capa_manual
+
     events_inputs = dict(EVENTS_DEFAULT)
     events_inputs["mes_referencia"] = mes_ano
     events_inputs["nome_condominio"] = condominio

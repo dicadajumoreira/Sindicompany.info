@@ -5,11 +5,13 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { slugifyCondo } from "@/lib/sindicompany/condominios";
 import {
   createEventosZipUploadIntent,
+  createManutencaoCapaUploadIntent,
   createManutencaoZipUploadIntent,
   createPrestacaoUploadIntent,
 } from "@/lib/sindicompany/condominios-db";
 
 const ALLOWED_PRESTACAO_EXT = new Set(["jpg", "jpeg", "png", "webp", "pdf"]);
+const ALLOWED_IMG_EXT = new Set(["jpg", "jpeg", "png", "webp"]);
 
 async function requireAuth() {
   const store = await cookies();
@@ -105,6 +107,38 @@ export async function getEventosZipUploadIntent(
     const slug = slugifyCondo(condominio);
     const id = `pending-${Date.now()}`;
     const intent = await createEventosZipUploadIntent(slug, id);
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const uploadUrl = `${baseUrl}/storage/v1/object/upload/sign/condominios-fotos/${intent.path}?token=${intent.token}`;
+    return {
+      ok: true,
+      uploadUrl,
+      token: intent.token,
+      path: intent.path,
+      publicUrl: intent.publicUrl,
+    };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Falha desconhecida." };
+  }
+}
+
+export async function getManutencaoCapaUploadIntent(
+  condominio: string,
+  ext: string,
+): Promise<UploadIntentResult | UploadIntentError> {
+  try {
+    await requireAuth();
+  } catch {
+    return { ok: false, error: "Sessão expirada. Faça login de novo." };
+  }
+  const e = ext.toLowerCase().replace(/^\./, "");
+  if (!ALLOWED_IMG_EXT.has(e)) {
+    return { ok: false, error: "Capa precisa ser jpg, png ou webp." };
+  }
+  if (!condominio) return { ok: false, error: "Condomínio inválido." };
+  try {
+    const slug = slugifyCondo(condominio);
+    const id = `pending-${Date.now()}`;
+    const intent = await createManutencaoCapaUploadIntent(slug, id, e);
     const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const uploadUrl = `${baseUrl}/storage/v1/object/upload/sign/condominios-fotos/${intent.path}?token=${intent.token}`;
     return {

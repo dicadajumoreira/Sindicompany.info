@@ -99,4 +99,6 @@ const COLUMN_TO_MIGRATION: Record<string, string> = {
   manutencao_zip_url: "20260517_manutencao_zip.sql",
   // 20260518
   eventos_zip_url: "20260518_eventos_zip.sql",
+  // 20260519
+  manutencao_capa_url: "20260519_manutencao_capa.sql",
 };
