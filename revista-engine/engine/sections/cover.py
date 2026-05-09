@@ -240,12 +240,17 @@ class Cover(Section):
   }}
 
   .cover__subtitulo {{
+    /* Subtítulo destacado com fundo: pílula sand sobre o hero da capa */
+    display: inline-block;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: {subtitulo_size}px;
-    font-weight: 300;
+    font-weight: 500;
     line-height: 1.4;
     letter-spacing: -0.005em;
-    color: var(--sand);
+    color: var(--onix);
+    background: var(--sand);
+    padding: 8px 14px;
+    border-radius: 4px;
     margin-top: 18px;
     max-width: 38ch;
   }}

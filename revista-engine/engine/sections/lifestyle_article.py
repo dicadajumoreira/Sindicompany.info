@@ -173,11 +173,16 @@ class LifestyleArticle(Section):
   }}
 
   .life__subtitulo {{
+    /* Subtítulo destacado com fundo (pílula sand sobre o hero) */
+    display: inline-block;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 13px;
-    font-weight: 400;
+    font-weight: 500;
     line-height: 1.4;
-    color: var(--sand-90);
+    color: var(--onix);
+    background: var(--sand);
+    padding: 6px 12px;
+    border-radius: 4px;
     max-width: 50ch;
   }}
 
