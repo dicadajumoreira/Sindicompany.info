@@ -58,11 +58,11 @@ def _badge_colors(badge: str) -> tuple[str, str]:
 
 
 def _empacotar_por_fotos(mans: list[dict]) -> list[list[dict]]:
-    """Distribui as manutenções em páginas com 4-6 fotos cada.
+    """Distribui as manutenções em páginas com até 6 fotos cada.
 
     Cada manutenção usa até 4 fotos próprias. Empacotador fecha a página
-    quando o total atinge 4-6 fotos, mantendo todos os itens listados
-    (mesmo aqueles com 1-2 fotos só).
+    quando adicionar a próxima ultrapassaria 6 fotos. Garante que todos
+    os itens são listados, mesmo aqueles com 1-2 fotos só.
     """
     pages: list[list[dict]] = []
     cur: list[dict] = []
@@ -70,8 +70,8 @@ def _empacotar_por_fotos(mans: list[dict]) -> list[list[dict]]:
     for m in mans:
         n_disp = len(m.get("fotos") or [])
         n_usar = min(max(1, n_disp), 4)
-        # Se adicionar passa de 6 e já temos pelo menos 4 → quebra página
-        if cur_count + n_usar > 6 and cur_count >= 4:
+        # Fecha sempre que ultrapassaria 6 fotos
+        if cur and cur_count + n_usar > 6:
             pages.append(cur)
             cur = []
             cur_count = 0
