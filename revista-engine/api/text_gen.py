@@ -410,7 +410,6 @@ def gerar_carta_sindico(
     mes_nome = MESES_PT[int(revista["mes"]) - 1] if revista.get("mes") else ""
     ano = revista.get("ano", "")
 
-    eventos = "Houve eventos no condomínio neste mês." if revista.get("tem_eventos") else ""
     advert = revista.get("multas_advertencias_obs") or ""
 
     pronome = "a síndica" if genero == "feminino" else "o síndico"
@@ -421,14 +420,16 @@ def gerar_carta_sindico(
         f"Tema da carta: {titulo_carta}\n"
         f"Matéria de capa do mês: {materia_capa}\n"
         f"Receita do mês: {receita}\n"
-        f"{('Acontecimentos internos: ' + eventos) if eventos else ''}\n"
         f"{('Notas sobre advertências/multas: ' + advert) if advert else ''}\n\n"
         f"Estrutura sugerida (carta longa que ocupa página inteira de revista A4):\n"
         f"1) Saudação calorosa aos moradores do {condominio}\n"
         f"2) Reflexão sobre o tema da carta conectando com a realidade do condomínio\n"
         f"3) Comentário sobre a matéria de capa do mês como convite à leitura\n"
-        f"4) Menção à receita e aos eventos/notícias do condomínio quando houver\n"
+        f"4) Menção à receita do mês quando fizer sentido\n"
         f"5) Encerramento caloroso, assinado por {nome}\n\n"
+        f"REGRA IMPORTANTE: NÃO mencione eventos do condomínio. Os eventos têm "
+        f"caderno próprio na revista — a carta deve focar no tema editorial, "
+        f"não em listar acontecimentos.\n\n"
         f"Tom: caloroso, próximo, em primeira pessoa do singular. "
         f"4 a 5 parágrafos. Total entre 300 e 400 palavras (limite estrito "
         f"para caber na página A4 sem cortar)."
