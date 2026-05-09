@@ -39,6 +39,7 @@ from api.text_gen import (
     gerar_curiosidades,
     gerar_dica_receita,
     gerar_dicas_praticas,
+    gerar_receita_completa,
     gerar_materia_capa_completa,
     gerar_novidades,
     gerar_signos,
@@ -328,26 +329,33 @@ def build_inputs_from_db(
             for p in pastas_ev
         ]
 
-    # ---- S10 Receita (foto via DALL-E)
+    # ---- S10 Receita (todos os campos gerados a partir do título da
+    # receita do editorial — garante que ingredientes, modo de preparo,
+    # tempo de preparo e dica sejam SEMPRE coerentes com a receita
+    # escolhida no mês, sem misturar com defaults antigos).
     recipe_inputs = dict(RECIPE_DEFAULT)
     recipe_inputs["mes_referencia"] = mes_ano
-    if ed.get("receita_titulo"):
-        recipe_inputs["titulo_receita"] = ed["receita_titulo"]
-    if ed.get("receita_descricao"):
-        recipe_inputs["intro"] = ed["receita_descricao"]
+    titulo_receita = (ed.get("receita_titulo") or "").strip()
+    descricao_receita = (ed.get("receita_descricao") or "").strip()
+    if titulo_receita:
+        recipe_inputs["titulo_receita"] = titulo_receita
+        # Gera todos os campos da receita coerentes com o título
+        receita_ai = gerar_receita_completa(titulo_receita, descricao_receita)
+        if receita_ai:
+            for key in ("intro", "tempo_preparo", "ingredientes",
+                        "modo_preparo", "dica"):
+                if receita_ai.get(key):
+                    recipe_inputs[key] = receita_ai[key]
+        # Editorial pode ter sobreposto a descrição manual — respeitar
+        if descricao_receita:
+            recipe_inputs["intro"] = descricao_receita
+    # Foto da receita via DALL-E
     foto_receita_ai = gerar_foto_receita(
         recipe_inputs.get("titulo_receita", ""),
         recipe_inputs.get("intro", ""),
     )
     if foto_receita_ai:
         recipe_inputs["foto_receita"] = foto_receita_ai
-    # Dica específica da receita do mês (sobrescreve o default fixo)
-    dica_ai = gerar_dica_receita(
-        recipe_inputs.get("titulo_receita", ""),
-        recipe_inputs.get("intro", ""),
-    )
-    if dica_ai:
-        recipe_inputs["dica"] = dica_ai
 
     # ---- S11 Nossos Números: parse do HTML dentro da pasta de prestação
     numbers_inputs = dict(NUMBERS_DEFAULT)

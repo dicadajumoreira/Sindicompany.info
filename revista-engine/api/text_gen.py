@@ -656,6 +656,60 @@ def gerar_dicas_praticas(mes: int, ano: int) -> dict[str, Any]:
     return _aplicar_clean_recursivo(data)
 
 
+def gerar_receita_completa(titulo: str, descricao_extra: str = "") -> dict[str, Any]:
+    """Gera todos os campos de uma receita a partir do título.
+
+    Devolve dict com: intro, tempo_preparo, ingredientes, modo_preparo, dica.
+    Tudo coerente com a receita — sem misturar com receita anterior.
+    """
+    titulo = (titulo or "").strip()
+    if not titulo:
+        return {}
+
+    fallback = {
+        "intro": f"Uma receita simples e gostosa: {titulo}.",
+        "tempo_preparo": "30 min · serve 6 pessoas",
+        "ingredientes": ["Ingredientes a definir."],
+        "modo_preparo": ["Modo de preparo a definir."],
+        "dica": "Sirva quente, com uma dose extra de carinho.",
+    }
+
+    prompt = (
+        f"Receita: '{titulo}'.\n"
+        f"{('Descrição extra: ' + descricao_extra) if descricao_extra else ''}\n\n"
+        f"Devolva um JSON com TODOS os campos abaixo, COERENTES entre si "
+        f"e específicos pra essa receita (não para outra):\n"
+        f"{{\n"
+        f'  "intro": "subtítulo de 1 frase, descritivo, abrindo a receita (max 140 chars)",\n'
+        f'  "tempo_preparo": "ex: 25 min · serve 8 pessoas",\n'
+        f'  "ingredientes": [\n'
+        f'    "1 xícara de farinha de trigo",\n'
+        f'    "2 ovos",\n'
+        f'    ...\n'
+        f'    // 6 a 12 ingredientes com QUANTIDADE e MEDIDA reais\n'
+        f'  ],\n'
+        f'  "modo_preparo": [\n'
+        f'    "Pré-aqueça o forno a 180°C.",\n'
+        f'    "Bata os ovos com o açúcar até ficar fofo.",\n'
+        f'    ...\n'
+        f'    // 4 a 8 passos numerados (sem usar números no início, só o texto)\n'
+        f'  ],\n'
+        f'  "dica": "1-2 frases com truque específico da receita (substituição, ponto certo, harmonização)"\n'
+        f"}}\n\n"
+        f"REGRAS:\n"
+        f"- Português brasileiro com TODOS os acentos.\n"
+        f"- Sem markdown. Sem texto fora do JSON.\n"
+        f"- Não cite outras receitas.\n"
+        f"- Quantidades reais e proporcionais (não use 'a gosto' em mais de 2 itens).\n"
+        f"- Modo de preparo: passos curtos, ação direta, sem iniciar com número.\n"
+    )
+    data = _gerar_json(
+        prompt, fallback,
+        expected_keys=["intro", "ingredientes", "modo_preparo"],
+    )
+    return _aplicar_clean_recursivo(data)
+
+
 def gerar_dica_receita(titulo: str, intro: str = "") -> str:
     """Gera uma dica curta (1-2 frases) referente à receita do mês.
 
