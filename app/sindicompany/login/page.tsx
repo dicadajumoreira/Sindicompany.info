@@ -11,8 +11,14 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://raw.githubusercontent.com/dicadajumoreira/Sindicompany/main/Logotipo%20Sindicompany%201.png"
+            alt="Sindicompany"
+            className="h-10 w-auto mx-auto mb-4"
+          />
           <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-3">
-            Sindicompany · Comunicação
+            Comunicação
           </div>
           <h1 className="text-3xl font-bold text-onix-900 leading-none">
             Entrar na plataforma

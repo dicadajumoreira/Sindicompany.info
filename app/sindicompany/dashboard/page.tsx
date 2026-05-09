@@ -49,8 +49,16 @@ export default async function DashboardPage({
       {/* Header */}
       <header className="flex items-start justify-between mb-12">
         <div>
-          <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2">
-            Sindicompany · Comunicação
+          <div className="flex items-center gap-3 mb-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://raw.githubusercontent.com/dicadajumoreira/Sindicompany/main/Logotipo%20Sindicompany%201.png"
+              alt="Sindicompany"
+              className="h-9 w-auto"
+            />
+            <span className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold">
+              Comunicação
+            </span>
           </div>
           <h1 className="text-4xl font-bold text-onix-900 leading-tight">
             Revistas mensais
