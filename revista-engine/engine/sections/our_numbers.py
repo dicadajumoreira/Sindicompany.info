@@ -120,38 +120,61 @@ class OurNumbers(Section):
 
         kpi_cards = self._render_kpi_cards(kpis, theme)
         donut_svg = _render_donut(despesas)
-        despesas_tbl = self._render_despesas(despesas, max_despesa, theme)
         resumo_contas_html = self._render_resumo_contas(resumo_contas, theme)
         previsto_html = self._render_previsto_realizado(previsto_realizado, theme)
 
-        # Bloco principal: 3 colunas em grid pra caber tudo na página
-        # 1: Resumo das contas | 2: Previsto x Realizado | 3: Despesas por categoria
-        cols = []
+        # Bloco principal:
+        #  - Coluna ESQUERDA (40%): donut GRANDE + legenda — destaque visual
+        #  - Coluna DIREITA  (60%): Resumo das contas (topo) + Previsto×Realizado (baixo)
+        donut_block = ""
+        if despesas:
+            donut_block = f"""
+      <div class="num-block num-block--donut">
+        <h2 class="num-block__titulo">Despesas por categoria</h2>
+        <div class="num-block__donut-wrap">
+          {donut_svg}
+        </div>
+        {_render_donut_legend(despesas)}
+      </div>"""
+
+        right_blocks = []
         if resumo_contas:
-            cols.append(f"""
+            right_blocks.append(f"""
       <div class="num-block">
         <h2 class="num-block__titulo">Resumo das contas</h2>
         {resumo_contas_html}
       </div>""")
         if previsto_realizado:
-            cols.append(f"""
+            right_blocks.append(f"""
       <div class="num-block">
         <h2 class="num-block__titulo">Previsto × Realizado</h2>
         {previsto_html}
       </div>""")
-        if despesas:
-            cols.append(f"""
-      <div class="num-block num-block--donut">
-        <h2 class="num-block__titulo">Despesas por categoria</h2>
-        {donut_svg}
-        {_render_donut_legend(despesas)}
-      </div>""")
 
         bloco_principal = ""
-        if cols:
-            n = len(cols)
-            grid_class = f"numbers__main numbers__main--cols-{n}"
-            bloco_principal = f'<div class="{grid_class}">{"".join(cols)}</div>'
+        if donut_block or right_blocks:
+            right_html = "".join(right_blocks)
+            # Se só tem donut: 1 coluna full-width.
+            # Se só tem direita: 1 coluna full-width.
+            # Caso normal: 2 colunas (donut esquerda, blocos direita).
+            if donut_block and right_blocks:
+                bloco_principal = f"""
+    <div class="numbers__main numbers__main--split">
+      {donut_block}
+      <div class="numbers__col-right">
+        {right_html}
+      </div>
+    </div>"""
+            elif donut_block:
+                bloco_principal = f"""
+    <div class="numbers__main numbers__main--full">
+      {donut_block}
+    </div>"""
+            else:
+                bloco_principal = f"""
+    <div class="numbers__main numbers__main--full">
+      <div class="numbers__col-right">{right_html}</div>
+    </div>"""
 
         return f"""
 <section class="page numbers-page">
@@ -170,7 +193,6 @@ class OurNumbers(Section):
     <footer class="numbers__nota">
       <span class="numbers__nota-label">Transparência</span>
       <span class="numbers__nota-text">{_escape(nota)}</span>
-      {f'<a class="numbers__dashboard-link" href="{_escape_attr(dashboard_url)}">Ver dashboard completo →</a>' if dashboard_url else ''}
     </footer>
   </div>
 </section>
@@ -179,38 +201,38 @@ class OurNumbers(Section):
   .numbers-page {{
     background: var(--white);
     color: var(--onix);
-    padding: 36px 40px;
+    padding: 40px 44px 36px;
   }}
 
   .numbers__content {{
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 22px;
   }}
 
   .numbers__header {{
     margin-bottom: 0;
-    border-bottom: 1px solid var(--gray-20);
-    padding-bottom: 12px;
+    border-bottom: 2px solid var(--mint);
+    padding-bottom: 14px;
   }}
 
   .numbers__kicker {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
     color: var(--mint-80);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }}
 
   .numbers__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 32px;
+    font-size: 38px;
     font-weight: 400;
     line-height: 0.98;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     color: var(--onix);
   }}
 
@@ -218,61 +240,74 @@ class OurNumbers(Section):
     display: none;
   }}
 
-  /* KPI cards: 4 colunas compactas */
+  /* KPI cards: 4 colunas, mais respiráveis */
   .numbers__kpis {{
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 12px;
   }}
 
   .kpi-card {{
-    background: var(--gray-5);
-    border-radius: 6px;
-    padding: 14px 14px 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-20);
+    border-radius: 8px;
+    padding: 18px 18px 16px;
     border-top: 3px solid var(--mint);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }}
 
-  .kpi-card--credito {{ border-top-color: var(--mint); }}
-  .kpi-card--debito {{ border-top-color: var(--sand-80); }}
-  .kpi-card--saldo {{ border-top-color: var(--onix); }}
+  .kpi-card--credito {{ border-top-color: #2A8A6F; }}
+  .kpi-card--debito {{ border-top-color: #C46A47; }}
+  .kpi-card--saldo {{ border-top-color: var(--onix); background: var(--onix); }}
+  .kpi-card--saldo .kpi-card__label {{ color: var(--mint); }}
+  .kpi-card--saldo .kpi-card__value {{ color: var(--white); }}
 
   .kpi-card__label {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 8px;
+    font-size: 8.5px;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--mint-80);
-    margin-bottom: 6px;
   }}
 
   .kpi-card__value {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 17px;
+    font-size: 20px;
     font-weight: 400;
-    letter-spacing: -0.012em;
+    letter-spacing: -0.015em;
     color: var(--onix);
     line-height: 1.05;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
+    margin-top: 4px;
   }}
 
-  /* Bloco principal: até 3 colunas (resumo, prev×real, despesas) */
+  /* Bloco principal: 2 colunas — donut grande à esquerda, tabelas à direita */
   .numbers__main {{
     flex: 1;
     min-height: 0;
     display: grid;
-    gap: 14px;
+    gap: 16px;
     align-items: stretch;
   }}
-  .numbers__main--cols-1 {{ grid-template-columns: 1fr; }}
-  .numbers__main--cols-2 {{ grid-template-columns: 1fr 1fr; }}
-  .numbers__main--cols-3 {{ grid-template-columns: 1.05fr 1.15fr 1fr; }}
+  .numbers__main--full {{ grid-template-columns: 1fr; }}
+  .numbers__main--split {{ grid-template-columns: 1.1fr 1.4fr; }}
+
+  .numbers__col-right {{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+  }}
+  .numbers__col-right .num-block {{ flex: 1; min-height: 0; }}
 
   .num-block {{
     background: var(--gray-5);
-    border-radius: 6px;
-    padding: 14px 14px 12px;
+    border-radius: 8px;
+    padding: 18px 20px 16px;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -280,24 +315,40 @@ class OurNumbers(Section):
   }}
 
   .num-block--donut {{
+    align-items: stretch;
+    background: var(--white);
+    border: 1px solid var(--gray-20);
+    padding: 20px 22px 18px;
+  }}
+
+  .num-block__donut-wrap {{
+    display: flex;
+    justify-content: center;
     align-items: center;
+    margin: 8px 0 14px;
   }}
 
   .num-block__titulo {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 9px;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--mint-80);
-    margin-bottom: 10px;
-    align-self: stretch;
+    margin-bottom: 12px;
     text-align: left;
   }}
 
   .donut-chart {{
-    width: 110px; height: 110px;
-    margin: 2px 0 8px;
+    width: 220px; height: 220px;
+  }}
+
+  .donut-chart__total-label {{
+    font-size: 3px;
+  }}
+
+  .donut-chart__total {{
+    font-size: 6.5px;
   }}
 
   .numbers__empty {{
@@ -419,26 +470,26 @@ class OurNumbers(Section):
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     text-align: left;
   }}
 
   .donut-legend__item {{
     display: grid;
-    grid-template-columns: 8px 1fr auto;
+    grid-template-columns: 10px 1fr auto;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9px;
+    font-size: 10px;
     color: var(--onix);
-    padding: 3px 0;
+    padding: 5px 0;
     border-bottom: 1px solid var(--gray-20);
   }}
 
   .donut-legend__item:last-child {{ border-bottom: none; }}
 
   .donut-legend__dot {{
-    width: 8px; height: 8px;
+    width: 10px; height: 10px;
     border-radius: 2px;
     flex-shrink: 0;
   }}
@@ -454,7 +505,7 @@ class OurNumbers(Section):
     font-weight: 700;
     color: var(--onix);
     font-variant-numeric: tabular-nums;
-    font-size: 9.5px;
+    font-size: 11px;
   }}
 
   /* Sparkline na KPI da inadimplência */
@@ -551,24 +602,6 @@ class OurNumbers(Section):
     gap: 12px;
     align-items: flex-start;
     flex-wrap: wrap;
-  }}
-
-  .numbers__dashboard-link {{
-    flex: 0 0 100%;
-    margin-top: 6px;
-    margin-left: 112px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9.5px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: var(--mint-80);
-    text-decoration: none;
-    border-bottom: 1.5px solid var(--mint-80);
-    padding-bottom: 1px;
-    align-self: flex-start;
-    width: fit-content;
-    max-width: calc(100% - 112px);
-    word-break: break-all;
   }}
 
   .numbers__nota-label {{
