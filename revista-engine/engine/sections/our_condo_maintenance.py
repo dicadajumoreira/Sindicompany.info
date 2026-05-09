@@ -30,13 +30,25 @@ from .base import Section
 
 
 _BADGE_COLORS = {
-    "jardim":      ("#84C7D3", "#1A1C29"),
-    "engenharia":  ("#1A1C29", "#FFFFFF"),
-    "operacional": ("#76B1BC", "#FFFFFF"),
-    "segurança":   ("#1A1C29", "#84C7D3"),
-    "seguranca":   ("#1A1C29", "#84C7D3"),
-    "manutenção":  ("#76B1BC", "#FFFFFF"),
-    "manutencao":  ("#76B1BC", "#FFFFFF"),
+    "jardim":       ("#84C7D3", "#1A1C29"),
+    "piscina":      ("#84C7D3", "#1A1C29"),
+    "elevador":     ("#1A1C29", "#FFFFFF"),
+    "maquinário":   ("#1A1C29", "#FFFFFF"),
+    "maquinario":   ("#1A1C29", "#FFFFFF"),
+    "pintura":      ("#D4AE94", "#1A1C29"),
+    "reforma":      ("#D4AE94", "#1A1C29"),
+    "limpeza":      ("#76B1BC", "#FFFFFF"),
+    "hidráulica":   ("#B8C0FF", "#1A1C29"),
+    "hidraulica":   ("#B8C0FF", "#1A1C29"),
+    "elétrica":     ("#1A1C29", "#FFFFFF"),
+    "eletrica":     ("#1A1C29", "#FFFFFF"),
+    "estrutura":    ("#76B1BC", "#FFFFFF"),
+    "engenharia":   ("#1A1C29", "#FFFFFF"),
+    "operacional":  ("#76B1BC", "#FFFFFF"),
+    "segurança":    ("#1A1C29", "#84C7D3"),
+    "seguranca":    ("#1A1C29", "#84C7D3"),
+    "manutenção":   ("#76B1BC", "#FFFFFF"),
+    "manutencao":   ("#76B1BC", "#FFFFFF"),
 }
 
 

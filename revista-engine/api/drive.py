@@ -144,6 +144,41 @@ def _path_to_url(p: Path) -> str:
     return p.absolute().as_uri()
 
 
+# Mapa de palavras-chave → categoria. Procura no nome da pasta (lowercase
+# sem acentos) e devolve a primeira categoria que bater.
+import unicodedata
+
+
+def _normalize_kw(s: str) -> str:
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
+    return s.lower()
+
+
+_CATEGORIA_KEYWORDS: list[tuple[str, list[str]]] = [
+    ("Jardim",      ["jardim", "jardinagem", "paisagismo", "grama", "poda", "plantio", "horta"]),
+    ("Piscina",     ["piscina"]),
+    ("Elevador",    ["elevador"]),
+    ("Maquinário",  ["bomba", "motor", "maquinario", "maquinas", "gerador", "compressor"]),
+    ("Pintura",     ["pintura", "tinta", "fachada"]),
+    ("Reforma",     ["reforma", "obra", "reparo"]),
+    ("Limpeza",     ["limpeza", "lavagem", "higienizacao"]),
+    ("Hidráulica",  ["hidraulic", "encanament", "vazament"]),
+    ("Elétrica",    ["eletric", "iluminacao", "lampada", "fiacao"]),
+    ("Segurança",   ["seguranca", "camera", "portao", "interfone", "alarme"]),
+    ("Estrutura",   ["estrutura", "telhado", "muro", "calcada", "estacionamento", "garagem"]),
+]
+
+
+def categorizar_pasta(nome_pasta: str) -> str:
+    """Devolve uma palavra-chave editorial pro card de manutenção
+    (ex: 'Jardim', 'Maquinário', 'Elevador'). Default: 'Manutenção'."""
+    n = _normalize_kw(nome_pasta)
+    for cat, kws in _CATEGORIA_KEYWORDS:
+        if any(k in n for k in kws):
+            return cat
+    return "Manutenção"
+
+
 def _coletar_pastas(root: Path) -> list[dict[str, Any]]:
     """Dado um diretório com (sub)pastas + fotos, devolve a lista no
     formato que a S3 (Nosso Condomínio) espera. Mesma lógica usada
@@ -231,17 +266,35 @@ def baixar_pastas_manutencao_zip(zip_url: str, dest: Path) -> list[dict[str, Any
 
 
 def baixar_capa_manutencao_zip(zip_url: str, dest: Path) -> str | None:
-    """Pega a primeira imagem na raiz do ZIP já extraído (capa do caderno)."""
+    """Foto de capa do caderno de manutenção. Prioridade:
+    1. Imagem na raiz do ZIP (intencional: a editora colocou ali)
+    2. Primeira imagem da primeira subpasta — fallback automático
+    """
     extract_dir = dest / "extracted"
     if not extract_dir.exists():
         return None
     entries = [p for p in extract_dir.iterdir() if not p.name.startswith(".")]
     root = entries[0] if (len(entries) == 1 and entries[0].is_dir()) else extract_dir
-    imgs = sorted(
+
+    # 1. Tenta imagem na raiz
+    imgs_root = sorted(
         p for p in root.iterdir()
         if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
     )
-    return _path_to_url(imgs[0]) if imgs else None
+    if imgs_root:
+        return _path_to_url(imgs_root[0])
+
+    # 2. Pega a primeira imagem que achar em qualquer subpasta
+    for sub in sorted(root.iterdir()):
+        if not sub.is_dir():
+            continue
+        imgs_sub = sorted(
+            p for p in sub.rglob("*")
+            if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
+        )
+        if imgs_sub:
+            return _path_to_url(imgs_sub[0])
+    return None
 
 
 def baixar_capa_manutencao(drive_url: str, dest: Path) -> str | None:

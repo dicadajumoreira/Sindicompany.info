@@ -103,10 +103,8 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
   const multas_advertencias_obs = getStr(formData, "multas_advertencias_obs");
 
   const tem_eventos = getBool(formData, "tem_eventos");
-  const drive_eventos_url = getStr(formData, "drive_eventos_url");
-  if (tem_eventos && drive_eventos_url && !isValidDriveUrl(drive_eventos_url)) {
-    backToFormWithError("Link de eventos precisa ser do Google Drive.", formData);
-  }
+  const eventos_zip_url =
+    getStr(formData, "eventos_zip_url_uploaded") || undefined;
 
   const notas_editor = getStr(formData, "notas_editor");
   const carta_sindico_texto = getStr(formData, "carta_sindico_texto");
@@ -178,7 +176,7 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     tem_advertencias,
     multas_advertencias_obs: tem_advertencias ? multas_advertencias_obs : undefined,
     tem_eventos,
-    drive_eventos_url: tem_eventos ? drive_eventos_url || undefined : undefined,
+    eventos_zip_url: tem_eventos ? eventos_zip_url : undefined,
     notas_editor: notas_editor || undefined,
     carta_sindico_texto: carta_sindico_texto || undefined,
     // Carta do gestor só salva se o condo tem gestor cadastrado

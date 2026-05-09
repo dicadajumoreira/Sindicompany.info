@@ -412,11 +412,15 @@ export default async function NovaEdicaoPage({
             </label>
           </Field>
 
-          <Field label="Link da pasta de fotos dos eventos (se sim)">
-            <input type="url" name="drive_eventos_url"
-                   defaultValue={v("drive_eventos_url")}
-                   placeholder="https://drive.google.com/drive/folders/..."
-                   className={inputCls} />
+          <Field label="Fotos dos eventos (arquivo .zip)"
+                 hint="ZIP com 1 subpasta por evento. Cada subpasta vira uma página exclusiva. Upload direto pro Storage.">
+            <DirectUploadField
+              kind="eventos_zip"
+              hiddenInputName="eventos_zip_url_uploaded"
+              initialUrl={fonte?.eventos_zip_url ?? undefined}
+              accept=".zip,application/zip,application/x-zip-compressed"
+              maxBytes={500 * 1024 * 1024}
+            />
           </Field>
         </section>
 

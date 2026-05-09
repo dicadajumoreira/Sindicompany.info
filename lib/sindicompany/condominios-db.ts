@@ -121,6 +121,21 @@ export async function createManutencaoZipUploadIntent(
   return { token: data.token, path, publicUrl: pub.publicUrl };
 }
 
+/** Mesma ideia pro ZIP de eventos. */
+export async function createEventosZipUploadIntent(
+  condoSlug: string,
+  revistaId: string,
+): Promise<{ token: string; path: string; publicUrl: string }> {
+  const path = `${condoSlug}/eventos-${revistaId}.zip`;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUploadUrl(path, { upsert: true });
+  if (error) throw error;
+  const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return { token: data.token, path, publicUrl: pub.publicUrl };
+}
+
 /** Sobe o arquivo de prestação de contas (imagem ou PDF) atrelado a
  *  uma revista específica. Mantido para fluxos que ainda usam upload
  *  via Server Action (testes locais e arquivos pequenos). O fluxo

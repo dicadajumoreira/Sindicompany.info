@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
+  getEventosZipUploadIntent,
   getManutencaoZipUploadIntent,
   getPrestacaoUploadIntent,
 } from "./upload-actions";
 
-type UploadKind = "prestacao" | "manutencao_zip";
+type UploadKind = "prestacao" | "manutencao_zip" | "eventos_zip";
 
 interface DirectUploadFieldProps {
   kind: UploadKind;
@@ -78,8 +79,17 @@ export function DirectUploadField({
         return;
       }
       intent = r;
-    } else {
+    } else if (kind === "manutencao_zip") {
       const r = await getManutencaoZipUploadIntent(condominio);
+      if (!r.ok) {
+        setStatus("error");
+        setErrorMsg(r.error);
+        return;
+      }
+      intent = r;
+    } else {
+      // eventos_zip
+      const r = await getEventosZipUploadIntent(condominio);
       if (!r.ok) {
         setStatus("error");
         setErrorMsg(r.error);

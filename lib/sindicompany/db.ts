@@ -36,6 +36,7 @@ export interface Revista {
   multas_advertencias_obs: string | null;
   tem_eventos: boolean;
   drive_eventos_url: string | null;
+  eventos_zip_url: string | null;
   // Editorial
   materia_capa_titulo: string | null;
   materia_capa_subtitulo: string | null;
@@ -69,6 +70,7 @@ export interface RevistaInput {
   multas_advertencias_obs?: string;
   tem_eventos?: boolean;
   drive_eventos_url?: string;
+  eventos_zip_url?: string;
   materia_capa_titulo?: string;
   materia_capa_subtitulo?: string;
   foto_capa_url?: string;

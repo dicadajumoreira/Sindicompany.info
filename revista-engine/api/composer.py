@@ -22,6 +22,7 @@ from api.drive import (
     baixar_capa_manutencao_zip,
     baixar_pastas_manutencao,
     baixar_pastas_manutencao_zip,
+    categorizar_pasta,
 )
 from api.image_gen import (
     gerar_foto_agenda_hero,
@@ -36,6 +37,7 @@ from api.text_gen import (
     gerar_carta_gestor,
     gerar_carta_sindico,
     gerar_curiosidades,
+    gerar_dica_receita,
     gerar_dicas_praticas,
     gerar_materia_capa_completa,
     gerar_novidades,
@@ -288,11 +290,12 @@ def build_inputs_from_db(
             capa = baixar_capa_manutencao(drive_url, tmpdir) if pastas else None
         if pastas:
             # Cada subpasta vira uma manutenção. Título = nome da pasta.
-            # Passa TODAS as fotos da subpasta — a S3 escolhe o layout
-            # baseado em quantas: 1-2 → small, 3-5 → large, 6+ → hero.
+            # Passa TODAS as fotos — S08 escolhe layout pelo número delas.
+            # tipo_badge inferido do nome (Jardim, Pintura, Maquinário, …).
             maint_inputs["manutencoes"] = [
                 {
                     "titulo": p["nome_pasta"],
+                    "tipo_badge": categorizar_pasta(p["nome_pasta"]),
                     "fotos": p.get("fotos") or ([p["foto_path"]] if p.get("foto_path") else []),
                     "descricao": "",
                 }
@@ -304,20 +307,26 @@ def build_inputs_from_db(
     events_inputs = dict(EVENTS_DEFAULT)
     events_inputs["mes_referencia"] = mes_ano
     events_inputs["nome_condominio"] = condominio
+    # Preferência: ZIP. Fallback: link Drive (legado).
+    eventos_zip_url = revista.get("eventos_zip_url")
     drive_eventos_url = revista.get("drive_eventos_url")
-    if drive_eventos_url:
+    pastas_ev: list[dict] = []
+    if eventos_zip_url or drive_eventos_url:
         import tempfile
         tmpdir_ev = Path(tempfile.mkdtemp(prefix=f"event_{revista.get('id','')[:8]}_"))
-        pastas_ev = baixar_pastas_manutencao(drive_eventos_url, tmpdir_ev)
-        if pastas_ev:
-            events_inputs["eventos"] = [
-                {
-                    "titulo": p["nome_pasta"],
-                    "fotos": p.get("fotos") or ([p["foto_path"]] if p.get("foto_path") else []),
-                    "descricao": "",
-                }
-                for p in pastas_ev
-            ]
+        if eventos_zip_url:
+            pastas_ev = baixar_pastas_manutencao_zip(eventos_zip_url, tmpdir_ev)
+        else:
+            pastas_ev = baixar_pastas_manutencao(drive_eventos_url, tmpdir_ev)
+    if pastas_ev:
+        events_inputs["eventos"] = [
+            {
+                "titulo": p["nome_pasta"],
+                "fotos": p.get("fotos") or ([p["foto_path"]] if p.get("foto_path") else []),
+                "descricao": "",
+            }
+            for p in pastas_ev
+        ]
 
     # ---- S10 Receita (foto via DALL-E)
     recipe_inputs = dict(RECIPE_DEFAULT)
@@ -332,6 +341,13 @@ def build_inputs_from_db(
     )
     if foto_receita_ai:
         recipe_inputs["foto_receita"] = foto_receita_ai
+    # Dica específica da receita do mês (sobrescreve o default fixo)
+    dica_ai = gerar_dica_receita(
+        recipe_inputs.get("titulo_receita", ""),
+        recipe_inputs.get("intro", ""),
+    )
+    if dica_ai:
+        recipe_inputs["dica"] = dica_ai
 
     # ---- S11 Nossos Números: parse do HTML dentro da pasta de prestação
     numbers_inputs = dict(NUMBERS_DEFAULT)
@@ -421,7 +437,10 @@ def build_inputs_from_db(
         ("S07 Novidades e Legislação", News(),                 news_inputs),
         ("S08 Manutenções",            OurCondoMaintenance(),  maint_inputs),
     ])
-    if revista.get("tem_eventos"):
+    # Inclui a seção de eventos só se temos eventos de verdade pra mostrar.
+    # 'tem_eventos' marca a intenção, mas se o ZIP/Drive vier vazio ou
+    # falhar o download, evita-se uma página em branco.
+    if revista.get("tem_eventos") and (events_inputs.get("eventos") or []):
         sequence.append(("S09 Eventos", OurCondoEvents(), events_inputs))
     sequence.extend([
         ("S10 Receita do Mês",         Recipe(),               recipe_inputs),

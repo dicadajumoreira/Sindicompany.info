@@ -1,21 +1,18 @@
 """
 S09 — Nosso Condomínio (Eventos).
 
-1-N páginas dinâmico (Doc 01 §3 S09). Por ora: 1 página com até 4 eventos
-em grid 2×2.
-
-Regras (Doc 01):
-- Máx 4 cards no grid
-- Foto sem legenda confirmada → exibir só foto, NUNCA inventar legenda
+Cada evento ganha sua PRÓPRIA página A4 (Doc 01 §3 S09 atualizado).
+Layout: foto hero (60% da altura), kicker editorial, título grande,
+descrição opcional, grid com até 4 fotos extras.
 
 Inputs:
 - mes_referencia (str)
 - nome_condominio (str)
 - eventos (list[dict]):
   - titulo (str)
-  - data (str) — descritiva, ex: "5 de abril"
+  - data (str opcional)
   - descricao (str opcional)
-  - fotos (list[str])
+  - fotos (list[str]) — primeira é hero; até 4 extras viram grid
 """
 
 from __future__ import annotations
@@ -53,8 +50,44 @@ def _photo_bg(foto: str, seed: str) -> str:
     return _placeholder_gradient(seed)
 
 
+# Inferência simples de kicker editorial pelo nome do evento — mesma
+# ideia do categorizador de manutenção.
+import unicodedata
+
+
+def _normalize(s: str) -> str:
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
+    return s.lower()
+
+
+_EVENT_CATEGORIAS: list[tuple[str, list[str]]] = [
+    ("Festa Junina",  ["junina", "sao joao", "sao pedro"]),
+    ("Confraternização", ["confraternizacao", "confraternização", "fim de ano", "natal", "ano novo"]),
+    ("Carnaval",      ["carnaval", "bloquinho"]),
+    ("Páscoa",        ["pascoa", "páscoa"]),
+    ("Dia das Crianças", ["criancas", "crianças", "dia das criancas"]),
+    ("Dia das Mães",  ["dia das maes", "mae", "mães"]),
+    ("Dia dos Pais",  ["dia dos pais", "pai"]),
+    ("Aniversário",   ["aniversario", "niver"]),
+    ("Show",          ["show", "musica ao vivo", "música ao vivo", "concerto"]),
+    ("Cinema",        ["cinema", "filme"]),
+    ("Bazar",         ["bazar", "feira"]),
+    ("Workshop",      ["workshop", "oficina", "curso"]),
+    ("Esporte",       ["futebol", "torneio", "campeonato", "esporte", "tenis"]),
+    ("Reunião",       ["reuniao", "reunião", "assembleia"]),
+]
+
+
+def _categorizar_evento(titulo: str) -> str:
+    n = _normalize(titulo)
+    for cat, kws in _EVENT_CATEGORIAS:
+        if any(k in n for k in kws):
+            return cat
+    return "Evento"
+
+
 class OurCondoEvents(Section):
-    """Nosso Condomínio (Eventos) — S09."""
+    """Nosso Condomínio (Eventos) — S09. 1 página A4 por evento."""
 
     type = "our_condo_events"
     label = "Nosso Condomínio — Eventos"
@@ -64,179 +97,191 @@ class OurCondoEvents(Section):
         eventos = inputs.get("eventos") or []
         if not isinstance(eventos, list):
             errors.append("Eventos: 'eventos' deve ser lista")
-        elif len(eventos) > 4:
-            errors.append(f"Eventos: máx 4 itens no grid (recebido {len(eventos)})")
         return errors
 
     def paginate(self, inputs: dict) -> int:
-        return 1
+        n = len(list(inputs.get("eventos") or []))
+        return max(1, n)
 
     def render_a4(self, inputs: dict, theme) -> list[str]:
-        return [self._render(inputs, theme)]
-
-    def render_mobile(self, inputs: dict, theme) -> list[str]:
-        return [self._render(inputs, theme)]
-
-    def _render(self, inputs: dict, theme) -> str:
+        eventos = list(inputs.get("eventos") or [])
+        if not eventos:
+            return []
         mes = (inputs.get("mes_referencia") or "").strip().upper()
         condo = (inputs.get("nome_condominio") or "").strip()
-        eventos = list(inputs.get("eventos") or [])[:4]
+        return [self._render_page(e, mes, condo, theme) for e in eventos]
 
-        cards_html = "\n".join(self._render_event(e) for e in eventos)
+    def render_mobile(self, inputs: dict, theme) -> list[str]:
+        return self.render_a4(inputs, theme)
+
+    def _render_page(self, evento: dict, mes: str, condo: str, theme) -> str:
+        titulo = (evento.get("titulo") or "").strip()
+        data = (evento.get("data") or "").strip()
+        desc = (evento.get("descricao") or "").strip()
+        fotos = list(evento.get("fotos") or [])
+
+        kicker = _categorizar_evento(titulo)
+        hero_foto = fotos[0] if fotos else ""
+        extras = fotos[1:5]  # até 4 fotos extras no rodapé
+
+        hero_bg = _photo_bg(hero_foto, titulo + (hero_foto or ""))
+
+        # Grid de fotos extras (se houver)
+        grid_html = ""
+        if extras:
+            cells = []
+            for i, foto in enumerate(extras):
+                bg = _photo_bg(foto, titulo + str(i) + foto)
+                cells.append(f'<div class="ev-extra" style="{bg}"></div>')
+            grid_html = f"""
+    <div class="ev-extras ev-extras--{len(extras)}">
+      {''.join(cells)}
+    </div>"""
+
+        date_html = (
+            f'<span class="ev__data">{_escape(data)}</span>'
+            if data else ""
+        )
+        desc_html = (
+            f'<p class="ev__desc">{_escape(desc)}</p>'
+            if desc else ""
+        )
 
         return f"""
-<section class="page events-page">
-  <div class="events__content">
-    <header class="events__header">
-      <div class="events__kicker">EVENTOS · {_escape(mes)}</div>
-      <h1 class="events__titulo">O que rolou no {_escape(condo)}</h1>
-      <p class="events__sub">Os melhores momentos compartilhados em comunidade — registros do que vivemos juntos no mês.</p>
-    </header>
-
-    <div class="events__grid">
-      {cards_html}
+<section class="page event-page">
+  <div class="ev__hero" style="{hero_bg}">
+    <div class="ev__hero-overlay"></div>
+    <div class="ev__hero-content">
+      <div class="ev__kicker">EVENTOS · {_escape(mes)} · {_escape(condo)}</div>
+      <span class="ev__categoria">{_escape(kicker)}</span>
+      <h1 class="ev__titulo">{_escape(titulo)}</h1>
+      {date_html}
     </div>
+  </div>
+
+  <div class="ev__body">
+    {desc_html}
+    {grid_html}
   </div>
 </section>
 
 <style>
-  .events-page {{
+  .event-page {{
     background: var(--white);
     color: var(--onix);
-    padding: 48px 56px 40px;
-  }}
-
-  .events__content {{
-    height: 100%;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 22px;
   }}
 
-  .events__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--mint-80);
-    margin-bottom: 10px;
-  }}
-
-  .events__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 36px;
-    font-weight: 400;
-    line-height: 0.98;
-    letter-spacing: -0.025em;
-    color: var(--onix);
-    margin-bottom: 6px;
-    max-width: 22ch;
-    text-wrap: balance;
-  }}
-
-  .events__sub {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 11.5px;
-    line-height: 1.5;
-    color: var(--onix);
-    opacity: 0.7;
-    max-width: 60ch;
-  }}
-
-  .events__grid {{
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: 16px;
-    flex: 1;
-    min-height: 0;
-  }}
-
-  .event-card {{
-    border-radius: 8px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    background: var(--gray-5);
-  }}
-
-  .event-card__photo {{
-    flex: 1;
-    min-height: 160px;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+  .ev__hero {{
     position: relative;
+    flex: 0 0 58%;
+    overflow: hidden;
   }}
 
-  .event-card__date-overlay {{
+  .ev__hero-overlay {{
     position: absolute;
-    top: 12px; left: 12px;
-    background: rgba(255, 255, 255, 0.92);
-    padding: 5px 10px;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(26,28,41,0.0) 0%,
+      rgba(26,28,41,0.0) 30%,
+      rgba(26,28,41,0.55) 70%,
+      rgba(26,28,41,0.92) 100%
+    );
+  }}
+
+  .ev__hero-content {{
+    position: absolute;
+    left: 56px; right: 56px; bottom: 36px;
+    color: var(--white);
+  }}
+
+  .ev__kicker {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--sand);
+    margin-bottom: 12px;
+  }}
+
+  .ev__categoria {{
+    display: inline-block;
+    background: var(--mint);
+    color: var(--onix);
+    padding: 4px 10px;
     border-radius: 3px;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--onix);
+    margin-bottom: 14px;
   }}
 
-  .event-card__body {{
-    padding: 14px 18px 16px;
-    background: var(--white);
-    border-top: 1px solid var(--gray-20);
-  }}
-
-  .event-card__titulo {{
+  .ev__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 17px;
+    font-size: 44px;
     font-weight: 400;
-    line-height: 1.15;
-    color: var(--onix);
-    letter-spacing: -0.015em;
-    margin-bottom: 6px;
+    line-height: 0.98;
+    letter-spacing: -0.028em;
+    color: var(--white);
+    max-width: 18ch;
+    margin: 0 0 10px;
+    text-wrap: balance;
   }}
 
-  .event-card__desc {{
+  .ev__data {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 11px;
-    line-height: 1.45;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--sand-90);
+  }}
+
+  .ev__body {{
+    flex: 1;
+    min-height: 0;
+    padding: 28px 56px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }}
+
+  .ev__desc {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 13px;
+    line-height: 1.55;
     color: var(--onix);
-    opacity: 0.78;
+    opacity: 0.85;
+    max-width: 68ch;
+    margin: 0;
+  }}
+
+  .ev-extras {{
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    gap: 10px;
+  }}
+  .ev-extras--1 {{ grid-template-columns: 1fr; }}
+  .ev-extras--2 {{ grid-template-columns: 1fr 1fr; }}
+  .ev-extras--3 {{ grid-template-columns: 1.4fr 1fr 1fr; }}
+  .ev-extras--4 {{ grid-template-columns: 1fr 1fr 1fr 1fr; }}
+
+  .ev-extra {{
+    border-radius: 6px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 0;
   }}
 </style>
 """
-
-    def _render_event(self, e: dict) -> str:
-        titulo = (e.get("titulo") or "").strip()
-        data = (e.get("data") or "").strip()
-        desc = (e.get("descricao") or "").strip()
-        fotos = list(e.get("fotos") or [])
-        seed = titulo + (fotos[0] if fotos else "")
-        photo_bg = _photo_bg(fotos[0] if fotos else "", seed)
-
-        date_html = (
-            f'<div class="event-card__date-overlay">{_escape(data)}</div>'
-            if data else ""
-        )
-        desc_html = (
-            f'<p class="event-card__desc">{_escape(desc)}</p>'
-            if desc else ""
-        )
-
-        return f"""
-      <article class="event-card">
-        <div class="event-card__photo" style="{photo_bg}">
-          {date_html}
-        </div>
-        <div class="event-card__body">
-          <h3 class="event-card__titulo">{_escape(titulo)}</h3>
-          {desc_html}
-        </div>
-      </article>"""
 
 
 def _escape(s: str) -> str:

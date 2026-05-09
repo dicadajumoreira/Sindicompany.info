@@ -97,4 +97,6 @@ const COLUMN_TO_MIGRATION: Record<string, string> = {
   prestacao_arquivo_url: "20260514_prestacao_arquivo.sql",
   // 20260517
   manutencao_zip_url: "20260517_manutencao_zip.sql",
+  // 20260518
+  eventos_zip_url: "20260518_eventos_zip.sql",
 };

@@ -363,6 +363,45 @@ def gerar_dicas_praticas(mes: int, ano: int) -> dict[str, Any]:
     return _aplicar_clean_recursivo(data)
 
 
+def gerar_dica_receita(titulo: str, intro: str = "") -> str:
+    """Gera uma dica curta (1-2 frases) referente à receita do mês.
+
+    A dica é específica do prato — ex: substituição de ingrediente,
+    ponto certo, harmonização. Não dica genérica de cozinha.
+    """
+    titulo = (titulo or "").strip()
+    if not titulo:
+        return ""
+    cli = _client()
+    fallback = "Sirva quente, com uma dose extra de carinho."
+    if cli is None:
+        return fallback
+    prompt = (
+        f"Receita do mês: '{titulo}'.\n"
+        f"{('Sobre a receita: ' + intro) if intro else ''}\n\n"
+        f"Escreva UMA dica de cozinheira experiente, em 1 ou 2 frases (máx 220 caracteres), "
+        f"ESPECÍFICA pra essa receita: pode ser uma substituição de ingrediente, "
+        f"o ponto certo de cozimento, uma combinação que casa, ou um truque de "
+        f"apresentação. Tom: leve, próximo, voz humana. Sem clichês. Sem bullet. "
+        f"Sem aspas, sem prefixos como 'Dica:'."
+    )
+    try:
+        resp = cli.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": SYSTEM_HUMANIZER},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.7,
+            max_tokens=120,
+        )
+        text = (resp.choices[0].message.content or "").strip()
+        return clean_text(text) or fallback
+    except Exception as e:  # noqa: BLE001
+        print(f"[text_gen] dica receita falhou: {e}", flush=True)
+        return fallback
+
+
 def gerar_curiosidades(mes: int, ano: int) -> dict[str, Any]:
     """4 curiosidades do setor condominial pro mês."""
     mes_nome = MESES_PT[mes - 1]

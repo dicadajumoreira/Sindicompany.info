@@ -124,49 +124,34 @@ class OurNumbers(Section):
         resumo_contas_html = self._render_resumo_contas(resumo_contas, theme)
         previsto_html = self._render_previsto_realizado(previsto_realizado, theme)
 
-        # Bloco principal: 2 colunas
-        # Esquerda: resumo contas + previsto x realizado (empilhados)
-        # Direita: donut despesas por categoria + tabela de despesas
+        # Bloco principal: 3 colunas em grid pra caber tudo na página
+        # 1: Resumo das contas | 2: Previsto x Realizado | 3: Despesas por categoria
+        cols = []
+        if resumo_contas:
+            cols.append(f"""
+      <div class="num-block">
+        <h2 class="num-block__titulo">Resumo das contas</h2>
+        {resumo_contas_html}
+      </div>""")
+        if previsto_realizado:
+            cols.append(f"""
+      <div class="num-block">
+        <h2 class="num-block__titulo">Previsto × Realizado</h2>
+        {previsto_html}
+      </div>""")
+        if despesas:
+            cols.append(f"""
+      <div class="num-block num-block--donut">
+        <h2 class="num-block__titulo">Despesas por categoria</h2>
+        {donut_svg}
+        {_render_donut_legend(despesas)}
+      </div>""")
+
         bloco_principal = ""
-        if despesas or resumo_contas or previsto_realizado:
-            despesas_block = ""
-            if despesas:
-                despesas_block = f"""
-        <div class="chart-card chart-card--donut">
-          <h2 class="chart-card__titulo">Despesas por categoria</h2>
-          {donut_svg}
-          {_render_donut_legend(despesas)}
-        </div>
-        <div class="numbers__despesas">
-          <h2 class="numbers__sub">Detalhamento</h2>
-          {despesas_tbl}
-        </div>
-"""
-            esquerda_block = ""
-            if resumo_contas:
-                esquerda_block += f"""
-        <div class="numbers__sub-block">
-          <h2 class="numbers__sub">Resumo das contas</h2>
-          {resumo_contas_html}
-        </div>
-"""
-            if previsto_realizado:
-                esquerda_block += f"""
-        <div class="numbers__sub-block">
-          <h2 class="numbers__sub">Previsto × Realizado</h2>
-          {previsto_html}
-        </div>
-"""
-            bloco_principal = f"""
-    <div class="numbers__main">
-      <div class="numbers__col numbers__col--left">
-        {esquerda_block}
-      </div>
-      <div class="numbers__col numbers__col--right">
-        {despesas_block}
-      </div>
-    </div>
-"""
+        if cols:
+            n = len(cols)
+            grid_class = f"numbers__main numbers__main--cols-{n}"
+            bloco_principal = f'<div class="{grid_class}">{"".join(cols)}</div>'
 
         return f"""
 <section class="page numbers-page">
@@ -174,7 +159,6 @@ class OurNumbers(Section):
     <header class="numbers__header">
       <div class="numbers__kicker">NOSSOS NÚMEROS · {_escape(mes)}</div>
       <h1 class="numbers__titulo">Fechamento financeiro</h1>
-      <p class="numbers__lede">Movimentação do mês: saldo anterior, créditos, débitos, saldo atual, e como cada conta e categoria fechou.</p>
     </header>
 
     <div class="numbers__kpis">
@@ -195,64 +179,57 @@ class OurNumbers(Section):
   .numbers-page {{
     background: var(--white);
     color: var(--onix);
-    padding: 56px;
+    padding: 36px 40px;
   }}
 
   .numbers__content {{
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 18px;
   }}
 
   .numbers__header {{
     margin-bottom: 0;
     border-bottom: 1px solid var(--gray-20);
-    padding-bottom: 18px;
+    padding-bottom: 12px;
   }}
 
   .numbers__kicker {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--mint-80);
-    margin-bottom: 12px;
+    margin-bottom: 6px;
   }}
 
   .numbers__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 52px;
+    font-size: 32px;
     font-weight: 400;
     line-height: 0.98;
-    letter-spacing: -0.028em;
+    letter-spacing: -0.02em;
     color: var(--onix);
-    margin-bottom: 8px;
   }}
 
   .numbers__lede {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 12px;
-    line-height: 1.45;
-    color: var(--onix);
-    opacity: 0.65;
-    max-width: 60ch;
+    display: none;
   }}
 
-  /* KPI cards: 4 colunas, mais respiráveis */
+  /* KPI cards: 4 colunas compactas */
   .numbers__kpis {{
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
+    gap: 10px;
   }}
 
   .kpi-card {{
     background: var(--gray-5);
-    border-radius: 8px;
-    padding: 22px 18px 18px;
-    border-top: 4px solid var(--mint);
-    position: relative;
+    border-radius: 6px;
+    padding: 14px 14px 12px;
+    border-top: 3px solid var(--mint);
   }}
 
   .kpi-card--credito {{ border-top-color: var(--mint); }}
@@ -261,54 +238,66 @@ class OurNumbers(Section):
 
   .kpi-card__label {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--mint-80);
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }}
 
   .kpi-card__value {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 22px;
+    font-size: 17px;
     font-weight: 400;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.012em;
     color: var(--onix);
     line-height: 1.05;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }}
 
-  .kpi-card__hint {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 10px;
-    color: var(--onix);
-    opacity: 0.55;
-    margin-top: 6px;
-  }}
-
-  /* Bloco principal: 2 colunas (esquerda compacta, direita com donut+detalhe) */
+  /* Bloco principal: até 3 colunas (resumo, prev×real, despesas) */
   .numbers__main {{
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 1.05fr 1fr;
-    gap: 24px;
+    gap: 14px;
     align-items: stretch;
   }}
+  .numbers__main--cols-1 {{ grid-template-columns: 1fr; }}
+  .numbers__main--cols-2 {{ grid-template-columns: 1fr 1fr; }}
+  .numbers__main--cols-3 {{ grid-template-columns: 1.05fr 1.15fr 1fr; }}
 
-  .numbers__col {{
+  .num-block {{
+    background: var(--gray-5);
+    border-radius: 6px;
+    padding: 14px 14px 12px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
     min-height: 0;
+    overflow: hidden;
   }}
 
-  .numbers__sub-block {{
-    background: var(--gray-5);
-    border-radius: 8px;
-    padding: 18px 20px;
+  .num-block--donut {{
+    align-items: center;
+  }}
+
+  .num-block__titulo {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--mint-80);
+    margin-bottom: 10px;
+    align-self: stretch;
+    text-align: left;
+  }}
+
+  .donut-chart {{
+    width: 110px; height: 110px;
+    margin: 2px 0 8px;
   }}
 
   .numbers__empty {{
@@ -332,19 +321,19 @@ class OurNumbers(Section):
   .resumo-contas tr:last-child {{ border-bottom: none; }}
 
   .resumo-contas td {{
-    padding: 8px 0;
+    padding: 6px 0;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
   }}
 
   .resumo-contas__nome {{
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
     color: var(--onix);
   }}
 
   .resumo-contas__valor {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 13px;
+    font-size: 11.5px;
     font-weight: 400;
     color: var(--onix);
     text-align: right;
@@ -352,7 +341,7 @@ class OurNumbers(Section):
     letter-spacing: -0.005em;
   }}
 
-  /* Previsto x Realizado */
+  /* Previsto x Realizado — colunas compactas */
   .prev-real {{
     width: 100%;
     border-collapse: collapse;
@@ -360,12 +349,12 @@ class OurNumbers(Section):
   }}
 
   .prev-real .pr__th {{
-    font-size: 8px;
+    font-size: 7px;
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--mint-80);
-    padding: 4px 0 8px;
+    padding: 3px 0 6px;
     text-align: right;
   }}
 
@@ -374,57 +363,36 @@ class OurNumbers(Section):
   }}
 
   .prev-real td {{
-    padding: 7px 0;
-    font-size: 10.5px;
+    padding: 5px 0;
+    font-size: 9.5px;
   }}
 
   .prev-real .pr__cat {{
     color: var(--onix);
     font-weight: 500;
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }}
 
   .prev-real .pr__val {{
     font-variant-numeric: tabular-nums;
     text-align: right;
     color: var(--onix);
-    padding-left: 8px;
+    padding-left: 6px;
   }}
 
   .prev-real .pr__diff {{
     font-variant-numeric: tabular-nums;
     text-align: right;
     font-weight: 700;
-    padding-left: 8px;
-    width: 50px;
+    padding-left: 6px;
+    width: 40px;
   }}
 
   .pr-status--ok {{ color: #2A8A6F; }}
   .pr-status--over {{ color: #C46A47; }}
-
-  .chart-card {{
-    background: var(--gray-5);
-    border-radius: 8px;
-    padding: 22px 22px 24px;
-    display: flex;
-    flex-direction: column;
-  }}
-
-  .chart-card--donut {{
-    align-items: center;
-    text-align: center;
-  }}
-
-  .chart-card__titulo {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--mint-80);
-    margin-bottom: 18px;
-    align-self: stretch;
-    text-align: left;
-  }}
 
   .donut-chart {{
     width: 140px; height: 140px;
@@ -451,39 +419,42 @@ class OurNumbers(Section):
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     text-align: left;
   }}
 
   .donut-legend__item {{
     display: grid;
-    grid-template-columns: 10px 1fr auto;
+    grid-template-columns: 8px 1fr auto;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 10px;
+    font-size: 9px;
     color: var(--onix);
-    padding-bottom: 6px;
+    padding: 3px 0;
     border-bottom: 1px solid var(--gray-20);
   }}
 
-  .donut-legend__item:last-child {{ border-bottom: none; padding-bottom: 0; }}
+  .donut-legend__item:last-child {{ border-bottom: none; }}
 
   .donut-legend__dot {{
-    width: 10px; height: 10px;
+    width: 8px; height: 8px;
     border-radius: 2px;
     flex-shrink: 0;
   }}
 
   .donut-legend__cat {{
     color: var(--onix);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }}
 
   .donut-legend__pct {{
     font-weight: 700;
     color: var(--onix);
     font-variant-numeric: tabular-nums;
-    font-size: 11px;
+    font-size: 9.5px;
   }}
 
   /* Sparkline na KPI da inadimplência */
