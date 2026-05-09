@@ -507,10 +507,12 @@ def build_inputs_from_db(
     # então uma página de abertura é gerada.
     if revista.get("tem_eventos"):
         sequence.append(("S09 Eventos", OurCondoEvents(), events_inputs))
-    sequence.extend([
-        ("S10 Receita do Mês",         Recipe(),               recipe_inputs),
-        ("S11 Nossos Números",         OurNumbers(),           numbers_inputs),
-    ])
+    sequence.append(("S10 Receita do Mês", Recipe(), recipe_inputs))
+    # S11 Nossos Números só aparece se a editora subiu o dashboard
+    # de prestação no form da revista. Sem dashboard, não há números
+    # pra mostrar — pular a seção evita uma página com KPIs zerados.
+    if revista.get("prestacao_arquivo_url"):
+        sequence.append(("S11 Nossos Números", OurNumbers(), numbers_inputs))
     if revista.get("tem_advertencias"):
         sequence.append(("S12 Advertências e Multas", Warnings(), warnings_inputs))
     # Nota da edição (texto livre da editora). Aparece só se preenchido
