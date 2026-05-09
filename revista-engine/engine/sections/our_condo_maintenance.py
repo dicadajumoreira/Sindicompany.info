@@ -60,20 +60,23 @@ def _badge_colors(badge: str) -> tuple[str, str]:
 
 
 def _empacotar_por_fotos(mans: list[dict]) -> list[list[dict]]:
-    """Distribui as manutenções em páginas com até 6 fotos cada.
+    """Distribui as manutenções em páginas com no máximo 2 pastas e
+    até 6 fotos cada.
 
     Cada manutenção usa até 4 fotos próprias. Empacotador fecha a página
-    quando adicionar a próxima ultrapassaria 6 fotos. Garante que todos
-    os itens são listados, mesmo aqueles com 1-2 fotos só.
+    quando adicionar a próxima ultrapassaria 6 fotos OU quando já tem
+    2 pastas. Garante que todos os itens são listados.
     """
+    MAX_PASTAS = 2
+    MAX_FOTOS = 6
     pages: list[list[dict]] = []
     cur: list[dict] = []
     cur_count = 0
     for m in mans:
         n_disp = len(m.get("fotos") or [])
         n_usar = min(max(1, n_disp), 4)
-        # Fecha sempre que ultrapassaria 6 fotos
-        if cur and cur_count + n_usar > 6:
+        # Fecha se ultrapassaria 6 fotos OU já tem 2 pastas
+        if cur and (cur_count + n_usar > MAX_FOTOS or len(cur) >= MAX_PASTAS):
             pages.append(cur)
             cur = []
             cur_count = 0
