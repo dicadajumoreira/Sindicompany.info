@@ -114,8 +114,8 @@ class Theme:
             return ""
 
         n = len(encontrados)
-        # Aplicado nas páginas internas (excluí cover/back-cover/maint-cover/event)
-        sel_base = ".page:not(.cover-page):not(.back-cover):not(.maint-cover-page):not(.event-page)"
+        # Aplicado em TODAS as páginas (inclui capa, contracapa, etc.)
+        sel_base = ".page"
         regras: list[str] = []
         for i, p in enumerate(encontrados, start=1):
             data_url = self._image_to_data_url(p)
@@ -226,10 +226,11 @@ html, body {{
   z-index: 100;
 }}
 
-/* Padrões geométricos sutis no fundo das páginas internas (opacity ~6%).
-   Excluí capa, contracapa, abertura do caderno e páginas hero de evento
-   pra não competir com fotos full-bleed. */
-.page:not(.cover-page):not(.back-cover):not(.maint-cover-page):not(.event-page)::before {{
+/* Padrões geométricos sutis no fundo de TODAS as páginas (opacity ~6%).
+   Aplicado também em capa, contracapa, abertura do caderno e hero de
+   evento. Como está em ::before com opacity baixa, não compete com
+   fotos full-bleed. */
+.page::before {{
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
