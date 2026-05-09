@@ -52,7 +52,6 @@ class Colophon(Section):
         ano = inputs.get("ano_edicao", 0)
         sindico = (inputs.get("nome_sindico") or "").strip()
         cargo_sindico = (inputs.get("cargo_sindico") or "Síndico(a) Profissional").strip()
-        # Label do bloco de crédito ('Síndico' ou 'Síndica' conforme gênero)
         label_sindico = (inputs.get("label_sindico") or "Síndico").strip()
         equipe_condo = list(inputs.get("equipe_condominio") or [])
         equipe_sc = list(inputs.get("equipe_sindicompany") or [])
@@ -60,60 +59,73 @@ class Colophon(Section):
         editor = (inputs.get("editor_responsavel") or "").strip()
         contato = (inputs.get("contato") or "").strip()
 
-        # Créditos obrigatórios (3) + extras
-        creditos = [
-            (label_sindico, [f"{sindico} · {cargo_sindico}" if sindico else "—"]),
-            ("Equipe do Condomínio", equipe_condo or [f"Equipe administrativa · {condo}"]),
-            ("Equipe Sindicompany",  equipe_sc or [
-                "Direção editorial",
-                "Pauta e produção",
-                "Diagramação e revisão",
-            ]),
-        ]
+        # Separa fontes (vão pro rodapé inline) dos demais blocos.
+        fontes_lista: list[str] = []
+        outros_extras: list[tuple[str, list[str]]] = []
         for c in extras:
-            t = c.get("titulo", "").strip()
+            t = (c.get("titulo") or "").strip()
             ns = list(c.get("nomes") or [])
-            if t and ns:
-                creditos.append((t, ns))
+            if not (t and ns):
+                continue
+            if t.lower().startswith("fonte"):
+                fontes_lista = [str(n) for n in ns]
+            else:
+                outros_extras.append((t, ns))
 
-        # Bloco de "Fontes de Pesquisa" usa layout inline com '|' separando
-        # itens. Demais blocos seguem o layout vertical em lista.
-        def _render_cred_block(titulo: str, nomes: list) -> str:
-            t_norm = titulo.strip().lower()
-            if t_norm.startswith("fonte"):  # 'Fontes de Pesquisa'
-                inline = " | ".join(_escape(str(n)) for n in nomes)
-                return (
-                    f'<div class="cred-block cred-block--inline">'
-                    f'<h3 class="cred-block__titulo">{_escape(titulo)}</h3>'
-                    f'<p class="cred-block__inline">{inline}</p>'
-                    f'</div>'
-                )
-            itens = "".join(
-                f'<li class="cred-block__item">{_escape(str(n))}</li>'
-                for n in nomes
-            )
-            return (
-                f'<div class="cred-block">'
-                f'<h3 class="cred-block__titulo">{_escape(titulo)}</h3>'
-                f'<ul class="cred-block__list">{itens}</ul>'
-                f'</div>'
-            )
+        # Equipe Sindicompany: usa default se vazio
+        if not equipe_sc:
+            equipe_sc = ["Direção editorial", "Pauta e Produção", "Diagramação e Arte"]
 
-        creditos_html = "\n".join(
-            _render_cred_block(titulo, nomes) for titulo, nomes in creditos
-        )
+        # Equipe do condomínio: usa default genérico se vazio
+        if not equipe_condo:
+            equipe_condo = [f"Equipe administrativa · {condo}"]
 
         edicao_str = f"Edição {edicao:02d} · {ano}" if (edicao and ano) else ""
+        sindico_value = f"{sindico} · {cargo_sindico}" if sindico else "—"
+
+        # Renderiza blocos extras (não-fontes) na coluna esquerda
+        extras_html = "\n".join(
+            f"""
+        <div class="exp-block">
+          <div class="exp-block__titulo">{_escape(t)}</div>
+          <ul class="exp-block__list">
+            {''.join(f'<li>{_escape(str(n))}</li>' for n in ns)}
+          </ul>
+        </div>"""
+            for t, ns in outros_extras
+        )
+
+        equipe_condo_html = "".join(
+            f'<li>{_escape(str(n))}</li>' for n in equipe_condo
+        )
+        equipe_sc_html = "".join(
+            f'<li>{_escape(str(n))}</li>' for n in equipe_sc
+        )
+
+        fontes_html = ""
+        if fontes_lista:
+            fontes_inline = " | ".join(_escape(str(n)) for n in fontes_lista)
+            fontes_html = f"""
+      <div class="exp-fontes">
+        <div class="exp-block__titulo">Fontes de Pesquisa</div>
+        <p class="exp-fontes__text">{fontes_inline}</p>
+      </div>"""
+
+        editor_html = (
+            f'<div class="ficha-item"><span class="ficha-item__label">Editor</span>'
+            f'<span class="ficha-item__value">{_escape(editor)}</span></div>'
+            if editor else ""
+        )
 
         return f"""
 <section class="page colophon-page">
-  <div class="colophon__content">
-    <header class="colophon__header">
-      <div class="colophon__kicker">EXPEDIENTE · {_escape(mes)}</div>
-      <h1 class="colophon__titulo">Quem fez esta edição</h1>
+  <div class="exp">
+    <header class="exp__header">
+      <div class="exp__kicker">EXPEDIENTE · {_escape(mes)}</div>
+      <h1 class="exp__titulo">Quem fez esta edição</h1>
     </header>
 
-    <div class="colophon__ficha">
+    <div class="exp__ficha">
       <div class="ficha-item">
         <span class="ficha-item__label">Publicação</span>
         <span class="ficha-item__value">Revista mensal de moradores</span>
@@ -126,20 +138,39 @@ class Colophon(Section):
         <span class="ficha-item__label">Edição</span>
         <span class="ficha-item__value">{_escape(edicao_str)}</span>
       </div>
-      {f'<div class="ficha-item"><span class="ficha-item__label">Editor responsável</span><span class="ficha-item__value">{_escape(editor)}</span></div>' if editor else ''}
+      {editor_html}
     </div>
 
-    <div class="colophon__creditos">
-      {creditos_html}
-    </div>
-
-    <footer class="colophon__nota">
-      <div class="colophon__legal">
-        <strong>Sindicompany ®</strong> · revista produzida por equipe editorial dedicada,
-        sob curadoria da síndica responsável e da gestão do condomínio.
-        {f"Correções e sugestões: {_escape(contato)}." if contato else ""}
-        Todos os direitos reservados.
+    <div class="exp__main">
+      <div class="exp-col exp-col--esq">
+        <div class="exp-block exp-block--hero">
+          <div class="exp-block__titulo">{_escape(label_sindico)}</div>
+          <div class="exp-block__sindico">{_escape(sindico_value)}</div>
+        </div>
+        <div class="exp-block">
+          <div class="exp-block__titulo">Equipe Sindicompany</div>
+          <ul class="exp-block__list">{equipe_sc_html}</ul>
+        </div>
       </div>
+      <div class="exp-col exp-col--dir">
+        <div class="exp-block">
+          <div class="exp-block__titulo">Equipe do Condomínio</div>
+          <ul class="exp-block__list">{equipe_condo_html}</ul>
+        </div>
+        {extras_html}
+      </div>
+    </div>
+
+    {fontes_html}
+
+    <footer class="exp__footer">
+      <span class="exp__brand">Sindicompany ®</span>
+      <span class="exp__legal">
+        Revista produzida por equipe editorial dedicada, sob curadoria
+        da {_escape(label_sindico.lower())} responsável e da gestão do condomínio.
+        {f'Correções e sugestões: {_escape(contato)}.' if contato else ''}
+        Todos os direitos reservados.
+      </span>
     </footer>
   </div>
 </section>
@@ -148,43 +179,50 @@ class Colophon(Section):
   .colophon-page {{
     background: var(--white);
     color: var(--onix);
-    padding: 56px;
+    padding: 36px 44px 28px;
   }}
 
-  .colophon__content {{
+  .exp {{
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 16px;
   }}
 
-  .colophon__kicker {{
+  /* Header compacto com linha mint embaixo */
+  .exp__header {{
+    border-bottom: 2px solid var(--mint);
+    padding-bottom: 10px;
+  }}
+
+  .exp__kicker {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.2em;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.26em;
     text-transform: uppercase;
     color: var(--mint-80);
-    margin-bottom: 12px;
+    margin-bottom: 6px;
   }}
 
-  .colophon__titulo {{
+  .exp__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 44px;
+    font-size: 30px;
     font-weight: 400;
-    line-height: 0.98;
-    letter-spacing: -0.025em;
+    line-height: 1.0;
+    letter-spacing: -0.022em;
     color: var(--onix);
+    margin: 0;
   }}
 
-  /* Ficha técnica em grid horizontal */
-  .colophon__ficha {{
+  /* Ficha técnica: 4 colunas, fundo cinza claro */
+  .exp__ficha {{
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px 28px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px 18px;
     background: var(--gray-5);
-    border-radius: 8px;
-    padding: 18px 22px;
+    border-radius: 6px;
+    padding: 12px 16px;
   }}
 
   .ficha-item {{
@@ -195,7 +233,7 @@ class Colophon(Section):
 
   .ficha-item__label {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9px;
+    font-size: 7.5px;
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -204,86 +242,102 @@ class Colophon(Section):
 
   .ficha-item__value {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 14px;
+    font-size: 12px;
     color: var(--onix);
-    line-height: 1.2;
+    line-height: 1.15;
   }}
 
-  /* Créditos: 3 colunas */
-  .colophon__creditos {{
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
+  /* Bloco principal: 2 colunas */
+  .exp__main {{
     flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    gap: 18px;
+    align-content: start;
   }}
 
-  .cred-block {{
-    border-top: 2px solid var(--onix);
-    padding-top: 12px;
+  .exp-col {{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }}
 
-  .cred-block:nth-child(1) {{ border-top-color: #84C7D3; }} /* mint */
-  .cred-block:nth-child(2) {{ border-top-color: #D4AE94; }} /* sand-80 */
-  .cred-block:nth-child(3) {{ border-top-color: #B8C0FF; }} /* lavender */
-  .cred-block:nth-child(4) {{ border-top-color: #76B1BC; }} /* mint-80 */
-  .cred-block:nth-child(5) {{ border-top-color: #DABDA9; }} /* sand */
+  /* Cada bloco de crédito */
+  .exp-block {{
+    border-top: 2px solid var(--mint);
+    padding-top: 8px;
+  }}
+  .exp-col--esq .exp-block:nth-child(1) {{ border-top-color: #84C7D3; }} /* mint — síndico */
+  .exp-col--esq .exp-block:nth-child(2) {{ border-top-color: #B8C0FF; }} /* lavender — sindicompany */
+  .exp-col--dir .exp-block:nth-child(1) {{ border-top-color: #D4AE94; }} /* sand-80 — condomínio */
+  .exp-col--dir .exp-block:nth-child(2) {{ border-top-color: #76B1BC; }} /* mint-80 — extras */
 
-  .cred-block__titulo {{
+  .exp-block__titulo {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9px;
+    font-size: 8.5px;
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--mint-80);
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }}
 
-  .cred-block__list {{
+  .exp-block__sindico {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 14px;
+    line-height: 1.2;
+    color: var(--onix);
+  }}
+
+  .exp-block__list {{
     list-style: none;
     margin: 0; padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: var(--onix);
   }}
 
-  /* Layout inline pra 'Fontes de Pesquisa': separador '|' entre itens */
-  .cred-block--inline {{
-    grid-column: 1 / -1;
+  /* Fontes de Pesquisa: linha cheia abaixo do bloco principal */
+  .exp-fontes {{
+    border-top: 2px solid #DABDA9; /* sand */
+    padding-top: 8px;
   }}
-  .cred-block__inline {{
+  .exp-fontes__text {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 11px;
+    font-size: 9.5px;
     line-height: 1.6;
     color: var(--onix);
     margin: 0;
   }}
 
-  .cred-block__item {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 12px;
-    line-height: 1.4;
-    color: var(--onix);
-  }}
-
-  /* Nota legal no rodapé */
-  .colophon__nota {{
+  /* Footer legal compacto */
+  .exp__footer {{
     border-top: 1px solid var(--gray-20);
-    padding-top: 14px;
+    padding-top: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
   }}
 
-  .colophon__legal {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 10px;
-    line-height: 1.5;
-    color: var(--onix);
-    opacity: 0.65;
-    max-width: 80ch;
-  }}
-
-  .colophon__legal strong {{
-    color: var(--onix);
-    opacity: 1;
+  .exp__brand {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 11px;
     font-weight: 600;
+    color: var(--onix);
+    flex-shrink: 0;
+  }}
+
+  .exp__legal {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 8.5px;
+    line-height: 1.45;
+    color: var(--onix);
+    opacity: 0.6;
   }}
 </style>
 """
