@@ -344,10 +344,13 @@ class OurCondoMaintenance(Section):
   }}
 
   .maint-secao__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 22px;
-    font-weight: 400;
-    line-height: 1.05;
+    /* Epilogue (corpo) tem cobertura completa de pt-BR; Provicali (títulos)
+       não cobre todos os caracteres acentuados. Trocado pra evitar tofu
+       em ç, ção, â, ê nos nomes das pastas. */
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.1;
     color: var(--onix);
     letter-spacing: -0.018em;
     margin: 0;
