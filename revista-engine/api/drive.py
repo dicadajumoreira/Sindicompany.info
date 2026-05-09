@@ -144,6 +144,31 @@ def _path_to_url(p: Path) -> str:
     return p.absolute().as_uri()
 
 
+def _renomear_recursivo_nfc(root: Path) -> None:
+    """Renomeia todo arquivo/pasta dentro de root pra forma Unicode NFC.
+
+    ZIPs criados no macOS guardam nomes em NFD (caracteres decompostos:
+    'ç' = 'c' + combining cedilla). Linux mantém literal, e isso causa
+    chaves de URL ruins no WeasyPrint e títulos quebrados no PDF.
+    """
+    import unicodedata as _u
+    # Renomeia bottom-up pra evitar invalidar paths-pais antes de descer
+    todos = sorted(root.rglob("*"), key=lambda p: -len(p.parts))
+    for p in todos:
+        nome_nfc = _u.normalize("NFC", p.name)
+        if nome_nfc == p.name:
+            continue
+        novo = p.parent / nome_nfc
+        try:
+            if novo.exists():
+                # Caso raríssimo: já existe um arquivo com o nome NFC.
+                # Mantém o atual sem renomear pra não sobrescrever.
+                continue
+            p.rename(novo)
+        except OSError as e:
+            print(f"[zip] falha ao renomear {p.name} → NFC: {e}", flush=True)
+
+
 # Mapa de palavras-chave → categoria. Procura no nome da pasta (lowercase
 # sem acentos) e devolve a primeira categoria que bater.
 import unicodedata
@@ -306,6 +331,8 @@ _PT_LOWERCASE_WORDS = {
 def formatar_titulo_pt(nome: str) -> str:
     """Normaliza um nome de pasta pra título legível em português.
 
+    - Normaliza Unicode NFC (resolve nomes do macOS que vêm com chars
+      decompostos: 'Manutenc╠ºa╠âo' → 'Manutenção')
     - Troca '_' e '-' por espaço
     - Aplica correções de acento conhecidas (manutencao → manutenção)
     - Title Case com preposições/artigos minúsculos no meio
@@ -314,6 +341,10 @@ def formatar_titulo_pt(nome: str) -> str:
     """
     if not nome:
         return ""
+    # Normaliza NFC: macOS guarda nomes em NFD (combining chars), o
+    # ZIP preserva isso, então acentos chegam como sequências de
+    # caracteres separados. NFC junta tudo num único codepoint.
+    nome = unicodedata.normalize("NFC", nome)
     # Limpeza inicial
     s = nome.replace("_", " ").replace("-", " ").strip()
     # Colapsa espaços múltiplos
@@ -420,6 +451,14 @@ def baixar_pastas_manutencao_zip(zip_url: str, dest: Path) -> list[dict[str, Any
     except Exception as e:  # noqa: BLE001
         print(f"[zip] extração falhou: {type(e).__name__}: {e}", flush=True)
         return []
+
+    # macOS guarda nomes de arquivo em Unicode NFD (chars decompostos).
+    # Quando o ZIP é criado no Mac, os nomes vêm assim: 'Manutenção'
+    # vira 'Manutenção' (c + cedilha combinante + tilde combinante).
+    # Linux preserva NFD literalmente, e isso quebra (a) os títulos no
+    # PDF e (b) URLs de file:// quando WeasyPrint tenta abrir.
+    # Solução: renomear tudo pra NFC após extract.
+    _renomear_recursivo_nfc(extract_dir)
 
     # Se o ZIP encapsulou tudo numa pasta-mãe (caso típico do macOS),
     # desce um nível.
