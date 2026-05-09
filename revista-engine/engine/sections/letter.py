@@ -100,8 +100,8 @@ class Letter(Section):
             padding = 60
             kicker_size = 11
             titulo_size = 56
-            corpo_size = 13
-            corpo_leading = 1.55
+            corpo_size = 12
+            corpo_leading = 1.5
             assinatura_nome_size = 16
             assinatura_cargo_size = 9
             foto_w = 220
@@ -125,6 +125,26 @@ class Letter(Section):
             paragrafos = [texto] if texto else []
         paragrafos = [_strip_inline_citations(p) for p in paragrafos]
         paragrafos = [p for p in paragrafos if p]
+
+        # Defesa de overflow: limita o texto total da carta a ~380 palavras
+        # (cabe confortavelmente em A4 com o layout atual). Se vier maior,
+        # corta no último parágrafo e adiciona reticências.
+        max_palavras = 380 if scale == "a4" else 260
+        total = 0
+        paragrafos_clip: list[str] = []
+        for p in paragrafos:
+            palavras = p.split()
+            restante = max_palavras - total
+            if restante <= 0:
+                break
+            if len(palavras) > restante:
+                p_cortado = " ".join(palavras[:restante]).rstrip(",.;:") + "…"
+                paragrafos_clip.append(p_cortado)
+                total += restante
+                break
+            paragrafos_clip.append(p)
+            total += len(palavras)
+        paragrafos = paragrafos_clip
 
         # Primeiro parágrafo recebe drop cap
         body_html_parts = []
@@ -184,6 +204,7 @@ class Letter(Section):
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;  /* defesa: corta se algum texto inesperado passar */
   }}
 
   .letter__header {{
