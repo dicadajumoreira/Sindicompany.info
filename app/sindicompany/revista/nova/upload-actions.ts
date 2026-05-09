@@ -7,6 +7,7 @@ import {
   createEventosZipUploadIntent,
   createManutencaoCapaUploadIntent,
   createManutencaoZipUploadIntent,
+  createPatternUploadIntent,
   createPrestacaoUploadIntent,
 } from "@/lib/sindicompany/condominios-db";
 
@@ -139,6 +140,38 @@ export async function getManutencaoCapaUploadIntent(
     const slug = slugifyCondo(condominio);
     const id = `pending-${Date.now()}`;
     const intent = await createManutencaoCapaUploadIntent(slug, id, e);
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const uploadUrl = `${baseUrl}/storage/v1/object/upload/sign/condominios-fotos/${intent.path}?token=${intent.token}`;
+    return {
+      ok: true,
+      uploadUrl,
+      token: intent.token,
+      path: intent.path,
+      publicUrl: intent.publicUrl,
+    };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Falha desconhecida." };
+  }
+}
+
+export async function getPatternUploadIntent(
+  slot: number,
+  ext: string,
+): Promise<UploadIntentResult | UploadIntentError> {
+  try {
+    await requireAuth();
+  } catch {
+    return { ok: false, error: "Sessao expirada. Faca login de novo." };
+  }
+  if (!Number.isInteger(slot) || slot < 1 || slot > 10) {
+    return { ok: false, error: "Slot invalido (1 a 10)." };
+  }
+  const e = ext.toLowerCase().replace(/^\./, "");
+  if (!ALLOWED_IMG_EXT.has(e)) {
+    return { ok: false, error: "Pattern precisa ser jpg, png ou webp." };
+  }
+  try {
+    const intent = await createPatternUploadIntent(slot, e);
     const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const uploadUrl = `${baseUrl}/storage/v1/object/upload/sign/condominios-fotos/${intent.path}?token=${intent.token}`;
     return {

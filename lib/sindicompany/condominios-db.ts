@@ -152,6 +152,46 @@ export async function createEventosZipUploadIntent(
   return { token: data.token, path, publicUrl: pub.publicUrl };
 }
 
+/** Padrões geométricos globais (não são por condomínio) que vão como
+ *  fundo sutil em todas as páginas da revista. 10 slots fixos
+ *  __patterns/pattern-{1..10}.png no bucket público. */
+export async function createPatternUploadIntent(
+  slot: number,
+  ext: string,
+): Promise<{ token: string; path: string; publicUrl: string }> {
+  const e = ext.toLowerCase().replace(/^\./, "");
+  const path = `__patterns/pattern-${slot}.${e}`;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUploadUrl(path, { upsert: true });
+  if (error) throw error;
+  const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return { token: data.token, path, publicUrl: pub.publicUrl };
+}
+
+/** Lista as URLs públicas dos patterns já subidos (slot 1..10). */
+export async function listPatternUrls(): Promise<(string | null)[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .list("__patterns", { limit: 100 });
+  if (error || !data) return Array(10).fill(null);
+  // Mapeia por slot (do nome do arquivo)
+  const bySlot: (string | null)[] = Array(10).fill(null);
+  for (const obj of data) {
+    const m = obj.name.match(/^pattern-(\d{1,2})\.(png|jpg|jpeg|webp|svg)$/i);
+    if (!m) continue;
+    const slot = parseInt(m[1], 10);
+    if (slot < 1 || slot > 10) continue;
+    const { data: pub } = supabase.storage
+      .from(BUCKET)
+      .getPublicUrl(`__patterns/${obj.name}`);
+    bySlot[slot - 1] = `${pub.publicUrl}?v=${obj.updated_at ?? obj.created_at ?? Date.now()}`;
+  }
+  return bySlot;
+}
+
 /** Sobe o arquivo de prestação de contas (imagem ou PDF) atrelado a
  *  uma revista específica. Mantido para fluxos que ainda usam upload
  *  via Server Action (testes locais e arquivos pequenos). O fluxo

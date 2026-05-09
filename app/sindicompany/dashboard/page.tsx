@@ -73,6 +73,12 @@ export default async function DashboardPage({
             Condomínios
           </Link>
           <Link
+            href="/sindicompany/patterns"
+            className="inline-flex items-center px-4 py-2.5 rounded-lg border border-onix-100 text-onix-900 font-medium hover:bg-onix-50 text-sm"
+          >
+            Patterns
+          </Link>
+          <Link
             href="/sindicompany/revista/nova"
             className="inline-flex items-center px-4 py-2.5 rounded-lg bg-onix-900 text-white font-medium hover:bg-onix-800 text-sm"
           >

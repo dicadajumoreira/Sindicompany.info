@@ -9,6 +9,7 @@ embutir as fontes (data: URLs) e os SVGs dos logos diretamente no HTML.
 from __future__ import annotations
 
 import base64
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -84,41 +85,88 @@ class Theme:
 
     def background_patterns_css(self) -> str:
         """CSS de regras nth-child que aplicam um pattern diferente em
-        cada página interna. A regra base (::before com opacity 0.06)
-        já vem do page_document — esta função só preenche o
-        background-image ciclando entre os patterns disponíveis.
+        cada página. A regra base (::before com opacity 0.06) já vem
+        do page_document — esta função só preenche o background-image
+        ciclando entre os patterns disponíveis.
 
-        Se a pasta engine/theme/patterns/ estiver vazia, devolve string
-        vazia e o ::before fica sem imagem (transparente, no-op).
+        Procura nesta ordem:
+          1. Arquivos locais em engine/theme/patterns/pattern-N.{ext}
+             (commitados no repo) → embute como data URI base64
+          2. Bucket público do Supabase em __patterns/pattern-N.{ext}
+             → baixa via HTTP e embute como data URI
+
+        Se nada for encontrado, devolve string vazia (no-op).
         """
-        # Reutiliza o mesmo dir que os logos vivem (theme/), mas em
-        # subpasta separada
+        encontrados_data_urls: list[str] = []
+
+        # Caminho 1: arquivos locais commitados no repo
         anchor = next(iter(self.logo_paths.values()), None) if hasattr(self, "logo_paths") else None
-        if not anchor:
-            return ""
-        patterns_dir = anchor.parent.parent / "patterns"
-        if not patterns_dir.exists():
-            return ""
-
-        # Coleta arquivos pattern-1.*, pattern-2.*, ... em ordem
+        patterns_dir = anchor.parent.parent / "patterns" if anchor else None
         suportados = (".png", ".jpg", ".jpeg", ".webp", ".svg")
-        encontrados: list[Path] = []
-        for i in range(1, 11):  # até 10 patterns
-            for ext in suportados:
-                p = patterns_dir / f"pattern-{i}{ext}"
-                if p.exists():
-                    encontrados.append(p)
-                    break
 
-        if not encontrados:
+        local_paths: dict[int, Path] = {}
+        if patterns_dir and patterns_dir.exists():
+            for i in range(1, 11):
+                for ext in suportados:
+                    p = patterns_dir / f"pattern-{i}{ext}"
+                    if p.exists():
+                        local_paths[i] = p
+                        break
+
+        # Caminho 2: Supabase Storage (bucket público condominios-fotos,
+        # prefix __patterns/). Tenta cada slot 1..10 com extensões comuns.
+        # Só tenta se SUPABASE_URL estiver setada.
+        supabase_url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+        remote_data_urls: dict[int, str] = {}
+        if supabase_url:
+            import urllib.error
+            import urllib.request
+            for i in range(1, 11):
+                if i in local_paths:
+                    continue  # já tem local, pula remoto
+                for ext in (".png", ".jpg", ".jpeg", ".webp"):
+                    url = (
+                        f"{supabase_url}/storage/v1/object/public/"
+                        f"condominios-fotos/__patterns/pattern-{i}{ext}"
+                    )
+                    try:
+                        req = urllib.request.Request(
+                            url,
+                            headers={"User-Agent": "revista-engine/1.0"},
+                        )
+                        with urllib.request.urlopen(req, timeout=15) as resp:
+                            if resp.status != 200:
+                                continue
+                            content = resp.read()
+                            ctype = resp.headers.get(
+                                "Content-Type", "image/png"
+                            ).split(";")[0].strip()
+                        b64 = base64.b64encode(content).decode("ascii")
+                        remote_data_urls[i] = f"data:{ctype};base64,{b64}"
+                        break  # encontrou nessa extensão
+                    except urllib.error.HTTPError:
+                        continue  # 404 ou outro — tenta próxima ext
+                    except Exception as e:  # noqa: BLE001
+                        print(
+                            f"[theme] pattern {i}{ext} falhou: {type(e).__name__}: {e}",
+                            flush=True,
+                        )
+                        break
+
+        # Consolida em ordem 1..10, descartando slots vazios
+        for i in range(1, 11):
+            if i in local_paths:
+                encontrados_data_urls.append(self._image_to_data_url(local_paths[i]))
+            elif i in remote_data_urls:
+                encontrados_data_urls.append(remote_data_urls[i])
+
+        if not encontrados_data_urls:
             return ""
 
-        n = len(encontrados)
-        # Aplicado em TODAS as páginas (inclui capa, contracapa, etc.)
+        n = len(encontrados_data_urls)
         sel_base = ".page"
         regras: list[str] = []
-        for i, p in enumerate(encontrados, start=1):
-            data_url = self._image_to_data_url(p)
+        for i, data_url in enumerate(encontrados_data_urls, start=1):
             regras.append(
                 f"{sel_base}:nth-child({n}n+{i})::before {{ "
                 f"background-image: url('{data_url}'); }}"
