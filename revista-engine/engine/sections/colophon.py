@@ -76,15 +76,31 @@ class Colophon(Section):
             if t and ns:
                 creditos.append((t, ns))
 
+        # Bloco de "Fontes de Pesquisa" usa layout inline com '|' separando
+        # itens. Demais blocos seguem o layout vertical em lista.
+        def _render_cred_block(titulo: str, nomes: list) -> str:
+            t_norm = titulo.strip().lower()
+            if t_norm.startswith("fonte"):  # 'Fontes de Pesquisa'
+                inline = " | ".join(_escape(str(n)) for n in nomes)
+                return (
+                    f'<div class="cred-block cred-block--inline">'
+                    f'<h3 class="cred-block__titulo">{_escape(titulo)}</h3>'
+                    f'<p class="cred-block__inline">{inline}</p>'
+                    f'</div>'
+                )
+            itens = "".join(
+                f'<li class="cred-block__item">{_escape(str(n))}</li>'
+                for n in nomes
+            )
+            return (
+                f'<div class="cred-block">'
+                f'<h3 class="cred-block__titulo">{_escape(titulo)}</h3>'
+                f'<ul class="cred-block__list">{itens}</ul>'
+                f'</div>'
+            )
+
         creditos_html = "\n".join(
-            f"""
-      <div class="cred-block">
-        <h3 class="cred-block__titulo">{_escape(titulo)}</h3>
-        <ul class="cred-block__list">
-          {''.join(f'<li class="cred-block__item">{_escape(str(n))}</li>' for n in nomes)}
-        </ul>
-      </div>"""
-            for titulo, nomes in creditos
+            _render_cred_block(titulo, nomes) for titulo, nomes in creditos
         )
 
         edicao_str = f"Edição {edicao:02d} · {ano}" if (edicao and ano) else ""
@@ -228,6 +244,18 @@ class Colophon(Section):
     display: flex;
     flex-direction: column;
     gap: 6px;
+  }}
+
+  /* Layout inline pra 'Fontes de Pesquisa': separador '|' entre itens */
+  .cred-block--inline {{
+    grid-column: 1 / -1;
+  }}
+  .cred-block__inline {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--onix);
+    margin: 0;
   }}
 
   .cred-block__item {{

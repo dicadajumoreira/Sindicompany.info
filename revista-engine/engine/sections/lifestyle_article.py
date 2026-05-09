@@ -89,14 +89,8 @@ class LifestyleArticle(Section):
             f'<p class="life__p">{_escape(p)}</p>' for p in paragrafos
         )
 
+        # Fontes movidas pro Expediente — não exibimos mais aqui.
         fontes_html = ""
-        if fontes:
-            items = " · ".join(_escape(f) for f in fontes)
-            fontes_html = f"""
-    <div class="life__fontes">
-      <span class="life__fontes-label">Fontes</span>
-      <span class="life__fontes-text">{items}</span>
-    </div>"""
 
         subtitulo_html = (
             f'<p class="life__subtitulo">{_escape(subtitulo)}</p>'

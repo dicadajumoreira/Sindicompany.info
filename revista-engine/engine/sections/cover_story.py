@@ -81,14 +81,8 @@ class CoverStory(Section):
             )
 
         body_html = self._render_blocos(blocos)
-        fontes_html = (
-            f"""
-    <div class="story__fontes">
-      <span class="story__fontes-label">Fontes</span>
-      <span class="story__fontes-text">{' · '.join(_escape(f) for f in fontes)}</span>
-    </div>"""
-            if fontes else ""
-        )
+        # Fontes movidas pro Expediente — não exibimos mais aqui.
+        fontes_html = ""
 
         return f"""
 <section class="page story-page">

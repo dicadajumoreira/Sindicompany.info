@@ -46,8 +46,8 @@ from api.text_gen import (
 )
 from engine.theme import load_theme
 from engine.sections import (
-    BackCover, Colophon, Cover, CoverStory, CulturalAgenda, Horoscope,
-    IndustryFacts, Letter, LifestyleArticle, News, OurCondoEvents,
+    BackCover, Colophon, Cover, CoverStory, CulturalAgenda, EditorNote,
+    Horoscope, IndustryFacts, Letter, LifestyleArticle, News, OurCondoEvents,
     OurCondoMaintenance, OurNumbers, Recipe, Tips, Warnings,
 )
 from scripts.preview_colophon import DEFAULT_INPUTS as COLOPHON_DEFAULT       # type: ignore
@@ -502,10 +502,10 @@ def build_inputs_from_db(
         ("S07 Novidades e Legislação", News(),                 news_inputs),
         ("S08 Manutenções",            OurCondoMaintenance(),  maint_inputs),
     ])
-    # Inclui a seção de eventos só se temos eventos de verdade pra mostrar.
-    # 'tem_eventos' marca a intenção, mas se o ZIP/Drive vier vazio ou
-    # falhar o download, evita-se uma página em branco.
-    if revista.get("tem_eventos") and (events_inputs.get("eventos") or []):
+    # Inclui a seção de eventos sempre que tem_eventos=true. Mesmo
+    # sem fotos no ZIP, a editora marcou que houve eventos no mês —
+    # então uma página de abertura é gerada.
+    if revista.get("tem_eventos"):
         sequence.append(("S09 Eventos", OurCondoEvents(), events_inputs))
     sequence.extend([
         ("S10 Receita do Mês",         Recipe(),               recipe_inputs),
@@ -513,6 +513,16 @@ def build_inputs_from_db(
     ])
     if revista.get("tem_advertencias"):
         sequence.append(("S12 Advertências e Multas", Warnings(), warnings_inputs))
+    # Nota da edição (texto livre da editora). Aparece só se preenchido
+    # no form de Nova Edição (campo notas_editor).
+    notas_editor = (revista.get("notas_editor") or "").strip()
+    if notas_editor:
+        editor_note_inputs = {
+            "texto": notas_editor,
+            "mes_referencia": mes_ano,
+            "nome_condominio": condominio,
+        }
+        sequence.append(("S12C Nota da Edição", EditorNote(), editor_note_inputs))
     sequence.extend([
         ("S12B Vida Condominial",      LifestyleArticle(),     life_inputs),
         ("S13 Signos do Mês",          Horoscope(),            horoscope_inputs),

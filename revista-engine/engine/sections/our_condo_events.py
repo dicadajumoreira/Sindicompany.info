@@ -104,20 +104,86 @@ class OurCondoEvents(Section):
     def paginate(self, inputs: dict) -> int:
         eventos = list(inputs.get("eventos") or [])
         fotos = _todas_as_fotos(eventos)
-        return max(1, len(_empacotar_fotos(fotos))) if fotos else 0
+        # Sempre 1 página mínima quando a seção é incluída
+        if not fotos:
+            return 1
+        return max(1, len(_empacotar_fotos(fotos)))
 
     def render_a4(self, inputs: dict, theme) -> list[str]:
         eventos = list(inputs.get("eventos") or [])
         fotos = _todas_as_fotos(eventos)
-        if not fotos:
-            return []
         mes = (inputs.get("mes_referencia") or "").strip().upper()
         condo = (inputs.get("nome_condominio") or "").strip()
+        if not fotos:
+            # Sem fotos: página de abertura do caderno (a editora marcou
+            # tem_eventos=sim mas o ZIP veio vazio ou não foi enviado).
+            return [self._render_abertura(mes, condo, theme)]
         paginas = _empacotar_fotos(fotos)
         return [
             self._render_page(pg, mes, condo, theme, idx=i, total=len(paginas))
             for i, pg in enumerate(paginas)
         ]
+
+    def _render_abertura(self, mes: str, condo: str, theme) -> str:
+        return f"""
+<section class="page event-page">
+  <div class="ev__abertura">
+    <div class="ev__abertura-content">
+      <div class="ev__kicker">EVENTO NO CONDOMÍNIO · {_escape(mes)}</div>
+      <h1 class="ev__titulo">O que rolou no {_escape(condo)}</h1>
+      <p class="ev__abertura-lede">As fotos dos eventos deste mês estarão disponíveis em breve.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .event-page {{
+    background: var(--white);
+    color: var(--onix);
+    padding: 0;
+  }}
+  .ev__abertura {{
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #84C7D3 0%, #76B1BC 50%, #1A1C29 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 56px;
+  }}
+  .ev__abertura-content {{
+    color: var(--white);
+    text-align: center;
+    max-width: 30ch;
+  }}
+  .ev__kicker {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--mint);
+    margin-bottom: 18px;
+  }}
+  .ev__titulo {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 56px;
+    font-weight: 400;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    color: var(--white);
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }}
+  .ev__abertura-lede {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--white);
+    opacity: 0.85;
+    margin: 0;
+  }}
+</style>
+"""
 
     def render_mobile(self, inputs: dict, theme) -> list[str]:
         return self.render_a4(inputs, theme)

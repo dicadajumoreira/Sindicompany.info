@@ -6,6 +6,7 @@ from .colophon import Colophon
 from .cover import Cover
 from .cover_story import CoverStory
 from .cultural_agenda import CulturalAgenda
+from .editor_note import EditorNote
 from .horoscope import Horoscope
 from .industry_facts import IndustryFacts
 from .letter import Letter
@@ -28,6 +29,7 @@ __all__ = [
     "Cover",
     "CoverStory",
     "CulturalAgenda",
+    "EditorNote",
     "Horoscope",
     "IndustryFacts",
     "Letter",

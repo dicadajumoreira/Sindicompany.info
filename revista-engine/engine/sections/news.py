@@ -275,10 +275,6 @@ class News(Section):
         </div>
         <h3 class="news-card__titulo">{_escape(_strip_inline_citations(n.get('titulo', '')))}</h3>
         <p class="news-card__resumo">{_escape(_strip_inline_citations(n.get('resumo', '')))}</p>
-        <div class="news-card__fonte">
-          <span class="news-card__fonte-label">Fonte</span>
-          <span class="news-card__fonte-text">{_escape(n.get('fonte', ''))}</span>
-        </div>
       </article>"""
 
 
