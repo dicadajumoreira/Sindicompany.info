@@ -344,10 +344,11 @@ class OurCondoMaintenance(Section):
   }}
 
   .maint-secao__titulo {{
-    /* Epilogue (corpo) tem cobertura completa de pt-BR; Provicali (títulos)
-       não cobre todos os caracteres acentuados. Trocado pra evitar tofu
-       em ç, ção, â, ê nos nomes das pastas. */
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    /* Stack robusta de fontes pra cobrir 100% pt-BR (acentos, cedilha,
+       til, circunflexo). Epilogue primeiro; se falhar, cai pra fontes
+       do sistema (DejaVu/Liberation no Linux) que sempre renderizam
+       caracteres acentuados. */
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 19px;
     font-weight: 600;
     line-height: 1.1;
