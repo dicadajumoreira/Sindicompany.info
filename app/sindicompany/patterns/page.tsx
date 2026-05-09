@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { listPatternUrls } from "@/lib/sindicompany/condominios-db";
 import { PatternSlot } from "./pattern-slot";
+import { DashboardShell } from "../shell";
 
 export default async function PatternsPage() {
   const store = await cookies();
@@ -20,6 +21,7 @@ export default async function PatternsPage() {
   }
 
   return (
+    <DashboardShell>
     <main className="max-w-5xl mx-auto px-6 py-12">
       <Link
         href="/sindicompany/dashboard"
@@ -60,5 +62,6 @@ export default async function PatternsPage() {
         no ciclo. Slots vazios são pulados.
       </div>
     </main>
+    </DashboardShell>
   );
 }

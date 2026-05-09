@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { listRevistas, formatEdicao, type Revista } from "@/lib/sindicompany/db";
 import { logoutAction } from "../login/actions";
+import { DashboardShell } from "../shell";
 import { DeleteRevistaButton } from "./delete-button";
 
 const STATUS_LABELS: Record<Revista["status"], string> = {
@@ -45,6 +46,7 @@ export default async function DashboardPage({
   const flashOk = sp.excluida ? "Revista excluída." : null;
 
   return (
+    <DashboardShell>
     <main className="max-w-6xl mx-auto px-6 py-12">
       {/* Header */}
       <header className="flex items-start justify-between mb-12">
@@ -215,5 +217,6 @@ export default async function DashboardPage({
         Sindicompany ® · Plataforma de comunicação editorial
       </footer>
     </main>
+    </DashboardShell>
   );
 }

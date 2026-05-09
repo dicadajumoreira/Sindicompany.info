@@ -8,6 +8,7 @@ import {
   formatMesAno,
   type Editorial,
 } from "@/lib/sindicompany/editoriais";
+import { DashboardShell } from "../shell";
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -52,6 +53,7 @@ export default async function EditorialListPage() {
   const proximos = nextMonths(6);
 
   return (
+    <DashboardShell>
     <main className="max-w-4xl mx-auto px-6 py-12">
       <Link
         href="/sindicompany/dashboard"
@@ -169,5 +171,6 @@ export default async function EditorialListPage() {
         </section>
       )}
     </main>
+    </DashboardShell>
   );
 }

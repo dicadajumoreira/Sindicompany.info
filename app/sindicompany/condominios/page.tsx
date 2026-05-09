@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { CONDOMINIOS, slugifyCondo } from "@/lib/sindicompany/condominios";
 import { listCondoMetas, type CondoMeta } from "@/lib/sindicompany/condominios-db";
+import { DashboardShell } from "../shell";
 
 async function safeListMetas(): Promise<{ metas: Map<string, CondoMeta>; error: string | null }> {
   try {
@@ -25,6 +26,7 @@ export default async function CondominiosPage() {
   const { metas, error } = await safeListMetas();
 
   return (
+    <DashboardShell>
     <main className="max-w-5xl mx-auto px-6 py-12">
       <Link
         href="/sindicompany/dashboard"
@@ -98,5 +100,6 @@ export default async function CondominiosPage() {
         </table>
       </section>
     </main>
+    </DashboardShell>
   );
 }

@@ -53,6 +53,9 @@ export function detectMigrationMissing(rawMessage: string): string | null {
     if (m.includes("editoriais_mensais")) {
       return "Tabela editoriais_mensais não existe. Rode a migration 20260511 no Supabase.";
     }
+    if (m.includes("carrosseis")) {
+      return "Tabela carrosseis não existe. Rode a migration 20260520_carrosseis.sql no Supabase.";
+    }
     if (m.includes("revistas")) {
       return "Tabela revistas não existe. Rode a migration 20260507 no Supabase.";
     }
