@@ -474,9 +474,12 @@ def baixar_pastas_manutencao_zip(zip_url: str, dest: Path) -> list[dict[str, Any
 
 
 def baixar_capa_manutencao_zip(zip_url: str, dest: Path) -> str | None:
-    """Foto de capa do caderno de manutenção. Prioridade:
-    1. Imagem na raiz do ZIP (intencional: a editora colocou ali)
-    2. Primeira imagem da primeira subpasta — fallback automático
+    """Foto de capa do caderno 'Nosso Condomínio'. Prioridade:
+    1. Imagem na raiz do ZIP nomeada 'capa.*' (escolha intencional)
+    2. Qualquer imagem na raiz do ZIP
+    3. Foto do MEIO da subpasta com MAIS fotos — evita repetir a
+       primeira foto de cada subpasta, que já aparecem como
+       thumbnail dentro dos cards de manutenção
     """
     extract_dir = dest / "extracted"
     if not extract_dir.exists():
@@ -484,7 +487,13 @@ def baixar_capa_manutencao_zip(zip_url: str, dest: Path) -> str | None:
     entries = [p for p in extract_dir.iterdir() if not p.name.startswith(".")]
     root = entries[0] if (len(entries) == 1 and entries[0].is_dir()) else extract_dir
 
-    # 1. Tenta imagem na raiz
+    # 1. Tenta imagem na raiz nomeada 'capa.*'
+    for p in sorted(root.iterdir()):
+        if (p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
+                and p.stem.lower() == "capa"):
+            return _path_to_url(p)
+
+    # 2. Qualquer imagem na raiz
     imgs_root = sorted(
         p for p in root.iterdir()
         if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
@@ -492,7 +501,11 @@ def baixar_capa_manutencao_zip(zip_url: str, dest: Path) -> str | None:
     if imgs_root:
         return _path_to_url(imgs_root[0])
 
-    # 2. Pega a primeira imagem que achar em qualquer subpasta
+    # 3. Foto do meio da subpasta com mais fotos. As primeiras de cada
+    #    subpasta já aparecem como thumbnails dos cards, então pegar do
+    #    meio evita repetição visual.
+    melhor_sub = None
+    melhor_imgs: list[Path] = []
     for sub in sorted(root.iterdir()):
         if not sub.is_dir():
             continue
@@ -500,8 +513,12 @@ def baixar_capa_manutencao_zip(zip_url: str, dest: Path) -> str | None:
             p for p in sub.rglob("*")
             if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS
         )
-        if imgs_sub:
-            return _path_to_url(imgs_sub[0])
+        if len(imgs_sub) > len(melhor_imgs):
+            melhor_sub = sub
+            melhor_imgs = imgs_sub
+    if melhor_imgs:
+        idx = len(melhor_imgs) // 2  # foto do meio
+        return _path_to_url(melhor_imgs[idx])
     return None
 
 

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 import re
+import unicodedata
 from typing import Any
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
@@ -314,6 +315,8 @@ def _apply_accent_dict(text: str) -> str:
 def clean_text(text: str) -> str:
     """Pós-processamento aplicado a TODO texto da revista.
 
+    - Normaliza Unicode NFC (junta combining chars: 'ç' = 'c'+cedilha
+      decomposto vira 'ç' único). Resolve nomes vindos de ZIPs do macOS.
     - Remove travessões (substitui por vírgula+espaço)
     - Normaliza espaços duplicados
     - Tira espaço antes de pontuação
@@ -322,8 +325,12 @@ def clean_text(text: str) -> str:
     if not text:
         return text
 
+    # NFC primeiro: senão o dicionário de acentos não bate com palavras
+    # decompostas, e fontes podem renderizar combining marks separados.
+    out = unicodedata.normalize("NFC", text)
+
     # — / – / – etc → ", " (mais natural que apagar)
-    out = DASH_RX.sub(", ", text)
+    out = DASH_RX.sub(", ", out)
 
     # Espaço antes de pontuação (típico de pós-processamento bagunçado)
     out = re.sub(r"\s+([,;:.!?])", r"\1", out)

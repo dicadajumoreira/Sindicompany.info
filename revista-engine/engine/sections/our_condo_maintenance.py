@@ -177,7 +177,7 @@ class OurCondoMaintenance(Section):
   <div class="maint-cover__overlay"></div>
   <div class="maint-cover__content">
     <div class="maint-cover__kicker">{_escape(condo)} · {_escape(mes)}</div>
-    <h1 class="maint-cover__titulo">Caderno de<br>Manutenção</h1>
+    <h1 class="maint-cover__titulo">Nosso<br>Condomínio</h1>
   </div>
 </section>
 
