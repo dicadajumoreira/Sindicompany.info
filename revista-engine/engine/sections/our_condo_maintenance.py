@@ -57,6 +57,33 @@ def _badge_colors(badge: str) -> tuple[str, str]:
                               ("#76B1BC", "#FFFFFF"))
 
 
+def _empacotar_por_fotos(mans: list[dict]) -> list[list[dict]]:
+    """Distribui as manutenções em páginas com 4-6 fotos cada.
+
+    Cada manutenção usa até 4 fotos próprias. Empacotador fecha a página
+    quando o total atinge 4-6 fotos, mantendo todos os itens listados
+    (mesmo aqueles com 1-2 fotos só).
+    """
+    pages: list[list[dict]] = []
+    cur: list[dict] = []
+    cur_count = 0
+    for m in mans:
+        n_disp = len(m.get("fotos") or [])
+        n_usar = min(max(1, n_disp), 4)
+        # Se adicionar passa de 6 e já temos pelo menos 4 → quebra página
+        if cur_count + n_usar > 6 and cur_count >= 4:
+            pages.append(cur)
+            cur = []
+            cur_count = 0
+        item = dict(m)
+        item["fotos_usadas"] = (m.get("fotos") or [])[:n_usar]
+        cur.append(item)
+        cur_count += n_usar
+    if cur:
+        pages.append(cur)
+    return pages
+
+
 # Paleta de placeholder (8 tonalidades sand/mint/lavender pra variar)
 _PLACEHOLDER_PALETTES = [
     ("#84C7D3", "#76B1BC"),   # mint
@@ -110,20 +137,18 @@ class OurCondoMaintenance(Section):
         return errors
 
     def paginate(self, inputs: dict) -> int:
-        # 1 abertura + N páginas de cards (6 cards por página).
-        mans = inputs.get("manutencoes") or []
-        n_card_pages = max(1, (len(mans) + 5) // 6)
-        return 1 + n_card_pages
+        # 1 abertura + N páginas. Empacotamento dinâmico por nº de fotos.
+        mans = list(inputs.get("manutencoes") or [])
+        return 1 + max(1, len(_empacotar_por_fotos(mans)))
 
     def render_a4(self, inputs: dict, theme) -> list[str]:
-        # Split em chunks de 6 manutenções por página.
         mans = list(inputs.get("manutencoes") or [])
-        chunks = [mans[i : i + 6] for i in range(0, max(len(mans), 1), 6)] or [[]]
+        paginas_de_itens = _empacotar_por_fotos(mans) or [[]]
 
         pages = [self._render_abertura(inputs, theme)]
-        for chunk in chunks:
+        for itens in paginas_de_itens:
             chunk_inputs = dict(inputs)
-            chunk_inputs["manutencoes"] = chunk
+            chunk_inputs["manutencoes"] = itens
             pages.append(self._render_cards(chunk_inputs, theme))
         return pages
 
@@ -209,9 +234,11 @@ class OurCondoMaintenance(Section):
         condo = (inputs.get("nome_condominio") or "").strip()
         mans = list(inputs.get("manutencoes") or [])
 
-        # Mostra até 6 manutenções, cada uma com 1 foto representativa
-        cards_html = "\n".join(
-            self._render_card(m, theme) for m in mans[:6]
+        # Cada manutenção da página vira uma "seção" com badge + título +
+        # grid de fotos (cada item usa seu campo 'fotos_usadas' definido
+        # pelo empacotamento; total da página fica entre 4 e 6 fotos).
+        secoes_html = "\n".join(
+            self._render_secao(m, theme) for m in mans
         )
 
         return f"""
@@ -220,11 +247,10 @@ class OurCondoMaintenance(Section):
     <header class="maint__header">
       <div class="maint__kicker">NOSSO CONDOMÍNIO · {_escape(mes)}</div>
       <h1 class="maint__titulo">O que fizemos pelo {_escape(condo)} este mês</h1>
-      <p class="maint__sub">Registro das principais manutenções e intervenções realizadas pela nossa equipe técnica.</p>
     </header>
 
-    <div class="maint__grid">
-      {cards_html}
+    <div class="maint__list">
+      {secoes_html}
     </div>
   </div>
 </section>
@@ -265,57 +291,27 @@ class OurCondoMaintenance(Section):
     text-wrap: balance;
   }}
 
-  .maint__sub {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 11.5px;
-    line-height: 1.5;
-    color: var(--onix);
-    opacity: 0.7;
-    max-width: 60ch;
-  }}
-
-  .maint__grid {{
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: 12px;
+  .maint__list {{
     flex: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }}
 
-  .maint-card {{
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-  }}
-
-  .maint-card__photo {{
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    position: relative;
-  }}
-
-  .maint-card__overlay {{
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(
-      180deg,
-      rgba(26,28,41,0.0) 50%,
-      rgba(26,28,41,0.78) 100%
-    );
-  }}
-
-  .maint-card__caption {{
-    position: absolute;
-    left: 14px; right: 14px; bottom: 14px;
-    color: var(--white);
+  .maint-secao {{
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    align-items: flex-start;
+  }}
+
+  .maint-secao__head {{
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
   }}
 
   .badge {{
@@ -329,34 +325,75 @@ class OurCondoMaintenance(Section):
     text-transform: uppercase;
   }}
 
-  .maint-card__titulo {{
+  .maint-secao__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 16px;
+    font-size: 22px;
     font-weight: 400;
-    line-height: 1.1;
-    color: var(--white);
-    letter-spacing: -0.015em;
+    line-height: 1.05;
+    color: var(--onix);
+    letter-spacing: -0.018em;
+    margin: 0;
+  }}
+
+  .maint-secao__grid {{
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    gap: 8px;
+  }}
+  .maint-secao__grid--1 {{ grid-template-columns: 1fr; }}
+  .maint-secao__grid--2 {{ grid-template-columns: 1fr 1fr; }}
+  .maint-secao__grid--3 {{ grid-template-columns: 1.4fr 1fr 1fr; grid-template-rows: 1fr 1fr; }}
+  .maint-secao__grid--3 > :first-child {{ grid-row: span 2; }}
+  .maint-secao__grid--4 {{ grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }}
+
+  .maint-foto {{
+    border-radius: 6px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 0;
   }}
 </style>
 """
 
-    def _render_card(self, m: dict, theme) -> str:
+    def _render_secao(self, m: dict, theme) -> str:
         titulo = (m.get("titulo") or "").strip()
         badge = (m.get("tipo_badge") or "MANUTENÇÃO").strip()
-        fotos = list(m.get("fotos") or [])
+        # 'fotos_usadas' é definido pelo empacotador (até 4 por seção).
+        # Se não vier, fallback: pega tudo de 'fotos' (até 4).
+        fotos = list(m.get("fotos_usadas") or (m.get("fotos") or [])[:4])
+        n = max(1, min(4, len(fotos)))
         bg, fg = _badge_colors(badge)
-        photo_seed = titulo + (fotos[0] if fotos else "")
-        photo_bg = _photo_bg(fotos[0] if fotos else "", photo_seed)
+
+        if fotos:
+            cells = []
+            for i, foto in enumerate(fotos[:n]):
+                seed = titulo + str(i) + foto
+                photo_bg = _photo_bg(foto, seed)
+                cells.append(f'<div class="maint-foto" style="{photo_bg}"></div>')
+            grid_html = (
+                f'<div class="maint-secao__grid maint-secao__grid--{n}">'
+                f'{"".join(cells)}'
+                f'</div>'
+            )
+        else:
+            # Sem fotos: ainda lista o item (placeholder gradient)
+            seed = titulo or "manut"
+            photo_bg = _photo_bg("", seed)
+            grid_html = (
+                f'<div class="maint-secao__grid maint-secao__grid--1">'
+                f'<div class="maint-foto" style="{photo_bg}"></div>'
+                f'</div>'
+            )
 
         return f"""
-      <article class="maint-card">
-        <div class="maint-card__photo" style="{photo_bg}">
-          <div class="maint-card__overlay"></div>
-          <div class="maint-card__caption">
-            <span class="badge" style="background:{bg};color:{fg}">{_escape(badge)}</span>
-            <h3 class="maint-card__titulo">{_escape(titulo)}</h3>
-          </div>
+      <article class="maint-secao">
+        <div class="maint-secao__head">
+          <span class="badge" style="background:{bg};color:{fg}">{_escape(badge)}</span>
+          <h3 class="maint-secao__titulo">{_escape(titulo)}</h3>
         </div>
+        {grid_html}
       </article>"""
 
 

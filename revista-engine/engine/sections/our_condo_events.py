@@ -100,8 +100,16 @@ class OurCondoEvents(Section):
         return errors
 
     def paginate(self, inputs: dict) -> int:
-        n = len(list(inputs.get("eventos") or []))
-        return max(1, n)
+        eventos = list(inputs.get("eventos") or [])
+        if not eventos:
+            return 0
+        total = 0
+        for e in eventos:
+            n_fotos = len(e.get("fotos") or [])
+            # 1 página hero (até 6 fotos) + extras de 6 em 6
+            extras_n = max(0, n_fotos - 6)
+            total += 1 + (extras_n + 5) // 6
+        return max(1, total)
 
     def render_a4(self, inputs: dict, theme) -> list[str]:
         eventos = list(inputs.get("eventos") or [])
@@ -109,24 +117,51 @@ class OurCondoEvents(Section):
             return []
         mes = (inputs.get("mes_referencia") or "").strip().upper()
         condo = (inputs.get("nome_condominio") or "").strip()
-        return [self._render_page(e, mes, condo, theme) for e in eventos]
+        # Cada evento pode gerar 1+ páginas: hero + até 5 extras (6 fotos
+        # total). Se tem mais fotos, abre página(s) extra(s) com grid de
+        # até 6 fotos cada.
+        pages: list[str] = []
+        for e in eventos:
+            pages.extend(self._render_event_pages(e, mes, condo, theme))
+        return pages
 
     def render_mobile(self, inputs: dict, theme) -> list[str]:
         return self.render_a4(inputs, theme)
 
-    def _render_page(self, evento: dict, mes: str, condo: str, theme) -> str:
+    def _render_event_pages(self, evento: dict, mes: str, condo: str, theme) -> list[str]:
         titulo = (evento.get("titulo") or "").strip()
         data = (evento.get("data") or "").strip()
         desc = (evento.get("descricao") or "").strip()
         fotos = list(evento.get("fotos") or [])
 
         kicker = _categorizar_evento(titulo)
+        # 1ª página: hero (1ª foto) + até 5 extras = 6 fotos visíveis
         hero_foto = fotos[0] if fotos else ""
-        extras = fotos[1:5]  # até 4 fotos extras no rodapé
+        extras_first = fotos[1:6]
+        extras_overflow = fotos[6:]
 
+        pages = [self._render_hero_page(
+            titulo=titulo, data=data, desc=desc, kicker=kicker,
+            mes=mes, condo=condo, hero_foto=hero_foto, extras=extras_first,
+            theme=theme,
+        )]
+
+        # Páginas adicionais: 6 fotos por página em grid 3x2
+        if extras_overflow:
+            for i in range(0, len(extras_overflow), 6):
+                chunk = extras_overflow[i : i + 6]
+                pages.append(self._render_extras_page(
+                    titulo=titulo, kicker=kicker, mes=mes, condo=condo,
+                    fotos=chunk, theme=theme,
+                ))
+        return pages
+
+    def _render_hero_page(
+        self, *, titulo: str, data: str, desc: str, kicker: str,
+        mes: str, condo: str, hero_foto: str, extras: list[str], theme,
+    ) -> str:
         hero_bg = _photo_bg(hero_foto, titulo + (hero_foto or ""))
 
-        # Grid de fotos extras (se houver)
         grid_html = ""
         if extras:
             cells = []
@@ -152,7 +187,7 @@ class OurCondoEvents(Section):
   <div class="ev__hero" style="{hero_bg}">
     <div class="ev__hero-overlay"></div>
     <div class="ev__hero-content">
-      <div class="ev__kicker">EVENTOS · {_escape(mes)} · {_escape(condo)}</div>
+      <div class="ev__kicker">EVENTO NO CONDOMÍNIO · {_escape(mes)} · {_escape(condo)}</div>
       <span class="ev__categoria">{_escape(kicker)}</span>
       <h1 class="ev__titulo">{_escape(titulo)}</h1>
       {date_html}
@@ -272,6 +307,53 @@ class OurCondoEvents(Section):
   .ev-extras--2 {{ grid-template-columns: 1fr 1fr; }}
   .ev-extras--3 {{ grid-template-columns: 1.4fr 1fr 1fr; }}
   .ev-extras--4 {{ grid-template-columns: 1fr 1fr 1fr 1fr; }}
+  .ev-extras--5 {{ grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }}
+  .ev-extras--5 > :first-child {{ grid-column: span 2; }}
+  .ev-extras--6 {{ grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }}
+
+  /* Página só de fotos extras (overflow >6 fotos) */
+  .ev-extras-page {{
+    background: var(--white);
+    color: var(--onix);
+    padding: 36px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }}
+
+  .ev-extras-page__head {{
+    border-bottom: 1px solid var(--gray-20);
+    padding-bottom: 10px;
+  }}
+
+  .ev-extras-page__kicker {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--mint-80);
+    margin-bottom: 6px;
+  }}
+
+  .ev-extras-page__titulo {{
+    font-family: '{theme.fonte_titulos.family}', serif;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.018em;
+    color: var(--onix);
+    margin: 0;
+  }}
+
+  .ev-extras-page__grid {{
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-rows: 1fr;
+  }}
 
   .ev-extra {{
     border-radius: 6px;
@@ -282,6 +364,26 @@ class OurCondoEvents(Section):
   }}
 </style>
 """
+
+
+    def _render_extras_page(
+        self, *, titulo: str, kicker: str, mes: str, condo: str,
+        fotos: list[str], theme,
+    ) -> str:
+        cells = []
+        for i, foto in enumerate(fotos):
+            bg = _photo_bg(foto, titulo + "extra" + str(i) + foto)
+            cells.append(f'<div class="ev-extra" style="{bg}"></div>')
+        return f"""
+<section class="page ev-extras-page">
+  <div class="ev-extras-page__head">
+    <div class="ev-extras-page__kicker">EVENTO NO CONDOMÍNIO · {_escape(mes)} · {_escape(condo)} · CONTINUAÇÃO</div>
+    <h2 class="ev-extras-page__titulo">{_escape(titulo)} <span style="color:var(--mint-80);font-size:14px">· {_escape(kicker)}</span></h2>
+  </div>
+  <div class="ev-extras-page__grid">
+    {''.join(cells)}
+  </div>
+</section>"""
 
 
 def _escape(s: str) -> str:
