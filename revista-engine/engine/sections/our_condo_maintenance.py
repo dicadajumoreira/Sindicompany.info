@@ -160,13 +160,14 @@ class OurCondoMaintenance(Section):
         condo = (inputs.get("nome_condominio") or "").strip().upper()
         foto = (inputs.get("foto_capa_caderno") or "").strip()
 
-        # Foto contida (sem corte) num bloco de fundo onix; placeholder
-        # gradient se sem foto. A foto fica em destaque mas é mostrada
-        # POR INTEIRA — não é mais background-size: cover que recortava.
+        # Foto vertical (portrait) → preenche tudo (cover); horizontal/quadrada
+        # → contém sem cortar (contain) sobre fundo onix. Detecção via PIL.
         if foto:
+            is_portrait = _is_portrait(foto)
+            size_mode = "cover" if is_portrait else "contain"
             foto_bg_css = (
                 f"background-image: url('{_escape_attr(foto)}');"
-                f"background-size: contain;"
+                f"background-size: {size_mode};"
                 f"background-position: center;"
                 f"background-repeat: no-repeat;"
                 f"background-color: var(--onix);"
@@ -410,6 +411,44 @@ class OurCondoMaintenance(Section):
         </div>
         {grid_html}
       </article>"""
+
+
+def _is_portrait(foto_url: str) -> bool:
+    """Detecta se a foto é vertical (altura > largura).
+
+    Aceita file:// URI (path local) ou http(s):// URL (Supabase). Em
+    qualquer falha de leitura (formato não suportado, rede off,
+    arquivo ausente), retorna False — fallback é o layout 'contain'
+    que é seguro pra qualquer proporção.
+    """
+    if not foto_url:
+        return False
+    try:
+        from io import BytesIO
+        from urllib.parse import unquote, urlparse
+
+        from PIL import Image  # type: ignore
+
+        parsed = urlparse(foto_url)
+        if parsed.scheme in ("file", ""):
+            local_path = unquote(parsed.path)
+            with Image.open(local_path) as img:
+                w, h = img.size
+        elif parsed.scheme in ("http", "https"):
+            import urllib.request
+            req = urllib.request.Request(
+                foto_url, headers={"User-Agent": "revista-engine/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = resp.read()
+            with Image.open(BytesIO(data)) as img:
+                w, h = img.size
+        else:
+            return False
+        return h > w
+    except Exception as e:  # noqa: BLE001
+        print(f"[s08] _is_portrait falhou pra {foto_url[:80]}: {type(e).__name__}: {e}", flush=True)
+        return False
 
 
 def _escape(s: str) -> str:
