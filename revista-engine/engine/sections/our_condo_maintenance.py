@@ -160,71 +160,86 @@ class OurCondoMaintenance(Section):
         condo = (inputs.get("nome_condominio") or "").strip().upper()
         foto = (inputs.get("foto_capa_caderno") or "").strip()
 
-        # Foto full-bleed; placeholder gradient se sem foto
+        # Foto contida (sem corte) num bloco de fundo onix; placeholder
+        # gradient se sem foto. A foto fica em destaque mas é mostrada
+        # POR INTEIRA — não é mais background-size: cover que recortava.
         if foto:
-            bg_css = (
+            foto_bg_css = (
                 f"background-image: url('{_escape_attr(foto)}');"
-                f"background-size: cover; background-position: center;"
+                f"background-size: contain;"
+                f"background-position: center;"
+                f"background-repeat: no-repeat;"
+                f"background-color: var(--onix);"
             )
         else:
-            bg_css = (
+            foto_bg_css = (
                 "background: linear-gradient(135deg, "
                 "#84C7D3 0%, #76B1BC 35%, #1A1C29 100%);"
             )
 
         return f"""
-<section class="page maint-cover-page" style="{bg_css}">
-  <div class="maint-cover__overlay"></div>
-  <div class="maint-cover__content">
+<section class="page maint-cover-page">
+  <div class="maint-cover__foto" style="{foto_bg_css}"></div>
+  <div class="maint-cover__texto">
     <div class="maint-cover__kicker">{_escape(condo)} · {_escape(mes)}</div>
     <h1 class="maint-cover__titulo">Nosso<br>Condomínio</h1>
+    <p class="maint-cover__lede">As manutenções, melhorias e cuidados que fizemos por aqui este mês.</p>
   </div>
 </section>
 
 <style>
   .maint-cover-page {{
-    position: relative;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    color: var(--white);
-    overflow: hidden;
+    background: var(--white);
+    color: var(--onix);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
   }}
 
-  .maint-cover__overlay {{
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(
-      180deg,
-      rgba(26,28,41,0.25) 0%,
-      rgba(26,28,41,0.45) 60%,
-      rgba(26,28,41,0.85) 100%
-    );
+  .maint-cover__foto {{
+    flex: 1 1 auto;
+    height: 70%;
+    width: 100%;
   }}
 
-  .maint-cover__content {{
-    position: absolute;
-    left: 56px; right: 56px; bottom: 80px;
-    z-index: 2;
+  .maint-cover__texto {{
+    flex: 0 0 30%;
+    padding: 32px 56px 40px;
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-top: 3px solid var(--mint);
   }}
 
   .maint-cover__kicker {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.28em;
     text-transform: uppercase;
-    color: var(--mint);
-    margin-bottom: 18px;
+    color: var(--mint-80);
+    margin-bottom: 14px;
   }}
 
   .maint-cover__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 96px;
+    font-size: 60px;
     font-weight: 400;
-    line-height: 0.9;
+    line-height: 0.92;
     letter-spacing: -0.03em;
-    color: var(--white);
+    color: var(--onix);
+    margin: 0 0 12px;
+  }}
+
+  .maint-cover__lede {{
+    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--onix);
+    opacity: 0.65;
+    max-width: 60ch;
+    margin: 0;
   }}
 </style>
 """
