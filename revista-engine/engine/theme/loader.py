@@ -82,6 +82,60 @@ class Theme:
                 )
         return "\n".join(blocks)
 
+    def background_patterns_css(self) -> str:
+        """CSS de regras nth-child que aplicam um pattern diferente em
+        cada página interna. A regra base (::before com opacity 0.06)
+        já vem do page_document — esta função só preenche o
+        background-image ciclando entre os patterns disponíveis.
+
+        Se a pasta engine/theme/patterns/ estiver vazia, devolve string
+        vazia e o ::before fica sem imagem (transparente, no-op).
+        """
+        # Reutiliza o mesmo dir que os logos vivem (theme/), mas em
+        # subpasta separada
+        anchor = next(iter(self.logo_paths.values()), None) if hasattr(self, "logo_paths") else None
+        if not anchor:
+            return ""
+        patterns_dir = anchor.parent.parent / "patterns"
+        if not patterns_dir.exists():
+            return ""
+
+        # Coleta arquivos pattern-1.*, pattern-2.*, ... em ordem
+        suportados = (".png", ".jpg", ".jpeg", ".webp", ".svg")
+        encontrados: list[Path] = []
+        for i in range(1, 11):  # até 10 patterns
+            for ext in suportados:
+                p = patterns_dir / f"pattern-{i}{ext}"
+                if p.exists():
+                    encontrados.append(p)
+                    break
+
+        if not encontrados:
+            return ""
+
+        n = len(encontrados)
+        # Aplicado nas páginas internas (excluí cover/back-cover/maint-cover/event)
+        sel_base = ".page:not(.cover-page):not(.back-cover):not(.maint-cover-page):not(.event-page)"
+        regras: list[str] = []
+        for i, p in enumerate(encontrados, start=1):
+            data_url = self._image_to_data_url(p)
+            regras.append(
+                f"{sel_base}:nth-child({n}n+{i})::before {{ "
+                f"background-image: url('{data_url}'); }}"
+            )
+        return "\n".join(regras)
+
+    def _image_to_data_url(self, path: Path) -> str:
+        mime = {
+            ".png":  "image/png",
+            ".jpg":  "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".webp": "image/webp",
+            ".svg":  "image/svg+xml",
+        }.get(path.suffix.lower(), "application/octet-stream")
+        b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+        return f"data:{mime};base64,{b64}"
+
     def logo_svg(self, variant: str = "white") -> str:
         """
         Retorna o conteúdo SVG do logo, pronto para embutir inline no HTML.
@@ -171,6 +225,23 @@ html, body {{
   pointer-events: none;
   z-index: 100;
 }}
+
+/* Padrões geométricos sutis no fundo das páginas internas (opacity ~6%).
+   Excluí capa, contracapa, abertura do caderno e páginas hero de evento
+   pra não competir com fotos full-bleed. */
+.page:not(.cover-page):not(.back-cover):not(.maint-cover-page):not(.event-page)::before {{
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}}
+
+{self.background_patterns_css()}
 
 @page {{
   size: {page_w}px {page_h}px;
