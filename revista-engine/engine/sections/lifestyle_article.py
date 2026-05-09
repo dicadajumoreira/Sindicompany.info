@@ -151,7 +151,7 @@ class LifestyleArticle(Section):
   }}
 
   .life__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.22em;
@@ -161,7 +161,7 @@ class LifestyleArticle(Section):
   }}
 
   .life__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 40px;
     font-weight: 400;
     line-height: 0.98;
@@ -175,7 +175,7 @@ class LifestyleArticle(Section):
   .life__subtitulo {{
     /* Subtítulo destacado com fundo (pílula sand sobre o hero) */
     display: inline-block;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 13px;
     font-weight: 500;
     line-height: 1.4;
@@ -201,7 +201,7 @@ class LifestyleArticle(Section):
   }}
 
   .life__p {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 12.5px;
     line-height: 1.65;
     color: var(--onix);
@@ -226,7 +226,7 @@ class LifestyleArticle(Section):
   }}
 
   .life__fontes-label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.22em;
@@ -235,7 +235,7 @@ class LifestyleArticle(Section):
   }}
 
   .life__fontes-text {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     color: var(--onix);
     opacity: 0.7;

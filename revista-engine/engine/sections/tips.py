@@ -98,7 +98,7 @@ class Tips(Section):
   }}
 
   .tips__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -108,7 +108,7 @@ class Tips(Section):
   }}
 
   .tips__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 38px;
     font-weight: 400;
     line-height: 0.98;
@@ -120,7 +120,7 @@ class Tips(Section):
   }}
 
   .tips__intro {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 12px;
     line-height: 1.5;
     color: var(--onix);
@@ -171,7 +171,7 @@ class Tips(Section):
   }}
 
   .dica-card__num {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 56px;
     font-weight: 400;
     line-height: 0.85;
@@ -201,7 +201,7 @@ class Tips(Section):
   }}
 
   .dica-card__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 18px;
     font-weight: 400;
     line-height: 1.1;
@@ -211,7 +211,7 @@ class Tips(Section):
   }}
 
   .dica-card__corpo {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11.5px;
     line-height: 1.5;
     color: var(--onix);

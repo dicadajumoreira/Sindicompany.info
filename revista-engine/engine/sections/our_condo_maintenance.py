@@ -216,7 +216,7 @@ class OurCondoMaintenance(Section):
   }}
 
   .maint-cover__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.28em;
@@ -226,7 +226,7 @@ class OurCondoMaintenance(Section):
   }}
 
   .maint-cover__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 60px;
     font-weight: 400;
     line-height: 0.92;
@@ -236,7 +236,7 @@ class OurCondoMaintenance(Section):
   }}
 
   .maint-cover__lede {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 12px;
     line-height: 1.5;
     color: var(--onix);
@@ -288,7 +288,7 @@ class OurCondoMaintenance(Section):
   }}
 
   .maint__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -298,7 +298,7 @@ class OurCondoMaintenance(Section):
   }}
 
   .maint__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 36px;
     font-weight: 400;
     line-height: 0.98;
@@ -336,7 +336,7 @@ class OurCondoMaintenance(Section):
     display: inline-block;
     padding: 3px 9px;
     border-radius: 3px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 8px;
     font-weight: 700;
     letter-spacing: 0.2em;

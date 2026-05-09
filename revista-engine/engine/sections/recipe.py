@@ -137,7 +137,7 @@ class Recipe(Section):
   }}
 
   .recipe__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -147,7 +147,7 @@ class Recipe(Section):
   }}
 
   .recipe__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 40px;
     font-weight: 400;
     line-height: 0.98;
@@ -157,7 +157,7 @@ class Recipe(Section):
   }}
 
   .recipe__tempo {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.12em;
@@ -167,7 +167,7 @@ class Recipe(Section):
   }}
 
   .recipe__intro {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 12px;
     line-height: 1.5;
     color: var(--onix);
@@ -188,7 +188,7 @@ class Recipe(Section):
   }}
 
   .recipe__sub {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 20px;
     font-weight: 400;
     color: var(--onix);
@@ -206,7 +206,7 @@ class Recipe(Section):
   }}
 
   .ing-item {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11.5px;
     line-height: 1.4;
     color: var(--onix);
@@ -240,7 +240,7 @@ class Recipe(Section):
   }}
 
   .prep-num {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 14px;
     color: var(--mint-80);
     flex-shrink: 0;
@@ -249,7 +249,7 @@ class Recipe(Section):
   }}
 
   .prep-text {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11.5px;
     line-height: 1.5;
     color: var(--onix);
@@ -262,7 +262,7 @@ class Recipe(Section):
   }}
 
   .recipe__dica-label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.2em;
@@ -272,7 +272,7 @@ class Recipe(Section):
   }}
 
   .recipe__dica-text {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11.5px;
     line-height: 1.5;
     color: var(--onix);

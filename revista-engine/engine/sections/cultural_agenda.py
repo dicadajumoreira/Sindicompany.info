@@ -124,7 +124,7 @@ class CulturalAgenda(Section):
   }}
 
   .agenda__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -134,7 +134,7 @@ class CulturalAgenda(Section):
   }}
 
   .agenda__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 38px;
     font-weight: 400;
     line-height: 0.98;
@@ -144,7 +144,7 @@ class CulturalAgenda(Section):
   }}
 
   .agenda__sub {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     color: var(--onix);
     opacity: 0.65;
@@ -188,7 +188,7 @@ class CulturalAgenda(Section):
   }}
 
   .agenda-hero__label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.2em;
@@ -197,7 +197,7 @@ class CulturalAgenda(Section):
   }}
 
   .agenda-hero__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 26px;
     font-weight: 400;
     line-height: 1.0;
@@ -206,7 +206,7 @@ class CulturalAgenda(Section):
   }}
 
   .agenda-hero__sinopse {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11.5px;
     line-height: 1.5;
     color: var(--onix);
@@ -214,7 +214,7 @@ class CulturalAgenda(Section):
   }}
 
   .agenda-hero__data {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.12em;
@@ -281,7 +281,7 @@ class CulturalAgenda(Section):
     display: inline-block;
     padding: 2px 6px;
     border-radius: 3px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 6.5px;
     font-weight: 700;
     letter-spacing: 0.14em;
@@ -289,7 +289,7 @@ class CulturalAgenda(Section):
   }}
 
   .agenda-card__data {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 8px;
     font-weight: 600;
     letter-spacing: 0.08em;
@@ -298,7 +298,7 @@ class CulturalAgenda(Section):
   }}
 
   .agenda-card__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 13px;
     font-weight: 500;
     line-height: 1.15;
@@ -311,7 +311,7 @@ class CulturalAgenda(Section):
   }}
 
   .agenda-card__desc {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9.5px;
     line-height: 1.4;
     color: var(--onix);
@@ -326,7 +326,7 @@ class CulturalAgenda(Section):
   .agenda-card__local {{
     margin-top: auto;
     padding-top: 6px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 7.5px;
     font-weight: 600;
     letter-spacing: 0.06em;

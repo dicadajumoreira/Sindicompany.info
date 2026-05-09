@@ -215,7 +215,7 @@ class Cover(Section):
   }}
 
   .cover__edicao {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: {edicao_size}px;
     font-weight: 500;
     letter-spacing: 0.14em;
@@ -232,7 +232,7 @@ class Cover(Section):
   }}
 
   .cover__manchete {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: {manchete_size}px;
     font-weight: 400;
     line-height: 0.98;
@@ -245,7 +245,7 @@ class Cover(Section):
   .cover__subtitulo {{
     /* Subtítulo destacado com fundo: pílula sand sobre o hero da capa */
     display: inline-block;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: {subtitulo_size}px;
     font-weight: 500;
     line-height: 1.4;
@@ -264,7 +264,7 @@ class Cover(Section):
   }}
 
   .cover__chamadas-label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: {chamada_label_size}px;
     font-weight: 600;
     letter-spacing: 0.22em;
@@ -283,7 +283,7 @@ class Cover(Section):
   }}
 
   .cover__chamada {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: {chamada_size}px;
     font-weight: 400;
     line-height: 1.4;

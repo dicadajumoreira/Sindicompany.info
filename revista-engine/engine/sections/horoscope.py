@@ -115,7 +115,7 @@ class Horoscope(Section):
   }}
 
   .horoscope__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -125,7 +125,7 @@ class Horoscope(Section):
   }}
 
   .horoscope__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 44px;
     font-weight: 400;
     line-height: 0.98;
@@ -135,7 +135,7 @@ class Horoscope(Section):
   }}
 
   .horoscope__sub {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     color: var(--onix);
     opacity: 0.65;
@@ -175,7 +175,7 @@ class Horoscope(Section):
   }}
 
   .signo-card__nome {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 16px;
     font-weight: 400;
     color: var(--onix);
@@ -184,7 +184,7 @@ class Horoscope(Section):
   }}
 
   .signo-card__datas {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 8px;
     font-weight: 600;
     letter-spacing: 0.16em;
@@ -194,7 +194,7 @@ class Horoscope(Section):
   }}
 
   .signo-card__texto {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9.5px;
     font-weight: 400;
     line-height: 1.45;

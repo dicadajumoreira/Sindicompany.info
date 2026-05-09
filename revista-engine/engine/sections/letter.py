@@ -212,7 +212,7 @@ class Letter(Section):
   }}
 
   .letter__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: {kicker_size}px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -222,7 +222,7 @@ class Letter(Section):
   }}
 
   .letter__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: {titulo_size}px;
     font-weight: 400;
     line-height: 0.98;
@@ -251,7 +251,7 @@ class Letter(Section):
 
   .letter__body {{
     flex: 1;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: {corpo_size}px;
     font-weight: 400;
     line-height: {corpo_leading};
@@ -279,7 +279,7 @@ class Letter(Section):
   }}
 
   .letter__sig-name {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: {assinatura_nome_size}px;
     font-weight: 400;
     letter-spacing: -0.01em;
@@ -288,7 +288,7 @@ class Letter(Section):
   }}
 
   .letter__sig-cargo {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: {assinatura_cargo_size}px;
     font-weight: 600;
     letter-spacing: 0.16em;

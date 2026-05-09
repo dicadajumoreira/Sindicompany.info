@@ -138,7 +138,7 @@ class CoverStory(Section):
   }}
 
   .story__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.24em;
@@ -148,7 +148,7 @@ class CoverStory(Section):
   }}
 
   .story__manchete {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 38px;
     font-weight: 400;
     line-height: 0.96;
@@ -162,7 +162,7 @@ class CoverStory(Section):
   .story__subtitulo {{
     /* Subtítulo destacado com fundo (pílula sand sobre o hero) */
     display: inline-block;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 12.5px;
     font-weight: 500;
     line-height: 1.4;
@@ -183,7 +183,7 @@ class CoverStory(Section):
   }}
 
   .story__p {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     line-height: 1.5;
     color: var(--onix);
@@ -198,7 +198,7 @@ class CoverStory(Section):
   }}
 
   .story__intertitulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 18px;
     font-weight: 400;
     line-height: 1.05;
@@ -210,7 +210,7 @@ class CoverStory(Section):
   }}
 
   .story__pull-quote {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 19px;
     font-weight: 400;
     line-height: 1.15;
@@ -228,7 +228,7 @@ class CoverStory(Section):
 
   .story__pull-quote-autor {{
     display: block;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.18em;
@@ -249,7 +249,7 @@ class CoverStory(Section):
   }}
 
   .story__dado-numero {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 28px;
     font-weight: 400;
     line-height: 0.95;
@@ -258,7 +258,7 @@ class CoverStory(Section):
   }}
 
   .story__dado-contexto {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11.5px;
     line-height: 1.4;
     color: var(--onix);
@@ -266,7 +266,7 @@ class CoverStory(Section):
   }}
 
   .story__dado-fonte {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 8px;
     font-weight: 700;
     letter-spacing: 0.2em;
@@ -286,7 +286,7 @@ class CoverStory(Section):
   }}
 
   .story__fontes-label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.22em;
@@ -295,7 +295,7 @@ class CoverStory(Section):
   }}
 
   .story__fontes-text {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     color: var(--onix);
     opacity: 0.75;

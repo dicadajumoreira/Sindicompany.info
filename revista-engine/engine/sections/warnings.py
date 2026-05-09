@@ -208,7 +208,7 @@ class Warnings(Section):
   }}
 
   .warnings__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -218,7 +218,7 @@ class Warnings(Section):
   }}
 
   .warnings__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 48px;
     font-weight: 400;
     line-height: 0.98;
@@ -243,7 +243,7 @@ class Warnings(Section):
   .kpi-card--val {{ border-left-color: var(--onix); }}
 
   .kpi-card__label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9px;
     font-weight: 600;
     letter-spacing: 0.16em;
@@ -253,7 +253,7 @@ class Warnings(Section):
   }}
 
   .kpi-card__value {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 28px;
     font-weight: 400;
     color: var(--onix);
@@ -263,7 +263,7 @@ class Warnings(Section):
   }}
 
   .kpi-card__hint {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     color: var(--onix);
     opacity: 0.55;
@@ -280,7 +280,7 @@ class Warnings(Section):
   }}
 
   .warnings__sub {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 18px;
     font-weight: 400;
     color: var(--onix);
@@ -306,7 +306,7 @@ class Warnings(Section):
   }}
 
   .assunto-row__num {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 14px;
     color: var(--mint-80);
     flex-shrink: 0;
@@ -315,7 +315,7 @@ class Warnings(Section):
   }}
 
   .assunto-row__txt {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 12px;
     line-height: 1.4;
     color: var(--onix);
@@ -334,7 +334,7 @@ class Warnings(Section):
   }}
 
   .dica-card__titulo {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 12px;
     font-weight: 700;
     color: var(--onix);
@@ -342,7 +342,7 @@ class Warnings(Section):
   }}
 
   .dica-card__desc {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     line-height: 1.4;
     color: var(--onix);
@@ -360,7 +360,7 @@ class Warnings(Section):
 
   .warnings__nota-label {{
     flex: 0 0 100px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.2em;
@@ -371,7 +371,7 @@ class Warnings(Section):
 
   .warnings__nota-text {{
     flex: 1;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     line-height: 1.45;
     color: var(--onix);

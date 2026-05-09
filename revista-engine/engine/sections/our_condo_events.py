@@ -158,7 +158,7 @@ class OurCondoEvents(Section):
     max-width: 30ch;
   }}
   .ev__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.28em;
@@ -167,7 +167,7 @@ class OurCondoEvents(Section):
     margin-bottom: 18px;
   }}
   .ev__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 56px;
     font-weight: 400;
     line-height: 0.95;
@@ -177,7 +177,7 @@ class OurCondoEvents(Section):
     text-wrap: balance;
   }}
   .ev__abertura-lede {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 13px;
     line-height: 1.5;
     color: var(--white);
@@ -250,7 +250,7 @@ class OurCondoEvents(Section):
   }}
 
   .ev__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.24em;
@@ -260,7 +260,7 @@ class OurCondoEvents(Section):
   }}
 
   .ev__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 36px;
     font-weight: 400;
     line-height: 0.98;

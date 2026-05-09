@@ -220,7 +220,7 @@ class OurNumbers(Section):
   }}
 
   .numbers__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.24em;
@@ -230,7 +230,7 @@ class OurNumbers(Section):
   }}
 
   .numbers__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 38px;
     font-weight: 400;
     line-height: 0.98;
@@ -267,7 +267,7 @@ class OurNumbers(Section):
   .kpi-card--saldo .kpi-card__value {{ color: var(--white); }}
 
   .kpi-card__label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 8.5px;
     font-weight: 700;
     letter-spacing: 0.18em;
@@ -276,7 +276,7 @@ class OurNumbers(Section):
   }}
 
   .kpi-card__value {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 20px;
     font-weight: 400;
     letter-spacing: -0.015em;
@@ -331,7 +331,7 @@ class OurNumbers(Section):
   }}
 
   .num-block__titulo {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.2em;
@@ -354,7 +354,7 @@ class OurNumbers(Section):
   }}
 
   .numbers__empty {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     color: var(--onix);
     opacity: 0.5;
@@ -375,7 +375,7 @@ class OurNumbers(Section):
 
   .resumo-contas td {{
     padding: 6px 0;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
   }}
 
   .resumo-contas__nome {{
@@ -385,7 +385,7 @@ class OurNumbers(Section):
   }}
 
   .resumo-contas__valor {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 11.5px;
     font-weight: 400;
     color: var(--onix);
@@ -398,7 +398,7 @@ class OurNumbers(Section):
   .prev-real {{
     width: 100%;
     border-collapse: collapse;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
   }}
 
   .prev-real .pr__th {{
@@ -453,7 +453,7 @@ class OurNumbers(Section):
   }}
 
   .donut-chart__total-label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 3.4px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -461,7 +461,7 @@ class OurNumbers(Section):
   }}
 
   .donut-chart__total {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 7.5px;
     fill: var(--onix);
   }}
@@ -481,7 +481,7 @@ class OurNumbers(Section):
     grid-template-columns: 10px 1fr auto;
     align-items: center;
     gap: 10px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     color: var(--onix);
     padding: 5px 0;
@@ -534,7 +534,7 @@ class OurNumbers(Section):
   }}
 
   .numbers__sub {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.18em;
@@ -555,14 +555,14 @@ class OurNumbers(Section):
   .despesa-row:last-child {{ border-bottom: none; }}
 
   .despesa-row__cat {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 12px;
     font-weight: 500;
     color: var(--onix);
   }}
 
   .despesa-row__val {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 15px;
     font-weight: 400;
     color: var(--onix);
@@ -589,7 +589,7 @@ class OurNumbers(Section):
   .despesa-row__obs {{
     grid-column: 1 / -1;
     margin-top: 4px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     color: var(--onix);
     opacity: 0.55;
@@ -608,7 +608,7 @@ class OurNumbers(Section):
 
   .numbers__nota-label {{
     flex: 0 0 100px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.2em;
@@ -619,7 +619,7 @@ class OurNumbers(Section):
 
   .numbers__nota-text {{
     flex: 1;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     line-height: 1.45;
     color: var(--onix);

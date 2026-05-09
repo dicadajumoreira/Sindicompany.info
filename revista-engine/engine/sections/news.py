@@ -117,7 +117,7 @@ class News(Section):
   }}
 
   .news__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -127,7 +127,7 @@ class News(Section):
   }}
 
   .news__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 38px;
     font-weight: 400;
     line-height: 0.98;
@@ -139,7 +139,7 @@ class News(Section):
   }}
 
   .news__intro {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 12px;
     line-height: 1.5;
     color: var(--onix);
@@ -200,7 +200,7 @@ class News(Section):
     display: inline-block;
     padding: 4px 10px;
     border-radius: 3px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 8px;
     font-weight: 700;
     letter-spacing: 0.2em;
@@ -208,7 +208,7 @@ class News(Section):
   }}
 
   .news-card__data {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9px;
     font-weight: 600;
     letter-spacing: 0.14em;
@@ -218,7 +218,7 @@ class News(Section):
   }}
 
   .news-card__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 18px;
     font-weight: 400;
     line-height: 1.12;
@@ -228,7 +228,7 @@ class News(Section):
   }}
 
   .news-card__resumo {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10.5px;
     line-height: 1.45;
     color: var(--onix);
@@ -245,7 +245,7 @@ class News(Section):
   }}
 
   .news-card__fonte-label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 8px;
     font-weight: 700;
     letter-spacing: 0.22em;
@@ -254,7 +254,7 @@ class News(Section):
   }}
 
   .news-card__fonte-text {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 600;
     color: var(--onix);

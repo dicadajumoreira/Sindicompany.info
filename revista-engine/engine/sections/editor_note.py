@@ -81,7 +81,7 @@ class EditorNote(Section):
     padding-bottom: 16px;
   }}
   .note__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.26em;
@@ -90,7 +90,7 @@ class EditorNote(Section):
     margin-bottom: 10px;
   }}
   .note__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 38px;
     font-weight: 400;
     line-height: 1.0;
@@ -101,7 +101,7 @@ class EditorNote(Section):
   .note__body {{
     flex: 1;
     min-height: 0;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 13.5px;
     line-height: 1.6;
     color: var(--onix);
@@ -110,7 +110,7 @@ class EditorNote(Section):
   .note__p {{ margin: 0 0 12px; }}
   .note__p:last-child {{ margin-bottom: 0; }}
   .note__footer {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.18em;

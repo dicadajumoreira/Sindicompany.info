@@ -198,7 +198,7 @@ class Colophon(Section):
   }}
 
   .exp__kicker {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.26em;
@@ -208,7 +208,7 @@ class Colophon(Section):
   }}
 
   .exp__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 30px;
     font-weight: 400;
     line-height: 1.0;
@@ -234,7 +234,7 @@ class Colophon(Section):
   }}
 
   .ficha-item__label {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 7.5px;
     font-weight: 700;
     letter-spacing: 0.18em;
@@ -243,7 +243,7 @@ class Colophon(Section):
   }}
 
   .ficha-item__value {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 12px;
     color: var(--onix);
     line-height: 1.15;
@@ -276,7 +276,7 @@ class Colophon(Section):
   .exp-col--dir .exp-block:nth-child(2) {{ border-top-color: #76B1BC; }} /* mint-80 — extras */
 
   .exp-block__titulo {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 8.5px;
     font-weight: 700;
     letter-spacing: 0.2em;
@@ -286,7 +286,7 @@ class Colophon(Section):
   }}
 
   .exp-block__sindico {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 14px;
     line-height: 1.2;
     color: var(--onix);
@@ -298,7 +298,7 @@ class Colophon(Section):
     display: flex;
     flex-direction: column;
     gap: 4px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 10.5px;
     line-height: 1.35;
     color: var(--onix);
@@ -310,7 +310,7 @@ class Colophon(Section):
     padding-top: 8px;
   }}
   .exp-fontes__text {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 9.5px;
     line-height: 1.6;
     color: var(--onix);
@@ -327,7 +327,7 @@ class Colophon(Section):
   }}
 
   .exp__brand {{
-    font-family: '{theme.fonte_titulos.family}', serif;
+    font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: 11px;
     font-weight: 600;
     color: var(--onix);
@@ -335,7 +335,7 @@ class Colophon(Section):
   }}
 
   .exp__legal {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
+    font-family: '{theme.fonte_corpo.family}', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
     font-size: 8.5px;
     line-height: 1.45;
     color: var(--onix);
