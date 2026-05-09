@@ -110,7 +110,7 @@ def baixar_pastas_manutencao(drive_url: str, dest: Path) -> list[dict[str, Any]]
                 continue
             out.append(
                 {
-                    "nome_pasta": sub.name,
+                    "nome_pasta": formatar_titulo_pt(sub.name),
                     "fotos": [_path_to_url(p) for p in imagens],
                 }
             )
@@ -126,7 +126,7 @@ def baixar_pastas_manutencao(drive_url: str, dest: Path) -> list[dict[str, Any]]
         for img in imagens_diretas:
             out.append(
                 {
-                    "nome_pasta": img.stem,
+                    "nome_pasta": formatar_titulo_pt(img.stem),
                     "fotos": [_path_to_url(img)],
                 }
             )
@@ -179,10 +179,179 @@ def categorizar_pasta(nome_pasta: str) -> str:
     return "Manutenção"
 
 
+# Dicionário de correções pt-BR. Chave = forma sem acento (lowercase),
+# valor = forma correta com acentos. Aplicado a cada palavra do título.
+_PT_ACCENT_FIXES: dict[str, str] = {
+    # Manutenção / engenharia
+    "manutencao": "manutenção", "manutencoes": "manutenções",
+    "maquinario": "maquinário", "maquinarios": "maquinários",
+    "maquinas": "máquinas", "maquina": "máquina",
+    "hidraulica": "hidráulica", "hidraulico": "hidráulico",
+    "eletrica": "elétrica", "eletrico": "elétrico",
+    "seguranca": "segurança",
+    "iluminacao": "iluminação",
+    "fiacao": "fiação",
+    "lampada": "lâmpada", "lampadas": "lâmpadas",
+    "calcada": "calçada", "calcadas": "calçadas",
+    "concreto": "concreto",
+    "construcao": "construção",
+    "instalacao": "instalação", "instalacoes": "instalações",
+    "interfone": "interfone",
+    "edificio": "edifício", "edificios": "edifícios",
+    "predio": "prédio", "predios": "prédios",
+    "garagem": "garagem",
+    "estacionamento": "estacionamento",
+    "porao": "porão",
+    "telhado": "telhado",
+    "fachada": "fachada",
+    "pisicna": "piscina",  # typo comum
+    "piscina": "piscina",
+    "salao": "salão", "saloes": "salões",
+    "saída": "saída", "saida": "saída",
+    "entrada": "entrada",
+    "elevador": "elevador",
+    "encanamento": "encanamento",
+    "vazamento": "vazamento",
+    "higienizacao": "higienização",
+    "limpeza": "limpeza",
+    "lavagem": "lavagem",
+    # Eventos
+    "junina": "junina", "juninas": "juninas",
+    "natal": "Natal",
+    "pascoa": "Páscoa",
+    "carnaval": "carnaval",
+    "aniversario": "aniversário", "aniversarios": "aniversários",
+    "confraternizacao": "confraternização",
+    "reuniao": "reunião", "reunioes": "reuniões",
+    "assembleia": "assembleia",
+    "criancas": "crianças", "crianca": "criança",
+    "maes": "mães", "mae": "mãe",
+    "pais": "pais", "pai": "pai",
+    "musica": "música",
+    "festa": "festa",
+    # Áreas / espaços
+    "comum": "comum", "comuns": "comuns",
+    "areia": "areia",
+    "area": "área", "areas": "áreas",
+    "patio": "pátio",
+    "ginastica": "ginástica",
+    "academia": "academia",
+    "playground": "playground",
+    "churrasqueira": "churrasqueira",
+    "salao_de_festas": "salão de festas",
+    # Outros
+    "deposito": "depósito",
+    "porteiro": "porteiro",
+    "agua": "água",
+    "gas": "gás",
+    "lixo": "lixo",
+    "muro": "muro",
+    "horta": "horta",
+    "sindico": "síndico",
+    "sindica": "síndica",
+    "sindicos": "síndicos",
+    "gestor": "gestor",
+    "morador": "morador",
+    "moradores": "moradores",
+    "comunicado": "comunicado",
+    "predial": "predial",
+    "publico": "público", "publicos": "públicos",
+    "publica": "pública", "publicas": "públicas",
+    "mes": "mês", "meses": "meses",
+    "comum": "comum",
+    "geral": "geral",
+    "anuncio": "anúncio",
+    "calendario": "calendário",
+    "ordem": "ordem",
+    "servico": "serviço",
+    "servicos": "serviços",
+    "vistoria": "vistoria",
+    "inspecao": "inspeção",
+    "verificacao": "verificação",
+    "manutencao_preventiva": "manutenção preventiva",
+    "preventiva": "preventiva",
+    "corretiva": "corretiva",
+    "tecnica": "técnica",
+    "tecnico": "técnico",
+    "jardim": "jardim",
+    "jardinagem": "jardinagem",
+    "paisagismo": "paisagismo",
+    "grama": "grama",
+    "poda": "poda",
+    "plantio": "plantio",
+    "tinta": "tinta",
+    "pintura": "pintura",
+    "obra": "obra",
+    "reforma": "reforma",
+    "reparo": "reparo",
+    "estrutura": "estrutura",
+    "bomba": "bomba",
+    "motor": "motor",
+    "gerador": "gerador",
+    "compressor": "compressor",
+    "camera": "câmera", "cameras": "câmeras",
+    "portao": "portão", "portoes": "portões",
+    "alarme": "alarme",
+}
+
+# Palavras de ligação que ficam minúsculas no meio do título (Title Case pt-BR)
+_PT_LOWERCASE_WORDS = {
+    "a", "o", "as", "os", "e", "ou", "de", "da", "do", "das", "dos",
+    "em", "no", "na", "nos", "nas", "para", "pra", "por", "pelo",
+    "pela", "pelos", "pelas", "com", "sem", "ao", "à", "aos", "às",
+    "um", "uma", "uns", "umas",
+}
+
+
+def formatar_titulo_pt(nome: str) -> str:
+    """Normaliza um nome de pasta pra título legível em português.
+
+    - Troca '_' e '-' por espaço
+    - Aplica correções de acento conhecidas (manutencao → manutenção)
+    - Title Case com preposições/artigos minúsculos no meio
+    - Primeira palavra sempre capitalizada
+    - Preserva palavras já acentuadas pela editora
+    """
+    if not nome:
+        return ""
+    # Limpeza inicial
+    s = nome.replace("_", " ").replace("-", " ").strip()
+    # Colapsa espaços múltiplos
+    s = re.sub(r"\s+", " ", s)
+    if not s:
+        return ""
+
+    palavras = s.split(" ")
+    out: list[str] = []
+    for i, palavra in enumerate(palavras):
+        if not palavra:
+            continue
+        # Se a palavra já tem acento, mantém só normalizando case
+        sem_acento = _normalize_kw(palavra)
+        # Se a palavra original já tem acentos, só ajusta capitalização
+        tem_acento_original = any(
+            unicodedata.category(c).startswith("M") or c in "áàâãéêíóôõúüç"
+            for c in unicodedata.normalize("NFD", palavra.lower())
+        )
+        if tem_acento_original:
+            base = palavra.lower()
+        else:
+            base = _PT_ACCENT_FIXES.get(sem_acento, palavra.lower())
+
+        # Decide capitalização
+        if i > 0 and sem_acento in _PT_LOWERCASE_WORDS:
+            out.append(base.lower())
+        else:
+            # Capitaliza primeira letra, preserva o resto
+            out.append(base[:1].upper() + base[1:])
+    return " ".join(out)
+
+
 def _coletar_pastas(root: Path) -> list[dict[str, Any]]:
     """Dado um diretório com (sub)pastas + fotos, devolve a lista no
     formato que a S3 (Nosso Condomínio) espera. Mesma lógica usada
-    pra Drive: subpastas → cards; sem subpastas → cada foto vira card."""
+    pra Drive: subpastas → cards; sem subpastas → cada foto vira card.
+    Nomes das pastas são normalizados para português correto."""
     out: list[dict[str, Any]] = []
     subpastas = [p for p in sorted(root.iterdir()) if p.is_dir()]
     if subpastas:
@@ -196,7 +365,7 @@ def _coletar_pastas(root: Path) -> list[dict[str, Any]]:
                 continue
             out.append(
                 {
-                    "nome_pasta": sub.name,
+                    "nome_pasta": formatar_titulo_pt(sub.name),
                     "fotos": [_path_to_url(p) for p in imagens],
                 }
             )
@@ -208,7 +377,7 @@ def _coletar_pastas(root: Path) -> list[dict[str, Any]]:
     )
     for img in imagens_diretas:
         out.append(
-            {"nome_pasta": img.stem, "fotos": [_path_to_url(img)]}
+            {"nome_pasta": formatar_titulo_pt(img.stem), "fotos": [_path_to_url(img)]}
         )
     return out
 
