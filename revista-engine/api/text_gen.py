@@ -30,12 +30,294 @@ SEARCH_MODEL = os.environ.get("OPENAI_SEARCH_MODEL", "gpt-4o-search-preview")
 DASH_RX = re.compile(r"[‐‑‒–—―]")
 
 
+# Dicionário de palavras pt-BR que costumam aparecer sem acento em
+# textos gerados ou copiados. Aplicado word-by-word com case
+# preservado (lower → lower, Title → Title, UPPER → UPPER).
+# IMPORTANTE: só palavras inequívocas — nada que possa significar
+# duas coisas com/sem acento (ex: "para/pára", "secretaria/secretária").
+_PT_ACCENT_MAP: dict[str, str] = {
+    # Substantivos comuns
+    "manutencao": "manutenção",
+    "manutencoes": "manutenções",
+    "informacao": "informação",
+    "informacoes": "informações",
+    "comunicacao": "comunicação",
+    "comunicacoes": "comunicações",
+    "organizacao": "organização",
+    "organizacoes": "organizações",
+    "administracao": "administração",
+    "administracoes": "administrações",
+    "convivencia": "convivência",
+    "convivencias": "convivências",
+    "transparencia": "transparência",
+    "frequencia": "frequência",
+    "experiencia": "experiência",
+    "experiencias": "experiências",
+    "consciencia": "consciência",
+    "preferencia": "preferência",
+    "diferenca": "diferença",
+    "diferencas": "diferenças",
+    "esperanca": "esperança",
+    "esperancas": "esperanças",
+    "crianca": "criança",
+    "criancas": "crianças",
+    "seguranca": "segurança",
+    "atencao": "atenção",
+    "atencoes": "atenções",
+    "operacao": "operação",
+    "operacoes": "operações",
+    "construcao": "construção",
+    "construcoes": "construções",
+    "instalacao": "instalação",
+    "instalacoes": "instalações",
+    "fundacao": "fundação",
+    "verificacao": "verificação",
+    "manipulacao": "manipulação",
+    "preservacao": "preservação",
+    "limitacao": "limitação",
+    "execucao": "execução",
+    "renovacao": "renovação",
+    "obrigacao": "obrigação",
+    "obrigacoes": "obrigações",
+    "decisao": "decisão",
+    "decisoes": "decisões",
+    "discussao": "discussão",
+    "discussoes": "discussões",
+    "reuniao": "reunião",
+    "reunioes": "reuniões",
+    "votacao": "votação",
+    "eleicao": "eleição",
+    "eleicoes": "eleições",
+    "regiao": "região",
+    "regioes": "regiões",
+    "questao": "questão",
+    "questoes": "questões",
+    "opcao": "opção",
+    "opcoes": "opções",
+    "solucao": "solução",
+    "solucoes": "soluções",
+    "atencao": "atenção",
+    "intencao": "intenção",
+    "redacao": "redação",
+    "transmissao": "transmissão",
+    "definicao": "definição",
+    "definicoes": "definições",
+    "previsao": "previsão",
+    "previsoes": "previsões",
+    "exigencia": "exigência",
+    "exigencias": "exigências",
+    "presenca": "presença",
+    "ausencia": "ausência",
+    "advertencia": "advertência",
+    "advertencias": "advertências",
+    "ocorrencia": "ocorrência",
+    "ocorrencias": "ocorrências",
+    "tendencia": "tendência",
+    "tendencias": "tendências",
+    "sao": "são",
+    "estao": "estão",
+    "tinham": "tinham",  # não tem acento mesmo, só pra confirmar
+    "vem": "vem",
+    "veem": "veem",
+    # Adjetivos / classificações
+    "publico": "público",
+    "publica": "pública",
+    "publicos": "públicos",
+    "publicas": "públicas",
+    "tecnico": "técnico",
+    "tecnica": "técnica",
+    "tecnicos": "técnicos",
+    "tecnicas": "técnicas",
+    "pratico": "prático",
+    "pratica": "prática",
+    "praticos": "práticos",
+    "praticas": "práticas",
+    "basico": "básico",
+    "basica": "básica",
+    "basicos": "básicos",
+    "basicas": "básicas",
+    "rapido": "rápido",
+    "rapida": "rápida",
+    "ultimo": "último",
+    "ultima": "última",
+    "ultimos": "últimos",
+    "ultimas": "últimas",
+    "proximo": "próximo",
+    "proxima": "próxima",
+    "proximos": "próximos",
+    "proximas": "próximas",
+    "necessario": "necessário",
+    "necessaria": "necessária",
+    "obrigatorio": "obrigatório",
+    "obrigatoria": "obrigatória",
+    "preventivo": "preventivo",
+    "corretivo": "corretivo",
+    "automatico": "automático",
+    "automatica": "automática",
+    "eletronico": "eletrônico",
+    "eletronica": "eletrônica",
+    # Verbos / particípios
+    "sera": "será",
+    "serao": "serão",
+    "tera": "terá",
+    "terao": "terão",
+    "fara": "fará",
+    "farao": "farão",
+    "estara": "estará",
+    "estarao": "estarão",
+    "havera": "haverá",
+    "havido": "havido",
+    "podera": "poderá",
+    "poderao": "poderão",
+    "devera": "deverá",
+    "deverao": "deverão",
+    # Outros termos comuns de condomínio / dia a dia
+    "predio": "prédio",
+    "predios": "prédios",
+    "edificio": "edifício",
+    "edificios": "edifícios",
+    "condominio": "condomínio",
+    "condominios": "condomínios",
+    "condomino": "condômino",
+    "condominos": "condôminos",
+    "sindico": "síndico",
+    "sindicos": "síndicos",
+    "sindica": "síndica",
+    "agua": "água",
+    "aguas": "águas",
+    "gas": "gás",
+    "luz": "luz",
+    "energia": "energia",
+    "lampada": "lâmpada",
+    "lampadas": "lâmpadas",
+    "calcada": "calçada",
+    "calcadas": "calçadas",
+    "porao": "porão",
+    "saloes": "salões",
+    "salao": "salão",
+    "patio": "pátio",
+    "patios": "pátios",
+    "garagem": "garagem",
+    "moradores": "moradores",
+    "morador": "morador",
+    "elevador": "elevador",
+    "elevadores": "elevadores",
+    "escada": "escada",
+    "iluminacao": "iluminação",
+    "fiacao": "fiação",
+    "encanamento": "encanamento",
+    "vazamento": "vazamento",
+    "higienizacao": "higienização",
+    "renovacao": "renovação",
+    "hidraulica": "hidráulica",
+    "hidraulico": "hidráulico",
+    "eletrica": "elétrica",
+    "eletrico": "elétrico",
+    "maquinario": "maquinário",
+    "maquinarios": "maquinários",
+    "maquina": "máquina",
+    "maquinas": "máquinas",
+    "camera": "câmera",
+    "cameras": "câmeras",
+    "portao": "portão",
+    "portoes": "portões",
+    "deposito": "depósito",
+    "depositos": "depósitos",
+    "anuncio": "anúncio",
+    "anuncios": "anúncios",
+    "calendario": "calendário",
+    "calendarios": "calendários",
+    "servico": "serviço",
+    "servicos": "serviços",
+    "inspecao": "inspeção",
+    "inspecoes": "inspeções",
+    "vistoria": "vistoria",
+    "horario": "horário",
+    "horarios": "horários",
+    "memoria": "memória",
+    "historia": "história",
+    "comercio": "comércio",
+    # Áreas / espaços
+    "area": "área",
+    "areas": "áreas",
+    "regiao": "região",
+    # Eventos / datas
+    "junina": "junina",
+    "juninas": "juninas",
+    "pascoa": "Páscoa",
+    "natal": "Natal",
+    "carnaval": "carnaval",
+    "aniversario": "aniversário",
+    "aniversarios": "aniversários",
+    "confraternizacao": "confraternização",
+    "celebracao": "celebração",
+    "celebracoes": "celebrações",
+    "comemoracao": "comemoração",
+    "comemoracoes": "comemorações",
+    "maes": "mães",
+    "mae": "mãe",
+    # Família / pessoas
+    "familia": "família",
+    "familias": "famílias",
+    "varios": "vários",
+    "varias": "várias",
+    "vario": "vário",
+    # Tempo
+    "mes": "mês",
+    "meses": "meses",
+    "ja": "já",
+    "ate": "até",
+    "tambem": "também",
+    "alem": "além",
+    "porem": "porém",
+    "atraves": "através",
+    "apos": "após",
+    "voce": "você",
+    "voces": "vocês",
+    # Numerais / ordinais
+    "primeiro": "primeiro",
+    "terceiro": "terceiro",
+    "tres": "três",
+}
+
+
+def _apply_accent_dict(text: str) -> str:
+    """Aplica o dicionário de acentos word-by-word, preservando case.
+
+    'manutencao' → 'manutenção'
+    'Manutencao' → 'Manutenção'
+    'MANUTENCAO' → 'MANUTENÇÃO'
+    """
+    if not text:
+        return text
+
+    def fix(match: re.Match) -> str:
+        word = match.group(0)
+        lower = word.lower()
+        replacement = _PT_ACCENT_MAP.get(lower)
+        if not replacement:
+            return word
+        # Preserva case da palavra original
+        if word.isupper():
+            return replacement.upper()
+        if word[0].isupper():
+            return replacement[0].upper() + replacement[1:]
+        return replacement
+
+    # \w+ não casa com acentos em pt-BR no Python por padrão? Na verdade
+    # casa com unicode (\w usa Unicode em Python 3). Mas nossos lookups
+    # são pra palavras SEM acento (que é justamente o problema).
+    return re.sub(r"[A-Za-zÀ-ÿ]+", fix, text)
+
+
+
 def clean_text(text: str) -> str:
     """Pós-processamento aplicado a TODO texto da revista.
 
     - Remove travessões (substitui por vírgula+espaço)
     - Normaliza espaços duplicados
     - Tira espaço antes de pontuação
+    - Corrige acentos pt-BR comuns que a IA às vezes esquece
     """
     if not text:
         return text
@@ -51,6 +333,9 @@ def clean_text(text: str) -> str:
 
     # Limpa linhas com só espaços
     out = re.sub(r"\n[ \t]+", "\n", out)
+
+    # Aplica dicionário de acentos pt-BR (manutencao → manutenção, etc.)
+    out = _apply_accent_dict(out)
 
     return out.strip()
 

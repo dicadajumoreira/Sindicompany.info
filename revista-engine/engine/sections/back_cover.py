@@ -92,7 +92,6 @@ class BackCover(Section):
 <section class="page back-cover" data-format="{scale}">
   <div class="back-cover__core">
     <div class="back-cover__logo">{logo_svg}</div>
-    <div class="back-cover__tagline">{_escape(theme.tagline)}</div>
   </div>
   <footer class="back-cover__footer">
     {proxima_block}

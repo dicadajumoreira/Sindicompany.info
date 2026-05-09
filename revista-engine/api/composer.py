@@ -454,7 +454,46 @@ def build_inputs_from_db(
         ("S14 Expediente",             Colophon(),             colophon_inputs),
         ("S15 Contracapa",             BackCover(),            back_cover_inputs),
     ])
+    # Pass final de revisão pt-BR: clean_text em todas as strings dos
+    # inputs (corrige acentos comuns, normaliza pontuação). Pula campos
+    # sensíveis (URLs, paths, fotos) pra não quebrar nomes próprios em
+    # caminhos ou querystrings.
+    sequence = [
+        (label, section, _revisar_pt_br(inputs))
+        for label, section, inputs in sequence
+    ]
     return sequence
+
+
+# Campos cujo conteúdo NÃO deve passar pelo clean_text (URLs, paths,
+# IDs, classes CSS). Usa-se uma checagem por nome de chave.
+_CAMPOS_SENSIVEIS = {
+    "fotos", "foto", "foto_path", "foto_principal", "foto_capa", "foto_capa_url",
+    "foto_capa_caderno", "foto_receita", "foto_sindico", "foto_gestor",
+    "logo_url", "dashboard_url", "drive_manutencao_url", "drive_eventos_url",
+    "drive_prestacao_url", "manutencao_zip_url", "eventos_zip_url",
+    "prestacao_arquivo_url", "pdf_storage_path", "id", "slug",
+}
+
+
+def _revisar_pt_br(obj: Any) -> Any:
+    """Aplica clean_text recursivamente em todas as strings do dict,
+    pulando campos sensíveis (URLs, paths, IDs)."""
+    if isinstance(obj, str):
+        if obj.startswith(("http://", "https://", "file://", "/")):
+            return obj
+        return clean_text(obj)
+    if isinstance(obj, dict):
+        out = {}
+        for k, v in obj.items():
+            if k in _CAMPOS_SENSIVEIS:
+                out[k] = v
+            else:
+                out[k] = _revisar_pt_br(v)
+        return out
+    if isinstance(obj, list):
+        return [_revisar_pt_br(x) for x in obj]
+    return obj
 
 
 def render_pdf_bytes(sequence: list[tuple[str, Any, dict[str, Any]]]) -> tuple[bytes, int]:
