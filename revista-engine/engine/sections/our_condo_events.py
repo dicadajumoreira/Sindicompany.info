@@ -1,25 +1,21 @@
 """
 S09 — Nosso Condomínio (Eventos).
 
-Caderno de eventos no MESMO padrão da S08 Manutenção: cada evento vira
-uma "seção" com título + grid de fotos. Empacotador distribui as
-seções em páginas com 4-6 fotos cada, garantindo que todos os eventos
-apareçam.
+Caderno limpo: só grids de 4-6 fotos por página, sem títulos por foto.
+Apenas um header de página com kicker editorial e título 'O que rolou
+no {condomínio}'.
 
 Inputs:
 - mes_referencia (str)
 - nome_condominio (str)
 - eventos (list[dict]):
-  - titulo (str)
-  - data (str opcional)
-  - descricao (str opcional)
-  - fotos (list[str])
+  - titulo (str) — usado APENAS pra seed do placeholder se faltar foto
+  - fotos (list[str]) — todas as fotos vão pro pool da página
 """
 
 from __future__ import annotations
 
 import hashlib
-import unicodedata
 
 from .base import Section
 
@@ -52,85 +48,48 @@ def _photo_bg(foto: str, seed: str) -> str:
     return _placeholder_gradient(seed)
 
 
-def _normalize(s: str) -> str:
-    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
-    return s.lower()
-
-
-_EVENT_CATEGORIAS: list[tuple[str, list[str]]] = [
-    ("Festa Junina",  ["junina", "sao joao", "sao pedro"]),
-    ("Confraternização", ["confraternizacao", "fim de ano", "natal", "ano novo"]),
-    ("Carnaval",      ["carnaval", "bloquinho"]),
-    ("Páscoa",        ["pascoa"]),
-    ("Dia das Crianças", ["criancas", "dia das criancas"]),
-    ("Dia das Mães",  ["dia das maes"]),
-    ("Dia dos Pais",  ["dia dos pais"]),
-    ("Aniversário",   ["aniversario", "niver"]),
-    ("Show",          ["show", "musica ao vivo", "concerto"]),
-    ("Cinema",        ["cinema", "filme"]),
-    ("Bazar",         ["bazar", "feira"]),
-    ("Workshop",      ["workshop", "oficina", "curso"]),
-    ("Esporte",       ["futebol", "torneio", "campeonato", "esporte", "tenis"]),
-    ("Reunião",       ["reuniao", "assembleia"]),
-]
-
-
-def _categorizar_evento(titulo: str) -> str:
-    n = _normalize(titulo)
-    for cat, kws in _EVENT_CATEGORIAS:
-        if any(k in n for k in kws):
-            return cat
-    return "Evento"
-
-
-def _empacotar_eventos_por_fotos(eventos: list[dict]) -> list[list[dict]]:
-    """Mesma ideia do empacotador de manutenção: distribui as seções
-    de evento em páginas com 4-6 fotos cada (até 4 fotos por seção).
-    Se um evento tem mais de 4 fotos, divide em múltiplas seções."""
-    # Primeiro expande eventos com >4 fotos em múltiplas seções
-    secoes: list[dict] = []
+def _todas_as_fotos(eventos: list[dict]) -> list[str]:
+    """Pool de fotos de todos os eventos, mantendo ordem dos eventos.
+    Sem agrupamento por título — só fotos."""
+    out: list[str] = []
     for ev in eventos:
-        titulo = ev.get("titulo") or ""
-        data = ev.get("data") or ""
-        desc = ev.get("descricao") or ""
         fotos = list(ev.get("fotos") or [])
-        kicker = _categorizar_evento(titulo)
-        if not fotos:
-            secoes.append({
-                "titulo": titulo, "data": data, "descricao": desc,
-                "kicker": kicker, "fotos_usadas": [], "_first": True,
-            })
-            continue
-        # Quebra em chunks de 4 fotos por seção
-        for i in range(0, len(fotos), 4):
-            chunk = fotos[i : i + 4]
-            secoes.append({
-                "titulo": titulo, "data": data, "descricao": desc,
-                "kicker": kicker, "fotos_usadas": chunk,
-                "_first": (i == 0),  # só a primeira seção mostra título completo
-            })
+        out.extend(fotos)
+    return out
 
-    # Empacotador: máx 6 fotos por página, evita passar do limite
-    pages: list[list[dict]] = []
-    cur: list[dict] = []
-    cur_count = 0
-    for s in secoes:
-        n = max(1, len(s["fotos_usadas"]))
-        # Fecha sempre que ultrapassaria 6 fotos (mesmo que página atual
-        # esteja com menos que 4) — melhor página com 3 do que com 7+.
-        if cur and cur_count + n > 6:
-            pages.append(cur)
-            cur = []
-            cur_count = 0
-        cur.append(s)
-        cur_count += n
-    if cur:
-        pages.append(cur)
+
+def _empacotar_fotos(fotos: list[str]) -> list[list[str]]:
+    """Distribui fotos em páginas: tenta 6 por página, mas se sobra
+    1-3 no fim, redistribui pra evitar página esquelética."""
+    n = len(fotos)
+    if n == 0:
+        return []
+    if n <= 6:
+        return [fotos]
+
+    # Calcula número de páginas alvo: arredonda pra cima, mas tentando
+    # manter cada página com 4-6 fotos.
+    n_pages = (n + 5) // 6  # 6 por página inicialmente
+    # Se a última página fica com 1-3 fotos, tenta nivelar.
+    base = n // n_pages
+    extra = n % n_pages
+
+    pages: list[list[str]] = []
+    idx = 0
+    for i in range(n_pages):
+        size = base + (1 if i < extra else 0)
+        # Garante 4-6 fotos por página (limita pelos extremos)
+        size = max(4, min(6, size))
+        pages.append(fotos[idx : idx + size])
+        idx += size
+    # Se sobraram fotos por causa do clamp, joga na última página
+    if idx < n:
+        pages[-1].extend(fotos[idx:])
     return pages
 
 
 class OurCondoEvents(Section):
-    """Caderno de Eventos — S09. 4-6 fotos por página."""
+    """Caderno de Eventos — S09. 4-6 fotos por página, sem títulos."""
 
     type = "our_condo_events"
     label = "Nosso Condomínio — Eventos"
@@ -144,39 +103,56 @@ class OurCondoEvents(Section):
 
     def paginate(self, inputs: dict) -> int:
         eventos = list(inputs.get("eventos") or [])
-        if not eventos:
-            return 0
-        return max(1, len(_empacotar_eventos_por_fotos(eventos)))
+        fotos = _todas_as_fotos(eventos)
+        return max(1, len(_empacotar_fotos(fotos))) if fotos else 0
 
     def render_a4(self, inputs: dict, theme) -> list[str]:
         eventos = list(inputs.get("eventos") or [])
-        if not eventos:
+        fotos = _todas_as_fotos(eventos)
+        if not fotos:
             return []
         mes = (inputs.get("mes_referencia") or "").strip().upper()
         condo = (inputs.get("nome_condominio") or "").strip()
-        paginas_de_secoes = _empacotar_eventos_por_fotos(eventos)
+        paginas = _empacotar_fotos(fotos)
         return [
-            self._render_page(secs, mes, condo, theme)
-            for secs in paginas_de_secoes
+            self._render_page(pg, mes, condo, theme, idx=i, total=len(paginas))
+            for i, pg in enumerate(paginas)
         ]
 
     def render_mobile(self, inputs: dict, theme) -> list[str]:
         return self.render_a4(inputs, theme)
 
     def _render_page(
-        self, secoes: list[dict], mes: str, condo: str, theme,
+        self, fotos: list[str], mes: str, condo: str, theme,
+        *, idx: int, total: int,
     ) -> str:
-        secoes_html = "\n".join(self._render_secao(s) for s in secoes)
+        n = len(fotos)
+        cells = []
+        for i, foto in enumerate(fotos):
+            seed = f"{condo}{idx}{i}{foto}"
+            bg = _photo_bg(foto, seed)
+            cells.append(f'<div class="ev-foto" style="{bg}"></div>')
+
+        # Só a primeira página leva o título grande; páginas seguintes
+        # têm header reduzido pra dar mais espaço pras fotos.
+        if idx == 0:
+            header_html = f"""
+    <header class="ev__header">
+      <div class="ev__kicker">EVENTO NO CONDOMÍNIO · {_escape(mes)} · {_escape(condo)}</div>
+      <h1 class="ev__titulo">O que rolou no {_escape(condo)}</h1>
+    </header>"""
+        else:
+            header_html = f"""
+    <header class="ev__header ev__header--cont">
+      <div class="ev__kicker">EVENTO NO CONDOMÍNIO · {_escape(mes)} · {_escape(condo)} · {idx + 1}/{total}</div>
+    </header>"""
+
         return f"""
 <section class="page event-page">
   <div class="ev__content">
-    <header class="ev__header">
-      <div class="ev__kicker">EVENTO NO CONDOMÍNIO · {_escape(mes)} · {_escape(condo)}</div>
-      <h1 class="ev__titulo-pagina">O que rolou no {_escape(condo)}</h1>
-    </header>
-
-    <div class="ev__list">
-      {secoes_html}
+    {header_html}
+    <div class="ev__grid ev__grid--{n}">
+      {''.join(cells)}
     </div>
   </div>
 </section>
@@ -185,7 +161,7 @@ class OurCondoEvents(Section):
   .event-page {{
     background: var(--white);
     color: var(--onix);
-    padding: 40px 44px 36px;
+    padding: 36px 40px;
   }}
 
   .ev__content {{
@@ -200,6 +176,11 @@ class OurCondoEvents(Section):
     padding-bottom: 12px;
   }}
 
+  .ev__header--cont {{
+    border-bottom: 1px solid var(--gray-20);
+    padding-bottom: 8px;
+  }}
+
   .ev__kicker {{
     font-family: '{theme.fonte_corpo.family}', sans-serif;
     font-size: 10px;
@@ -210,101 +191,40 @@ class OurCondoEvents(Section):
     margin-bottom: 6px;
   }}
 
-  .ev__titulo-pagina {{
+  .ev__titulo {{
     font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 400;
     line-height: 0.98;
-    letter-spacing: -0.022em;
+    letter-spacing: -0.024em;
     color: var(--onix);
     margin: 0;
+    max-width: 22ch;
+    text-wrap: balance;
   }}
 
-  .ev__list {{
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }}
-
-  .ev-secao {{
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }}
-
-  .ev-secao__head {{
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    flex-wrap: wrap;
-  }}
-
-  .ev-secao__badge {{
-    display: inline-block;
-    padding: 3px 9px;
-    border-radius: 3px;
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    background: var(--mint);
-    color: var(--onix);
-  }}
-
-  .ev-secao__titulo {{
-    font-family: '{theme.fonte_titulos.family}', serif;
-    font-size: 22px;
-    font-weight: 400;
-    line-height: 1.05;
-    color: var(--onix);
-    letter-spacing: -0.018em;
-    margin: 0;
-  }}
-
-  .ev-secao__data {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9.5px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--onix);
-    opacity: 0.55;
-  }}
-
-  .ev-secao__cont {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 9px;
-    font-style: italic;
-    color: var(--onix);
-    opacity: 0.55;
-  }}
-
-  .ev-secao__desc {{
-    font-family: '{theme.fonte_corpo.family}', sans-serif;
-    font-size: 11px;
-    line-height: 1.5;
-    color: var(--onix);
-    opacity: 0.78;
-    margin: 4px 0 6px;
-    max-width: 70ch;
-  }}
-
-  .ev-secao__grid {{
+  .ev__grid {{
     flex: 1;
     min-height: 0;
     display: grid;
-    gap: 8px;
+    gap: 10px;
   }}
-  .ev-secao__grid--1 {{ grid-template-columns: 1fr; }}
-  .ev-secao__grid--2 {{ grid-template-columns: 1fr 1fr; }}
-  .ev-secao__grid--3 {{ grid-template-columns: 1.4fr 1fr 1fr; grid-template-rows: 1fr 1fr; }}
-  .ev-secao__grid--3 > :first-child {{ grid-row: span 2; }}
-  .ev-secao__grid--4 {{ grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }}
+  /* 4 fotos: 2x2 */
+  .ev__grid--4 {{ grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }}
+  /* 5 fotos: foto grande + 4 menores */
+  .ev__grid--5 {{
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1.4fr 1fr;
+  }}
+  .ev__grid--5 > :first-child {{ grid-column: 1 / -1; }}
+  /* 6 fotos: 3x2 */
+  .ev__grid--6 {{ grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }}
+
+  /* Casos extremos (página única com 1-3 fotos) */
+  .ev__grid--1 {{ grid-template-columns: 1fr; }}
+  .ev__grid--2 {{ grid-template-columns: 1fr 1fr; }}
+  .ev__grid--3 {{ grid-template-columns: 1.4fr 1fr 1fr; grid-template-rows: 1fr 1fr; }}
+  .ev__grid--3 > :first-child {{ grid-row: span 2; }}
 
   .ev-foto {{
     border-radius: 6px;
@@ -315,57 +235,6 @@ class OurCondoEvents(Section):
   }}
 </style>
 """
-
-    def _render_secao(self, s: dict) -> str:
-        titulo = (s.get("titulo") or "").strip()
-        data = (s.get("data") or "").strip()
-        desc = (s.get("descricao") or "").strip()
-        kicker = (s.get("kicker") or "Evento").strip()
-        fotos = list(s.get("fotos_usadas") or [])
-        first = bool(s.get("_first", True))
-        n = max(1, min(4, len(fotos)))
-
-        # Header só aparece completo na primeira seção do evento.
-        # Em seções de continuação, mostra "(continuação)" sutil.
-        if first:
-            head_html = f"""
-        <div class="ev-secao__head">
-          <span class="ev-secao__badge">{_escape(kicker)}</span>
-          <h3 class="ev-secao__titulo">{_escape(titulo)}</h3>
-          {f'<span class="ev-secao__data">{_escape(data)}</span>' if data else ''}
-        </div>
-        {f'<p class="ev-secao__desc">{_escape(desc)}</p>' if desc else ''}"""
-        else:
-            head_html = f"""
-        <div class="ev-secao__head">
-          <h3 class="ev-secao__titulo">{_escape(titulo)}</h3>
-          <span class="ev-secao__cont">continuação</span>
-        </div>"""
-
-        if fotos:
-            cells = []
-            for i, foto in enumerate(fotos[:n]):
-                seed = titulo + str(i) + foto
-                photo_bg = _photo_bg(foto, seed)
-                cells.append(f'<div class="ev-foto" style="{photo_bg}"></div>')
-            grid_html = (
-                f'<div class="ev-secao__grid ev-secao__grid--{n}">'
-                f'{"".join(cells)}'
-                f'</div>'
-            )
-        else:
-            seed = titulo or "evento"
-            grid_html = (
-                f'<div class="ev-secao__grid ev-secao__grid--1">'
-                f'<div class="ev-foto" style="{_photo_bg("", seed)}"></div>'
-                f'</div>'
-            )
-
-        return f"""
-      <article class="ev-secao">
-        {head_html}
-        {grid_html}
-      </article>"""
 
 
 def _escape(s: str) -> str:
