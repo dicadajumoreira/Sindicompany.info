@@ -19,6 +19,8 @@ Inputs:
 
 from __future__ import annotations
 
+import unicodedata
+
 from .base import Section
 
 
@@ -345,7 +347,7 @@ class Colophon(Section):
 
 def _escape(s: str) -> str:
     return (
-        (s or "")
+        unicodedata.normalize("NFC", s or "")
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")

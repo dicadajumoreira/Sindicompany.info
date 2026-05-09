@@ -15,6 +15,8 @@ Inputs:
 
 from __future__ import annotations
 
+import unicodedata
+
 import hashlib
 
 from .base import Section
@@ -305,7 +307,7 @@ class OurCondoEvents(Section):
 
 def _escape(s: str) -> str:
     return (
-        (s or "")
+        unicodedata.normalize("NFC", s or "")
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")

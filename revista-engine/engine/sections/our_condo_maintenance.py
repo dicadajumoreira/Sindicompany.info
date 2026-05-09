@@ -24,6 +24,8 @@ Inputs:
 
 from __future__ import annotations
 
+import unicodedata
+
 import hashlib
 
 from .base import Section
@@ -453,7 +455,7 @@ def _is_portrait(foto_url: str) -> bool:
 
 def _escape(s: str) -> str:
     return (
-        (s or "")
+        unicodedata.normalize("NFC", s or "")
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")

@@ -19,6 +19,8 @@ Quando foto_capa é vazia, usa um gradiente Mint→Onix como placeholder
 
 from __future__ import annotations
 
+import unicodedata
+
 from .base import A4, MOBILE, Section
 
 
@@ -291,7 +293,7 @@ class Cover(Section):
 
 def _escape(s: str) -> str:
     return (
-        (s or "")
+        unicodedata.normalize("NFC", s or "")
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")

@@ -17,6 +17,8 @@ Inputs:
 
 from __future__ import annotations
 
+import unicodedata
+
 from .base import Section
 
 
@@ -281,7 +283,7 @@ class Recipe(Section):
 
 def _escape(s: str) -> str:
     return (
-        (s or "")
+        unicodedata.normalize("NFC", s or "")
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")

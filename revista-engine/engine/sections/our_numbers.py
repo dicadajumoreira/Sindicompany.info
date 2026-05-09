@@ -19,6 +19,8 @@ Inputs:
 
 from __future__ import annotations
 
+import unicodedata
+
 import math
 
 from .base import A4, Section
@@ -735,7 +737,7 @@ class OurNumbers(Section):
 
 def _escape(s: str) -> str:
     return (
-        (s or "")
+        unicodedata.normalize("NFC", s or "")
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
