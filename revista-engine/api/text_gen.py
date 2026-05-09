@@ -959,25 +959,44 @@ def gerar_carta_gestor(
     editorial: dict[str, Any],
     revista: dict[str, Any],
 ) -> str:
-    """Gera a carta do gestor (operacional, próximo do dia a dia)."""
+    """Gera a carta do gestor: reflexão sobre a IMPORTÂNCIA do tema editorial.
+
+    Difere da carta do(a) síndico(a) em foco: o gestor fala sobre por que
+    o tema da edição importa pro condomínio na prática, não sobre operação
+    do dia a dia.
+    """
     nome = revista.get("gestor_nome") or "Gestor"
     titulo = editorial.get("carta_gestor_tema") or "Recado do gestor"
+    materia_capa = editorial.get("materia_capa_titulo") or titulo
     condominio = revista.get("condominio") or ""
     mes_nome = MESES_PT[int(revista["mes"]) - 1] if revista.get("mes") else ""
     ano = revista.get("ano", "")
 
     prompt = (
-        f"Escreva a carta do gestor de atendimento '{nome}' pra revista mensal do "
-        f"condomínio '{condominio}', edição de {mes_nome} de {ano}.\n\n"
-        f"Tema: {titulo}\n\n"
-        f"Tom: prático, próximo dos moradores, voz do dia a dia. Fale de canais "
-        f"de atendimento, manutenções correntes, regras simples de convivência. "
-        f"2 parágrafos curtos. Encerre assinando como gestor."
+        f"Escreva a carta do gestor de atendimento '{nome}' pra revista mensal "
+        f"do condomínio '{condominio}', edição de {mes_nome} de {ano}.\n\n"
+        f"TEMA central da carta: {titulo}\n"
+        f"Tema da matéria de capa do mês: {materia_capa}\n\n"
+        f"O FOCO da carta é a IMPORTÂNCIA do tema acima pros moradores e pra "
+        f"convivência no condomínio. Defenda por que esse tema merece atenção "
+        f"agora, conecte com a realidade prática do dia a dia, dê exemplos "
+        f"concretos do que muda quando a comunidade leva o tema a sério.\n\n"
+        f"Estrutura sugerida:\n"
+        f"1) Abertura curta apresentando o tema e por que ele importa\n"
+        f"2) 1-2 exemplos do impacto prático (positivo e/ou negativo) na vida "
+        f"do condomínio quando o tema é tratado bem ou negligenciado\n"
+        f"3) Convite à participação coletiva, encerrando assinado como gestor\n\n"
+        f"Tom: próximo, direto, em primeira pessoa do singular. 2-3 parágrafos. "
+        f"Total entre 180 e 260 palavras (limite estrito pra caber na página). "
+        f"Português brasileiro com acentos corretos. Sem clichês corporativos."
     )
 
     fallback = (
-        f"Olá, moradores do {condominio}. Esta edição de {mes_nome} é sobre {titulo}. "
-        f"Estou à disposição pelos canais de atendimento. Abraço, {nome}."
+        f"Olá, moradores do {condominio}. Quando falamos em '{titulo}', estamos "
+        f"falando de algo que afeta a vida de todos aqui dentro. Cuidar disso "
+        f"juntos faz a diferença real no dia a dia: economiza recursos, evita "
+        f"conflitos e faz o {condominio} ser um lugar mais agradável pra todo "
+        f"mundo. Conto com a colaboração de cada um. Abraço, {nome}."
     )
 
     return _gerar_carta(prompt, fallback)
