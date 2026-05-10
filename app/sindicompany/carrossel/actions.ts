@@ -134,18 +134,11 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
     );
   }
 
-  // Gera 3 opções de copy via GPT
-  const copies = await gerarTresCopies({
-    titulo, tema, formato, n_slides, briefing: briefing || undefined,
-  });
-  if (copies.ok) {
-    try {
-      await updateCarrossel(carrossel.id, { copy_options: copies.copies });
-    } catch {
-      // se falhar, segue sem copies — usuário pode regenerar
-    }
-  }
-
+  // ATENCAO: nao aguarda o gerarTresCopies aqui. Antes a chamada
+  // GPT (~10-20s com o system prompt expandido) somava ao tempo da
+  // server action, estourando o cap de 26s do Netlify Functions e
+  // quebrando o redirect. Agora a /copy page detecta copy_options
+  // vazio e dispara a geracao client-side com timeout proprio.
   revalidatePath("/sindicompany/carrossel");
   redirect(`/sindicompany/carrossel/${carrossel.id}/copy`);
 }

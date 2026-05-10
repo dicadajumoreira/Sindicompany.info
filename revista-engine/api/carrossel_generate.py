@@ -756,16 +756,33 @@ def gerar_carrossel(carrossel_id: str) -> int:
         except Exception as e:  # noqa: BLE001
             print(f"[carrossel] falha ao subir zip (segue sem): {e}", flush=True)
 
-        # 3. Atualiza registro
+        # 3. Atualiza registro. zip_url eh coluna nova (migration
+        # 20260524) — se ainda nao foi rodada no Supabase a chamada
+        # quebra com PGRST204. Tentamos com o campo; se cair com erro
+        # de coluna ausente, fazemos retry sem ele.
         from datetime import datetime, timezone
-        _update_carrossel(carrossel_id, {
+        base_fields = {
             "png_paths": png_urls,
-            "zip_url": zip_url or None,
             "legenda": legenda,
             "status": "publicada",
             "gerado_em": datetime.now(timezone.utc).isoformat(),
             "erro_mensagem": None,
-        })
+        }
+        try:
+            _update_carrossel(
+                carrossel_id, {**base_fields, "zip_url": zip_url or None}
+            )
+        except Exception as e:  # noqa: BLE001
+            msg = str(e)
+            if "zip_url" in msg or "PGRST204" in msg:
+                print(
+                    f"[carrossel] coluna zip_url ausente (rode migration "
+                    f"20260524). Salvando sem zip_url. Detalhe: {msg[:120]}",
+                    flush=True,
+                )
+                _update_carrossel(carrossel_id, base_fields)
+            else:
+                raise
         print(f"[carrossel] OK — {n_total} slides + legenda", flush=True)
         return 0
 

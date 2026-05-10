@@ -8,6 +8,7 @@ import {
   escolherCopyAction,
   regenerarCopiesAction,
 } from "../../actions";
+import { AutoGenerateCopies } from "./auto-generate";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -72,10 +73,7 @@ export default async function EscolherCopyPage({
         </header>
 
         {copies.length === 0 ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-            <strong>Nenhuma copy gerada.</strong> A geração pode ter falhado.
-            Volte e tente de novo, ou crie um briefing novo.
-          </div>
+          <AutoGenerateCopies carrosselId={carrossel.id} />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {copies.map((copy, idx) => (
