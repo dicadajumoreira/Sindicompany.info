@@ -246,6 +246,7 @@ interface GenerateFotoErr {
 
 export async function generateFotoCapaWithAI(input: {
   carrosselId: string;
+  userPrompt?: string;
 }): Promise<GenerateFotoOk | GenerateFotoErr> {
   try {
     await requireAuth();
@@ -269,15 +270,17 @@ export async function generateFotoCapaWithAI(input: {
   const subtitulo = slide1?.body || "";
 
   // Pipeline 2 estágios pra evitar safety filter:
-  // 1) GPT-4o-mini converte a copy pt-BR (que pode ter palavras como
-  //    "conflito", "inadimplência") numa frase visual neutra em inglês.
+  // 1) Se a editora descreveu a imagem, traduz a descricao dela pra
+  //    cena visual em ingles. Se nao descreveu, GPT-4o-mini deriva
+  //    a cena a partir da copy escolhida (titulo + body do slide 1).
   // 2) Essa cena vira o subject do prompt do DALL-E. Tem fallback pro
   //    builder antigo se a tradução falhar.
   let subject = "";
+  const userDesc = (input.userPrompt ?? "").trim();
   const cena = await descreverCenaParaCapa({
     tema: carrossel.tema,
-    tituloCapa,
-    subtitulo,
+    tituloCapa: userDesc || tituloCapa,
+    subtitulo: userDesc ? "" : subtitulo,
   });
   if (cena.ok) subject = cena.sceneEn;
 

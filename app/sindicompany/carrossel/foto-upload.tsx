@@ -24,6 +24,7 @@ export function CarrosselFotoUpload({
   const [errorMsg, setErrorMsg] = useState("");
   const [filename, setFilename] = useState("");
   const [revisedPrompt, setRevisedPrompt] = useState<string>("");
+  const [userPrompt, setUserPrompt] = useState("");
 
   async function handleFile(file: File) {
     setErrorMsg("");
@@ -81,7 +82,10 @@ export function CarrosselFotoUpload({
     let result;
     try {
       result = await Promise.race([
-        generateFotoCapaWithAI({ carrosselId }),
+        generateFotoCapaWithAI({
+          carrosselId,
+          userPrompt: userPrompt.trim() || undefined,
+        }),
         timeoutPromise,
       ]);
     } catch (e) {
@@ -144,7 +148,30 @@ export function CarrosselFotoUpload({
           }}
           className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100 disabled:opacity-50"
         />
-        <span className="text-xs text-g60">ou</span>
+      </div>
+
+      <div className="rounded-lg border border-onix-100 bg-onix-50/40 p-4 space-y-2">
+        <label
+          htmlFor="ai-prompt"
+          className="block text-sm font-medium text-onix-900"
+        >
+          Descrever a imagem (opcional)
+        </label>
+        <p className="text-xs text-g60">
+          Descreva a cena, ambiente, pessoas e clima. Se deixar vazio, a IA
+          monta a cena a partir da copy escolhida. A imagem sai sempre
+          ultra-realista, 8K.
+        </p>
+        <textarea
+          id="ai-prompt"
+          value={userPrompt}
+          onChange={(e) => setUserPrompt(e.target.value)}
+          rows={3}
+          maxLength={600}
+          placeholder="Ex: Mulher de 35 anos, sindica, no lobby de um predio brasileiro de classe media alta, luz natural pela manha, sorriso discreto, terno claro, segurando um tablet."
+          disabled={isBusy}
+          className="block w-full rounded-md border border-onix-100 bg-white px-3 py-2 text-sm text-onix-900 focus:outline-none focus:ring-2 focus:ring-mint-300 disabled:opacity-50"
+        />
         <button
           type="button"
           onClick={handleGenerate}
