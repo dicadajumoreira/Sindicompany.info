@@ -7,6 +7,7 @@ import {
   type Carrossel,
 } from "@/lib/sindicompany/carrosseis";
 import { DashboardShell } from "../shell";
+import { CarrosselRowActions } from "./row-actions";
 
 const STATUS_LABELS: Record<Carrossel["status"], string> = {
   rascunho: "Rascunho",
@@ -121,6 +122,9 @@ export default async function CarrosseisPage() {
                   <th className="text-left font-semibold text-onix-900 px-5 py-3">
                     Criado
                   </th>
+                  <th className="text-right font-semibold text-onix-900 px-5 py-3">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -149,6 +153,11 @@ export default async function CarrosseisPage() {
                     </td>
                     <td className="px-5 py-3 text-g60 text-xs">
                       {formatDate(c.created_at)}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <div className="inline-flex justify-end">
+                        <CarrosselRowActions id={c.id} titulo={c.titulo} />
+                      </div>
                     </td>
                   </tr>
                 ))}

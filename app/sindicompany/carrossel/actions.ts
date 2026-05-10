@@ -7,6 +7,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import {
   createCarrossel,
   createCarrosselFotoUploadIntent,
+  deleteCarrossel,
   getCarrossel,
   updateCarrossel,
   uploadCarrosselFotoBytes,
@@ -360,4 +361,20 @@ export async function regenerateCarrosselAction(carrosselId: string): Promise<vo
   await requireAuth();
   await dispatchGenerateCarrossel(carrosselId);
   revalidatePath(`/sindicompany/carrossel/${carrosselId}`);
+}
+
+// =============================================================================
+// Excluir carrossel da lista
+// =============================================================================
+
+export async function excluirCarrosselAction(carrosselId: string): Promise<void> {
+  await requireAuth();
+  try {
+    await deleteCarrossel(carrosselId);
+  } catch (e) {
+    // segue silenciosamente — a lista vai refletir o estado real do banco
+    console.error("[carrossel] falha ao excluir:", e);
+  }
+  revalidatePath("/sindicompany/carrossel");
+  redirect("/sindicompany/carrossel");
 }
