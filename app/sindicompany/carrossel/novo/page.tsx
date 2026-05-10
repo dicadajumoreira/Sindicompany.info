@@ -3,8 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { DashboardShell } from "../../shell";
-import { novoCarrosselAction } from "../actions";
-import { CarrosselFotoUpload } from "../foto-upload";
+import { iniciarCarrosselAction } from "../actions";
 
 const TEMAS = [
   "Direitos do morador",
@@ -62,15 +61,16 @@ export default async function NovoCarrosselPage({
         </Link>
 
         <header className="mb-8">
-          <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2">
-            Novo carrossel
+          <Stepper step={1} />
+          <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2 mt-6">
+            Etapa 1 · Briefing
           </div>
           <h1 className="text-3xl font-bold text-onix-900">
-            Briefing do carrossel
+            Comece pelo briefing
           </h1>
           <p className="text-sm text-g60 mt-2 max-w-xl">
-            Preencha as informações abaixo. A engine usa o tema, formato e foto
-            de capa pra montar 5–7 slides em 4K com identidade Sindicompany.
+            Conte tema, formato e quantidade de slides. A IA vai gerar 3 opções
+            de copy pra você escolher na próxima etapa.
           </p>
         </header>
 
@@ -80,7 +80,7 @@ export default async function NovoCarrosselPage({
           </div>
         )}
 
-        <form action={novoCarrosselAction} className="space-y-6">
+        <form action={iniciarCarrosselAction} className="space-y-6">
           <Field
             label="Título interno"
             hint="Pra organização — não aparece no post."
@@ -96,10 +96,7 @@ export default async function NovoCarrosselPage({
             />
           </Field>
 
-          <Field
-            label="Tema"
-            hint="Assunto principal do carrossel."
-          >
+          <Field label="Tema" hint="Assunto principal do carrossel.">
             <select name="tema" defaultValue={v("tema")} required className={inputCls}>
               <option value="">— Selecione —</option>
               {TEMAS.map((t) => (
@@ -126,9 +123,7 @@ export default async function NovoCarrosselPage({
                     className="mt-1"
                   />
                   <div>
-                    <div className="text-sm font-medium text-onix-900">
-                      {f.label}
-                    </div>
+                    <div className="text-sm font-medium text-onix-900">{f.label}</div>
                     <div className="text-xs text-g60">{f.hint}</div>
                   </div>
                 </label>
@@ -138,7 +133,7 @@ export default async function NovoCarrosselPage({
 
           <Field
             label="Quantidade de slides"
-            hint="De 1 a 10. Recomendado: 5 a 7. Mais slides exigem briefing mais detalhado."
+            hint="De 1 a 10. Recomendado: 5 a 7."
           >
             <select
               name="n_slides"
@@ -154,43 +149,68 @@ export default async function NovoCarrosselPage({
           </Field>
 
           <Field
-            label="Foto da capa"
-            hint="Imagem real (pessoa, cotidiano, ambiente). Será o slide 1 com texto na metade de baixo. Recomendado: 4:5, alta resolução."
-          >
-            <CarrosselFotoUpload />
-          </Field>
-
-          <Field
             label="Briefing (opcional)"
-            hint="Conte o ângulo, contexto, números relevantes ou referências. Quanto mais específico, melhor o copy gerado."
+            hint="Conte o ângulo, contexto ou dado relevante. Quanto mais específico, melhor."
           >
             <textarea
               name="briefing"
-              rows={5}
+              rows={4}
               defaultValue={v("briefing")}
               maxLength={2000}
-              placeholder="Ex: O síndico João assumiu um condomínio com 12% de inadimplência e em 8 meses caiu pra 1,3%. Estratégia: conversa individual + plano de pagamento + comunicação clara."
+              placeholder="Ex: O síndico João reduziu a inadimplência de 12% pra 1,3% em 8 meses…"
               className={inputCls}
             />
           </Field>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-4 items-center">
             <button
               type="submit"
               className="rounded-lg bg-onix-900 text-white px-5 py-2.5 font-medium hover:bg-onix-800"
             >
-              Criar carrossel
+              Seguir →
             </button>
-            <Link
-              href="/sindicompany/carrossel"
-              className="rounded-lg border border-onix-100 px-5 py-2.5 font-medium hover:bg-onix-50"
-            >
-              Cancelar
-            </Link>
+            <span className="text-xs text-g60">
+              A IA vai gerar 3 opções de copy. Pode levar 10-15 segundos.
+            </span>
           </div>
         </form>
       </main>
     </DashboardShell>
+  );
+}
+
+function Stepper({ step }: { step: 1 | 2 | 3 }) {
+  const items = [
+    { n: 1, label: "Briefing" },
+    { n: 2, label: "Escolher copy" },
+    { n: 3, label: "Foto da capa" },
+  ];
+  return (
+    <nav className="flex items-center gap-2 text-xs">
+      {items.map((it, i) => {
+        const active = it.n === step;
+        const done = it.n < step;
+        return (
+          <div key={it.n} className="flex items-center gap-2">
+            <span
+              className={`w-6 h-6 inline-flex items-center justify-center rounded-full font-semibold ${
+                active
+                  ? "bg-onix-900 text-white"
+                  : done
+                    ? "bg-mint-100 text-mint-700"
+                    : "bg-onix-50 text-g60"
+              }`}
+            >
+              {done ? "✓" : it.n}
+            </span>
+            <span className={active ? "text-onix-900 font-medium" : "text-g60"}>
+              {it.label}
+            </span>
+            {i < items.length - 1 && <span className="text-g60">›</span>}
+          </div>
+        );
+      })}
+    </nav>
   );
 }
 

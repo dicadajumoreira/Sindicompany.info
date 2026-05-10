@@ -2,6 +2,17 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export type CarrosselStatus = "rascunho" | "em_producao" | "publicada" | "erro";
 
+export interface CarrosselSlide {
+  tipo: string;
+  titulo: string;
+  body: string;
+}
+
+export interface CarrosselCopy {
+  slides: CarrosselSlide[];
+  legenda: string;
+}
+
 export interface Carrossel {
   id: string;
   titulo: string;
@@ -15,6 +26,8 @@ export interface Carrossel {
   legenda: string | null;
   erro_mensagem: string | null;
   gerado_em: string | null;
+  copy_options: CarrosselCopy[] | null;
+  copy_selected: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +39,23 @@ export interface CarrosselInput {
   briefing?: string;
   foto_capa_url?: string;
   n_slides?: number;
+}
+
+export async function updateCarrossel(
+  id: string,
+  patch: Partial<{
+    foto_capa_url: string;
+    copy_options: CarrosselCopy[];
+    copy_selected: number;
+    status: CarrosselStatus;
+  }>,
+): Promise<void> {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from(TABLE)
+    .update(patch)
+    .eq("id", id);
+  if (error) throw error;
 }
 
 const TABLE = "carrosseis";

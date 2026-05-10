@@ -7,17 +7,19 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import {
   createCarrossel,
   createCarrosselFotoUploadIntent,
+  getCarrossel,
+  updateCarrossel,
   uploadCarrosselFotoBytes,
   type CarrosselInput,
 } from "@/lib/sindicompany/carrosseis";
 import { describeError } from "@/lib/sindicompany/errors";
 import { dispatchGenerateCarrossel } from "@/lib/sindicompany/engine";
 import {
-  buildCarrosselPrompt,
   buildCarrosselPromptSafe,
   downloadImageBytes,
   generateImage,
 } from "@/lib/sindicompany/openai-image";
+import { gerarTresCopies } from "@/lib/sindicompany/openai-text";
 
 const ALLOWED_IMG_EXT = new Set(["jpg", "jpeg", "png", "webp"]);
 
@@ -45,13 +47,17 @@ function getStr(fd: FormData, key: string): string {
   return String(fd.get(key) ?? "").trim();
 }
 
-function backWithError(message: string, fd: FormData): never {
+function backTo(url: string, message: string, fd: FormData): never {
   const params = new URLSearchParams({ error: message });
   for (const [k, v] of fd.entries()) {
     if (typeof v === "string" && v) params.set(k, v);
   }
-  redirect(`/sindicompany/carrossel/novo?${params.toString()}`);
+  redirect(`${url}?${params.toString()}`);
 }
+
+// =============================================================================
+// Upload helpers (signed URL pra Storage)
+// =============================================================================
 
 export async function getCarrosselFotoUploadIntent(
   ext: string,
@@ -84,29 +90,31 @@ export async function getCarrosselFotoUploadIntent(
   }
 }
 
-export async function novoCarrosselAction(formData: FormData): Promise<void> {
+// =============================================================================
+// Etapa 1: cria carrossel + gera 3 copies → /[id]/copy
+// =============================================================================
+
+export async function iniciarCarrosselAction(formData: FormData): Promise<void> {
   await requireAuth();
 
   const titulo = getStr(formData, "titulo");
   const tema = getStr(formData, "tema");
   const formato = getStr(formData, "formato");
   const briefing = getStr(formData, "briefing");
-  const foto_capa_url = getStr(formData, "foto_capa_url_uploaded") || undefined;
   const n_slides_raw = parseInt(getStr(formData, "n_slides"), 10);
   const n_slides = Number.isFinite(n_slides_raw)
     ? Math.max(1, Math.min(10, n_slides_raw))
     : 6;
 
-  if (!titulo) backWithError("Informe o título do carrossel.", formData);
-  if (!tema) backWithError("Selecione o tema.", formData);
-  if (!formato) backWithError("Selecione o formato.", formData);
+  if (!titulo) backTo("/sindicompany/carrossel/novo", "Informe o título do carrossel.", formData);
+  if (!tema) backTo("/sindicompany/carrossel/novo", "Selecione o tema.", formData);
+  if (!formato) backTo("/sindicompany/carrossel/novo", "Selecione o formato.", formData);
 
   const input: CarrosselInput = {
     titulo,
     tema,
     formato,
     briefing: briefing || undefined,
-    foto_capa_url,
     n_slides,
   };
 
@@ -114,23 +122,64 @@ export async function novoCarrosselAction(formData: FormData): Promise<void> {
   try {
     carrossel = await createCarrossel(input);
   } catch (e) {
-    backWithError(`Falha ao criar carrossel: ${describeError(e)}`, formData);
+    backTo(
+      "/sindicompany/carrossel/novo",
+      `Falha ao criar carrossel: ${describeError(e)}`,
+      formData,
+    );
   }
 
-  // Dispara automaticamente o workflow de geração dos PNGs (fire and forget).
-  // Se GITHUB_DISPATCH_TOKEN não estiver setada, vira no-op com warning.
-  await dispatchGenerateCarrossel(carrossel.id);
+  // Gera 3 opções de copy via GPT
+  const copies = await gerarTresCopies({
+    titulo, tema, formato, n_slides, briefing: briefing || undefined,
+  });
+  if (copies.ok) {
+    try {
+      await updateCarrossel(carrossel.id, { copy_options: copies.copies });
+    } catch {
+      // se falhar, segue sem copies — usuário pode regenerar
+    }
+  }
 
   revalidatePath("/sindicompany/carrossel");
-  redirect(`/sindicompany/carrossel/${carrossel.id}`);
+  redirect(`/sindicompany/carrossel/${carrossel.id}/copy`);
 }
 
-/** Re-dispara a geração (pra retry depois de erro ou regerar com inputs novos). */
-export async function regenerateCarrosselAction(carrosselId: string): Promise<void> {
+// =============================================================================
+// Etapa 2: editora escolhe uma das 3 copies → /[id]/foto
+// =============================================================================
+
+export async function escolherCopyAction(
+  carrosselId: string,
+  idx: number,
+): Promise<void> {
   await requireAuth();
+  const i = Number.isInteger(idx) ? Math.max(0, Math.min(2, idx)) : 0;
+  await updateCarrossel(carrosselId, { copy_selected: i });
+  revalidatePath(`/sindicompany/carrossel/${carrosselId}`);
+  redirect(`/sindicompany/carrossel/${carrosselId}/foto`);
+}
+
+// =============================================================================
+// Etapa 3: foto + dispara geração final dos PNGs
+// =============================================================================
+
+export async function finalizarCarrosselAction(
+  carrosselId: string,
+  fotoUrl: string,
+): Promise<void> {
+  await requireAuth();
+  if (fotoUrl) {
+    await updateCarrossel(carrosselId, { foto_capa_url: fotoUrl });
+  }
   await dispatchGenerateCarrossel(carrosselId);
   revalidatePath(`/sindicompany/carrossel/${carrosselId}`);
+  redirect(`/sindicompany/carrossel/${carrosselId}`);
 }
+
+// =============================================================================
+// Geração da foto via DALL-E usando a copy escolhida como contexto
+// =============================================================================
 
 interface GenerateFotoOk {
   ok: true;
@@ -143,37 +192,46 @@ interface GenerateFotoErr {
 }
 
 export async function generateFotoCapaWithAI(input: {
-  titulo: string;
-  tema?: string;
-  formato?: string;
-  briefing?: string;
+  carrosselId: string;
 }): Promise<GenerateFotoOk | GenerateFotoErr> {
   try {
     await requireAuth();
   } catch {
     return { ok: false, error: "Sessão expirada. Faça login de novo." };
   }
-  const titulo = (input.titulo ?? "").trim();
-  if (!titulo && !input.tema) {
-    return { ok: false, error: "Informe pelo menos o título ou tema antes de gerar." };
+
+  // Lê o registro pra usar a copy escolhida como contexto editorial
+  let carrossel;
+  try {
+    carrossel = await getCarrossel(input.carrosselId);
+  } catch (e) {
+    return { ok: false, error: `Banco indisponível: ${describeError(e)}` };
   }
+  if (!carrossel) return { ok: false, error: "Carrossel não encontrado." };
 
-  const tituloSafe = titulo || (input.tema ?? "Sindicompany");
+  const idx = carrossel.copy_selected ?? 0;
+  const copy = carrossel.copy_options?.[idx];
+  const slide1 = copy?.slides?.[0];
+  const tituloCapa = slide1?.titulo || carrossel.titulo;
+  const subtitulo = slide1?.body || "";
 
-  // Uma única tentativa com prompt minimalista (sanitizado, sem
-  // briefing). Cabe em ~10-12s, dentro do timeout de 26s do Netlify
-  // Functions com folga pra download + upload pro Storage.
-  // Se a editora quiser uma imagem mais específica, faz upload manual.
-  const result = await generateImage(
-    buildCarrosselPromptSafe({ titulo: tituloSafe, tema: input.tema }),
-    { size: "1024x1792", quality: "standard", style: "natural" },
-  );
+  // Prompt minimalista (já sanitizado em buildCarrosselPromptSafe).
+  // Inclui o título da capa pra contextualizar a foto.
+  const prompt = buildCarrosselPromptSafe({
+    titulo: `${tituloCapa}${subtitulo ? `. ${subtitulo}` : ""}`,
+    tema: carrossel.tema,
+  });
 
+  const result = await generateImage(prompt, {
+    size: "1024x1792",
+    quality: "standard",
+    style: "natural",
+  });
   if (!result.ok) {
     return {
       ok: false,
       error: /safety|content[_ ]policy/i.test(result.error)
-        ? `A OpenAI bloqueou a geração por causa de algum termo do tema. Tente trocar o tema ou faça upload manual. (${result.error})`
+        ? `A OpenAI bloqueou a geração. Tente trocar o tema ou faça upload manual. (${result.error})`
         : result.error,
     };
   }
@@ -192,10 +250,25 @@ export async function generateFotoCapaWithAI(input: {
   try {
     publicUrl = await uploadCarrosselFotoBytes(bytes);
   } catch (e) {
-    return {
-      ok: false,
-      error: `Falha ao subir pro Storage: ${describeError(e)}`,
-    };
+    return { ok: false, error: `Falha ao subir pro Storage: ${describeError(e)}` };
   }
+
+  // Persiste já no registro pra a editora não perder se sair da página
+  try {
+    await updateCarrossel(input.carrosselId, { foto_capa_url: publicUrl });
+  } catch {
+    // não bloqueia — finalizar action também salva
+  }
+
   return { ok: true, publicUrl, revisedPrompt: result.revised_prompt };
+}
+
+// =============================================================================
+// Re-dispara geração final (retry / refazer)
+// =============================================================================
+
+export async function regenerateCarrosselAction(carrosselId: string): Promise<void> {
+  await requireAuth();
+  await dispatchGenerateCarrossel(carrosselId);
+  revalidatePath(`/sindicompany/carrossel/${carrosselId}`);
 }
