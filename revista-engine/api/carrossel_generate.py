@@ -257,9 +257,12 @@ def _icons_all_data_urls() -> list[str]:
 
 def _icon_for_slide(slide_idx: int) -> str:
     """Mapeia: slot 1 -> slide 2, slot 2 -> slide 3, etc.
-    Se nao houver icon pra o slide, cicla pra reutilizar."""
+    Slide 1 (capa) recebe o ULTIMO slot por wrap-around (modulo
+    Python: -1 % len = len-1), garantindo que a capa tambem tenha
+    fundo carrossel sem repetir os primeiros slots usados pelos
+    slides internos."""
     icons = _icons_all_data_urls()
-    if not icons or slide_idx < 2:
+    if not icons:
         return ""
     return icons[(slide_idx - 2) % len(icons)]
 
@@ -479,6 +482,13 @@ def _slide_html(
         capa_pattern_div = (
             '<div class="pattern-bg-capa"></div>' if capa_pattern_url else ""
         )
+        # Fundo Carrossel na capa: slide 1 -> ultimo slot (wrap-around)
+        # pra ter fundo proprio sem repetir os usados nos internos.
+        # Mantem mesma regra de paridade — slide 1 (impar) -> esquerda.
+        capa_icon_bg_url = _icon_for_slide(1)
+        capa_icon_bg_div = (
+            '<div class="icon-bg-capa"></div>' if capa_icon_bg_url else ""
+        )
         return f"""
 <!doctype html><html><head><meta charset="utf-8">
 <link href="{epilogue_url}" rel="stylesheet">
@@ -508,6 +518,21 @@ def _slide_html(
     background-position: center center;
     background-size: cover;
     opacity: 0.10;
+    pointer-events: none;
+  }}
+  .icon-bg-capa {{
+    /* Fundo Carrossel na capa: 90% da largura, grudado canto
+       inferior esquerdo (slide 1 = impar -> esquerda, conforme
+       paridade dos demais). 0mm da borda em duas direcoes,
+       opacity 15%, cor original. */
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 2765px; height: 2765px;
+    background-image: url('{capa_icon_bg_url}');
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    background-size: contain;
+    opacity: 0.15;
     pointer-events: none;
   }}
   .overlay {{
@@ -583,6 +608,7 @@ def _slide_html(
 <body>
   {bg}
   {capa_pattern_div}
+  {capa_icon_bg_div}
   <div class="overlay"></div>
   <div class="content">
     <span class="badge">Sindicompany</span>
