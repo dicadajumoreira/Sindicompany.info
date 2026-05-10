@@ -401,6 +401,7 @@ def _slide_html(
   .handle {{
     position: absolute;
     bottom: 80px; left: 180px;
+    font-family: 'Epilogue', sans-serif;
     font-size: 80px;
     font-weight: 600;
     color: {p["mint"]};
@@ -591,6 +592,7 @@ def _slide_html(
   .handle {{
     position: absolute;
     bottom: 120px; left: 180px;
+    font-family: 'Epilogue', sans-serif;
     font-size: {handle_font}px;
     font-weight: 600;
     color: {accent};
