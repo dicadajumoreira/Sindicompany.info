@@ -301,21 +301,27 @@ def _slide_html(
     padding: 100px 0 220px;
     display: flex; flex-direction: column; justify-content: center;
   }}
+  /* Tamanhos calibrados pra Instagram display (1080w). Slide eh
+     3072w (escala 2.844x), por isso os px CSS sao maiores que os
+     px display que a marca pediu:
+       capa titulo  100 display -> 285 css
+       capa body     50 display -> 142 css
+       capa @        28 display ->  80 css */
   .badge {{
     display: inline-block;
     background: {p["mint"]};
     color: {p["onix"]};
     font-weight: 800;
-    font-size: 38px;
+    font-size: 80px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    padding: 18px 32px;
-    border-radius: 8px;
+    padding: 22px 40px;
+    border-radius: 10px;
     margin-bottom: 60px;
   }}
   .capa-titulo {{
     font-weight: 900;
-    font-size: 168px;
+    font-size: 285px;
     line-height: 0.95;
     letter-spacing: -0.025em;
     color: {p["white"]};
@@ -323,7 +329,7 @@ def _slide_html(
   }}
   .capa-body {{
     font-weight: 600;
-    font-size: 56px;
+    font-size: 142px;
     line-height: 1.25;
     color: {p["sand"]};
     margin-top: 48px;
@@ -332,7 +338,7 @@ def _slide_html(
   .handle {{
     position: absolute;
     bottom: 80px; left: 180px;
-    font-size: 36px;
+    font-size: 80px;
     font-weight: 600;
     color: {p["mint"]};
     letter-spacing: 0.08em;
@@ -379,6 +385,23 @@ def _slide_html(
     pattern_url = _pattern_for_slide(slide_idx)
     pattern_div = '<div class="pattern-bg"></div>' if pattern_url else ""
 
+    # Tamanhos calibrados pra Instagram (1080w display). Slide 4K
+    # = 2.844x, por isso CSS px = display px * 2.844 (arredondado).
+    # Internos (mid 75/47/27 display): titulo 213, body 134, footer 77.
+    # CTA (mid 80/52/29 display):     titulo 228, body 148, @ 82.
+    if is_cta:
+        titulo_font = 228
+        body_font = 148
+        handle_font = 82
+        pagination_font = 82
+        badge_font = 82
+    else:
+        titulo_font = 213
+        body_font = 134
+        handle_font = 77
+        pagination_font = 77
+        badge_font = 80
+
     return f"""
 <!doctype html><html><head><meta charset="utf-8">
 <link href="{epilogue_url}" rel="stylesheet">
@@ -422,16 +445,16 @@ def _slide_html(
     background: {accent};
     color: {accent_text};
     font-weight: 800;
-    font-size: 36px;
+    font-size: {badge_font}px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    padding: 16px 28px;
-    border-radius: 8px;
+    padding: 22px 40px;
+    border-radius: 10px;
     margin-bottom: 80px;
   }}
   .slide-titulo {{
     font-weight: 800;
-    font-size: 144px;
+    font-size: {titulo_font}px;
     line-height: 0.95;
     letter-spacing: -0.025em;
     color: {fg_color};
@@ -441,16 +464,24 @@ def _slide_html(
   }}
   .slide-body {{
     font-weight: 500;
-    font-size: 60px;
+    font-size: {body_font}px;
     line-height: 1.35;
     color: {fg_color};
     opacity: 0.88;
     max-width: 22ch;
   }}
+  /* Para palavras destacadas dentro do body — 55-70 display
+     (mid 62 -> 176 css). Use <span class="destaque">…</span>. */
+  .destaque {{
+    font-weight: 800;
+    font-size: 176px;
+    line-height: 1.1;
+    color: {accent};
+  }}
   .handle {{
     position: absolute;
     bottom: 120px; left: 180px;
-    font-size: 32px;
+    font-size: {handle_font}px;
     font-weight: 600;
     color: {accent};
     letter-spacing: 0.08em;
@@ -458,7 +489,7 @@ def _slide_html(
   .pagination {{
     position: absolute;
     bottom: 120px; right: 180px;
-    font-size: 32px;
+    font-size: {pagination_font}px;
     font-weight: 700;
     color: {fg_color};
     opacity: 0.55;
