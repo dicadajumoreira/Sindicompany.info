@@ -197,9 +197,18 @@ export async function finalizarCarrosselAction(
   carrosselId: string,
 ): Promise<void> {
   await requireAuth();
+  // Marca como em_producao ANTES de disparar — assim o auto-redirect
+  // do detalhe (que manda rascunhos pra /foto) nao volta a pessoa pra
+  // mesma pagina, e a pagina inicial mostra "Em producao".
+  try {
+    await updateCarrossel(carrosselId, { status: "em_producao" });
+  } catch {
+    // se falhar, segue — o engine tambem atualiza o status
+  }
   await dispatchGenerateCarrossel(carrosselId);
+  revalidatePath("/sindicompany/carrossel");
   revalidatePath(`/sindicompany/carrossel/${carrosselId}`);
-  redirect(`/sindicompany/carrossel/${carrosselId}`);
+  redirect("/sindicompany/carrossel");
 }
 
 export async function salvarFotoCapaAction(
@@ -272,11 +281,16 @@ export async function generateFotoCapaWithAI(input: {
   if (cena.ok) subject = cena.sceneEn;
 
   const prompt = subject
-    ? `Editorial photograph for Brazilian Instagram cover (4:5 vertical). ` +
+    ? `Ultra-realistic editorial photograph, 8K quality, hyper-detailed, ` +
+      `for Brazilian Instagram cover (4:5 vertical). ` +
       `Scene: ${subject} ` +
-      `Style: candid documentary photo, real Brazilian residential building setting, ` +
-      `natural daylight, shallow depth of field, photorealistic, no text, no logos, ` +
-      `composition leaves the bottom half slightly less busy.`
+      `Style: cinematic documentary photo of a real Brazilian residential ` +
+      `building setting, professional DSLR camera, natural daylight, shallow ` +
+      `depth of field, sharp focus on subject, photorealistic textures, ` +
+      `crisp details on every surface, no text, no logos. ` +
+      `Composition: subject occupies the TOP HALF of the frame; bottom half ` +
+      `is calmer (sky, wall, blurred background) so 50% of the image can be ` +
+      `covered by a text overlay added later.`
     : buildCarrosselPromptSafe({
         titulo: tituloCapa,
         tema: carrossel.tema,

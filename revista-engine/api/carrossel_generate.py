@@ -18,15 +18,82 @@ Uso (CLI):
 
 from __future__ import annotations
 
+import base64
 import io
 import json
 import os
 import sys
 import traceback
+import urllib.error
+import urllib.request
 from typing import Any
 
 from api.supabase_client import _client as _sb_client
 from api.text_gen import _client as _openai_client, MODEL, _gerar_json
+
+
+_PATTERNS_CACHE: list[str] | None = None  # data URLs prontos pra uso
+
+
+def _patterns_data_urls() -> list[str]:
+    """Baixa todos os patterns disponiveis em
+    condominios-fotos/__patterns/pattern-{1..20}.{png,jpg,webp}
+    e devolve lista de data URLs (base64). Cache por processo pra
+    nao re-baixar a cada slide. Falha silenciosa se nao houver
+    patterns ou SUPABASE_URL nao estiver setada."""
+    global _PATTERNS_CACHE
+    if _PATTERNS_CACHE is not None:
+        return _PATTERNS_CACHE
+
+    out: list[str] = []
+    base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    if not base:
+        _PATTERNS_CACHE = out
+        return out
+
+    for i in range(1, 21):
+        for ext in ("png", "jpg", "jpeg", "webp"):
+            url = (
+                f"{base}/storage/v1/object/public/"
+                f"condominios-fotos/__patterns/pattern-{i}.{ext}"
+            )
+            try:
+                req = urllib.request.Request(
+                    url, headers={"User-Agent": "carrossel-engine/1.0"}
+                )
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    if resp.status != 200:
+                        continue
+                    content = resp.read()
+                    ctype = (
+                        resp.headers.get("Content-Type", "image/png")
+                        .split(";")[0]
+                        .strip()
+                    )
+                b64 = base64.b64encode(content).decode("ascii")
+                out.append(f"data:{ctype};base64,{b64}")
+                break  # achou nessa ext, vai pro proximo i
+            except urllib.error.HTTPError:
+                continue
+            except Exception as e:  # noqa: BLE001
+                print(
+                    f"[carrossel] pattern-{i}.{ext} falhou: {type(e).__name__}: {e}",
+                    flush=True,
+                )
+                break
+
+    _PATTERNS_CACHE = out
+    print(f"[carrossel] {len(out)} pattern(s) carregado(s)", flush=True)
+    return out
+
+
+def _pattern_for_slide(slide_idx: int) -> str:
+    """Devolve uma data URL ciclando entre patterns disponiveis pelo
+    indice do slide, ou string vazia se nenhum pattern existir."""
+    pats = _patterns_data_urls()
+    if not pats:
+        return ""
+    return pats[(slide_idx - 1) % len(pats)]
 
 BUCKET = "condominios-fotos"
 SLIDE_W = 3072
@@ -216,17 +283,23 @@ def _slide_html(
     background-repeat: no-repeat;
   }}
   .overlay {{
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    /* Texto da capa ocupa exatamente 50% (metade de baixo).
+       Topo segue limpo pra a foto aparecer; metade de baixo tem
+       gradiente forte pra contraste do titulo. */
+    position: absolute; top: 50%; left: 0; right: 0; bottom: 0;
     background: linear-gradient(180deg,
       rgba(26,28,41,0.0) 0%,
-      rgba(26,28,41,0.0) 38%,
-      rgba(26,28,41,0.55) 60%,
-      rgba(26,28,41,0.92) 100%
+      rgba(26,28,41,0.85) 18%,
+      rgba(26,28,41,0.96) 100%
     );
   }}
   .content {{
+    /* Caixa de texto cobre exatamente a metade inferior do slide. */
     position: absolute;
-    left: 180px; right: 180px; bottom: 220px;
+    left: 180px; right: 180px;
+    top: 50%; bottom: 0;
+    padding: 100px 0 220px;
+    display: flex; flex-direction: column; justify-content: center;
   }}
   .badge {{
     display: inline-block;
@@ -303,6 +376,8 @@ def _slide_html(
     )
 
     body_html = f'<p class="slide-body">{_h(body)}</p>' if body else ""
+    pattern_url = _pattern_for_slide(slide_idx)
+    pattern_div = '<div class="pattern-bg"></div>' if pattern_url else ""
 
     return f"""
 <!doctype html><html><head><meta charset="utf-8">
@@ -316,6 +391,17 @@ def _slide_html(
     color: {fg_color};
     overflow: hidden;
     position: relative;
+  }}
+  .pattern-bg {{
+    /* Pattern da marca em 5% como textura de fundo nos slides internos.
+       Tile 800px pra o desenho aparecer claramente em 4K sem ficar
+       tao denso que polua o conteudo. */
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url('{pattern_url}');
+    background-repeat: repeat;
+    background-size: 800px 800px;
+    opacity: 0.05;
+    pointer-events: none;
   }}
   .corner {{
     position: absolute;
@@ -379,6 +465,7 @@ def _slide_html(
   }}
 </style></head>
 <body>
+  {pattern_div}
   <div class="corner"></div>
   <div class="content">
     <span class="badge">{_h(badge_label)}</span>
