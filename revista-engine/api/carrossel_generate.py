@@ -591,9 +591,8 @@ def _slide_html(
     icon_filter = (
         "brightness(0) invert(1)" if bg_is_dark else "brightness(0)"
     )
-    # Half-cropped bleed: alterna lado pra dar variedade visual.
-    # Pares = bleeds direita; impares = bleeds esquerda. Half do width
-    # fica fora da slide.
+    # Posicao do icon de fundo: rente a borda direita nos pares
+    # (2, 4, 6) e rente a borda esquerda nos impares (3, 5, 7).
     icon_bleed_side = "right" if slide_idx % 2 == 0 else "left"
 
     return f"""
@@ -691,13 +690,13 @@ def _slide_html(
   }}
   .icon-bg {{
     /* Icone grande de fundo: 90% da largura do slide (~2765px),
-       half-cropped — metade pra fora do slide, alternando direita/
-       esquerda por paridade do indice. 15% opacity pra nao competir
-       com o conteudo. CSS filter forca preto/branco conforme a cor
-       do bg pra garantir contraste maximo. */
+       posicionado RENTE a borda (sem bleed), alternando direita/
+       esquerda pela paridade do indice. Pares (2, 4, 6) -> direita;
+       impares (3, 5, 7) -> esquerda. 15% opacity. CSS filter forca
+       preto/branco conforme a cor do bg pra garantir contraste. */
     position: absolute;
     top: 50%;
-    {icon_bleed_side}: -1383px;
+    {icon_bleed_side}: 0;
     transform: translateY(-50%);
     width: 2765px; height: 2765px;
     background-image: url('{icon_url_internal}');
