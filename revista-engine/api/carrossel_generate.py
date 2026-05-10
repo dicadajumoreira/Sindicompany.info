@@ -120,6 +120,47 @@ def _pattern_for_slide(slide_idx: int) -> str:
 
 _ICON_CACHE: str | None = None
 _ICONS_LIST_CACHE: list[str] | None = None
+_ICON_SLOT_CACHE: dict[int, str] = {}
+
+
+def _icon_slot_data_url(slot: int) -> str:
+    """Devolve data URL do icon especifico em __icons/icon-{slot}.X.
+    Cache por slot. String vazia se nao houver."""
+    if slot in _ICON_SLOT_CACHE:
+        return _ICON_SLOT_CACHE[slot]
+    base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    if not base:
+        _ICON_SLOT_CACHE[slot] = ""
+        return ""
+    for ext in ("png", "svg", "webp", "jpg", "jpeg"):
+        url = (
+            f"{base}/storage/v1/object/public/"
+            f"condominios-fotos/__icons/icon-{slot}.{ext}"
+        )
+        try:
+            req = urllib.request.Request(
+                url, headers={"User-Agent": "carrossel-engine/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status != 200:
+                    continue
+                content = resp.read()
+                ctype = (
+                    resp.headers.get("Content-Type", "image/png")
+                    .split(";")[0]
+                    .strip()
+                )
+            b64 = base64.b64encode(content).decode("ascii")
+            url_str = f"data:{ctype};base64,{b64}"
+            _ICON_SLOT_CACHE[slot] = url_str
+            print(f"[carrossel] icon-{slot}.{ext} carregado", flush=True)
+            return url_str
+        except urllib.error.HTTPError:
+            continue
+        except Exception:  # noqa: BLE001
+            break
+    _ICON_SLOT_CACHE[slot] = ""
+    return ""
 
 
 def _icon_data_url() -> str:
@@ -427,7 +468,8 @@ def _slide_html(
             else f'<div class="hero-img" style="background: linear-gradient(135deg, {p["mint"]} 0%, {p["onix"]} 100%);"></div>'
         )
         body_html = f'<p class="capa-body">{_h(body)}</p>' if body else ""
-        icon_url = _icon_data_url()
+        # Capa: forca Icon 2 (slot fixo em __icons/icon-2.X)
+        icon_url = _icon_slot_data_url(2)
         icon_img = (
             f'<img class="brand-icon" src="{icon_url}" alt="" />' if icon_url else ""
         )
@@ -597,14 +639,22 @@ def _slide_html(
         pagination_font = 77
         badge_font = 80
 
+    # Fundo Carrossel: usado como icon-bg grande nos slides internos
+    # e na CTA (cycle pelo bucket __icon-carrossel/).
     icon_url_internal = _icon_for_slide(slide_idx)
-    icon_img_internal = (
-        f'<img class="brand-icon" src="{icon_url_internal}" alt="" />'
-        if icon_url_internal
-        else ""
-    )
     icon_bg_div = (
         '<div class="icon-bg"></div>' if icon_url_internal else ""
+    )
+    # Brand-icon do canto inferior direito: por padrao usa o mesmo
+    # da Fundo Carrossel; CTA forca Icon 6 (slot 6 em __icons/).
+    if is_cta:
+        corner_url = _icon_slot_data_url(6)
+    else:
+        corner_url = icon_url_internal
+    icon_img_internal = (
+        f'<img class="brand-icon" src="{corner_url}" alt="" />'
+        if corner_url
+        else ""
     )
     # Posicao do fundo carrossel: rente a borda direita nos pares
     # (2, 4, 6) e rente a borda esquerda nos impares (3, 5, 7).
