@@ -32,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { label: "Patterns", href: "/sindicompany/patterns" },
       { label: "Icons", href: "/sindicompany/icons" },
+      { label: "Icon Carrossel", href: "/sindicompany/icon-carrossel" },
       { label: "Logotipos", href: "/sindicompany/logos" },
     ],
   },

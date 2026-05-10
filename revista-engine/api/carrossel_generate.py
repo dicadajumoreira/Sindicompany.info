@@ -146,9 +146,13 @@ def _icon_data_url() -> str:
 
 
 def _icons_all_data_urls() -> list[str]:
-    """Baixa todos os icons em __icons/icon-{1..20}.X e devolve lista
-    de data URLs na ordem dos slots. Cache por processo. Slots vazios
-    sao pulados (sem buracos)."""
+    """Baixa todos os icons do CARROSSEL em
+    __icon-carrossel/icon-{1..20}.X e devolve lista de data URLs na
+    ordem dos slots. Cache por processo. Slots vazios sao pulados.
+
+    Bucket separado de __icons/ (que eh a biblioteca geral). Esse aqui
+    e exclusivo da engine de carrossel: cada slot preenche o fundo de
+    um slide especifico."""
     global _ICONS_LIST_CACHE
     if _ICONS_LIST_CACHE is not None:
         return _ICONS_LIST_CACHE
@@ -161,7 +165,7 @@ def _icons_all_data_urls() -> list[str]:
         for ext in ("png", "svg", "webp", "jpg", "jpeg"):
             url = (
                 f"{base}/storage/v1/object/public/"
-                f"condominios-fotos/__icons/icon-{i}.{ext}"
+                f"condominios-fotos/__icon-carrossel/icon-{i}.{ext}"
             )
             try:
                 req = urllib.request.Request(
@@ -184,17 +188,17 @@ def _icons_all_data_urls() -> list[str]:
             except Exception:  # noqa: BLE001
                 break
     _ICONS_LIST_CACHE = out
-    print(f"[carrossel] {len(out)} icon(s) carregado(s)", flush=True)
+    print(f"[carrossel] {len(out)} icon-carrossel carregado(s)", flush=True)
     return out
 
 
 def _icon_for_slide(slide_idx: int) -> str:
-    """Cicla entre icons disponiveis pelo indice do slide. String vazia
-    se nenhum icon existir."""
+    """Mapeia: slot 1 -> slide 2, slot 2 -> slide 3, etc.
+    Se nao houver icon pra o slide, cicla pra reutilizar."""
     icons = _icons_all_data_urls()
-    if not icons:
+    if not icons or slide_idx < 2:
         return ""
-    return icons[(slide_idx - 1) % len(icons)]
+    return icons[(slide_idx - 2) % len(icons)]
 
 BUCKET = "condominios-fotos"
 SLIDE_W = 3072

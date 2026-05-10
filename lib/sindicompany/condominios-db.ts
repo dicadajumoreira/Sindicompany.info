@@ -205,6 +205,7 @@ export async function listPatternUrls(): Promise<(string | null)[]> {
 // =============================================================================
 
 export const ICON_MAX_SLOTS = 20;
+export const ICON_CARROSSEL_MAX_SLOTS = 20;
 export const LOGO_MAX_SLOTS = 10;
 
 async function _createSlotUploadIntent(
@@ -254,6 +255,13 @@ export function createIconUploadIntent(slot: number, ext: string) {
 }
 export function listIconUrls() {
   return _listSlotUrls("__icons", "icon", ICON_MAX_SLOTS);
+}
+
+export function createIconCarrosselUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__icon-carrossel", "icon", slot, ext);
+}
+export function listIconCarrosselUrls() {
+  return _listSlotUrls("__icon-carrossel", "icon", ICON_CARROSSEL_MAX_SLOTS);
 }
 
 export function createLogoUploadIntent(slot: number, ext: string) {

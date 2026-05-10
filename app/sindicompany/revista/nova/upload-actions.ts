@@ -5,12 +5,14 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { slugifyCondo } from "@/lib/sindicompany/condominios";
 import {
   createEventosZipUploadIntent,
+  createIconCarrosselUploadIntent,
   createIconUploadIntent,
   createLogoUploadIntent,
   createManutencaoCapaUploadIntent,
   createManutencaoZipUploadIntent,
   createPatternUploadIntent,
   createPrestacaoUploadIntent,
+  ICON_CARROSSEL_MAX_SLOTS,
   ICON_MAX_SLOTS,
   LOGO_MAX_SLOTS,
 } from "@/lib/sindicompany/condominios-db";
@@ -228,6 +230,16 @@ async function _slotIntent(
 
 export async function getIconUploadIntent(slot: number, ext: string) {
   return _slotIntent(ext, slot, ICON_MAX_SLOTS, "Icon", createIconUploadIntent);
+}
+
+export async function getIconCarrosselUploadIntent(slot: number, ext: string) {
+  return _slotIntent(
+    ext,
+    slot,
+    ICON_CARROSSEL_MAX_SLOTS,
+    "Icon Carrossel",
+    createIconCarrosselUploadIntent,
+  );
 }
 
 export async function getLogoUploadIntent(slot: number, ext: string) {
