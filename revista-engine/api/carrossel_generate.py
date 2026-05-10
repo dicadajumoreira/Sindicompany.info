@@ -356,24 +356,26 @@ def _slide_html(
 </body></html>
 """
 
-    # Slides internos: fundo claro com paleta. Alterna entre 3 estilos.
+    # Slides internos: cada slide ganha uma cor de fundo diferente,
+    # ciclando pares e impares por listas separadas. Garante que
+    # consecutivos nao repitam (pares cycle 2, impares cycle 3).
     is_cta = tipo == "cta" or slide_idx == total
-    estilo = "dark" if is_cta else ("sand" if slide_idx % 2 == 0 else "light")
-    if estilo == "dark":
-        bg_color = p["onix"]
-        fg_color = p["white"]
-        accent = p["mint"]
-        accent_text = p["onix"]
-    elif estilo == "sand":
-        bg_color = p["sand"]
-        fg_color = p["onix"]
-        accent = p["onix"]
-        accent_text = p["sand"]
+    pares = [p["mint"], p["sand"]]
+    impares = [p["lavender"], p["white"], p["gray_5"]]
+    if slide_idx % 2 == 0:
+        bg_color = pares[(slide_idx // 2 - 1) % len(pares)]
     else:
-        bg_color = p["gray_5"]
-        fg_color = p["onix"]
+        bg_color = impares[((slide_idx - 1) // 2 - 1) % len(impares)]
+
+    fg_color = p["onix"]
+    # Accent: nas cores muito claras (white / gray_5) usa mint pra
+    # destacar; nas medias (mint / sand / lavender) usa onix solido.
+    if bg_color in (p["white"], p["gray_5"]):
         accent = p["mint"]
         accent_text = p["onix"]
+    else:
+        accent = p["onix"]
+        accent_text = p["white"]
 
     badge_label = (
         "Sindicompany"
