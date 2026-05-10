@@ -82,3 +82,19 @@ export async function createCarrosselFotoUploadIntent(
   const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
   return { token: data.token, path, publicUrl: pub.publicUrl };
 }
+
+/** Sobe bytes (de uma imagem gerada por IA, por exemplo) direto pro
+ *  bucket via service role e devolve a URL pública. */
+export async function uploadCarrosselFotoBytes(
+  bytes: Buffer,
+  contentType = "image/png",
+): Promise<string> {
+  const path = `__carrosseis/ai-${Date.now()}.png`;
+  const supabase = createAdminClient();
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, bytes, { contentType, upsert: true });
+  if (error) throw error;
+  const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return pub.publicUrl;
+}

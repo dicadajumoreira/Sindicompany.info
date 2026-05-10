@@ -7,9 +7,15 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import {
   createCarrossel,
   createCarrosselFotoUploadIntent,
+  uploadCarrosselFotoBytes,
   type CarrosselInput,
 } from "@/lib/sindicompany/carrosseis";
 import { describeError } from "@/lib/sindicompany/errors";
+import {
+  buildCarrosselPrompt,
+  downloadImageBytes,
+  generateImage,
+} from "@/lib/sindicompany/openai-image";
 
 const ALLOWED_IMG_EXT = new Set(["jpg", "jpeg", "png", "webp"]);
 
@@ -106,4 +112,68 @@ export async function novoCarrosselAction(formData: FormData): Promise<void> {
 
   revalidatePath("/sindicompany/carrossel");
   redirect(`/sindicompany/carrossel/${carrossel.id}`);
+}
+
+interface GenerateFotoOk {
+  ok: true;
+  publicUrl: string;
+  revisedPrompt?: string;
+}
+interface GenerateFotoErr {
+  ok: false;
+  error: string;
+}
+
+export async function generateFotoCapaWithAI(input: {
+  titulo: string;
+  tema?: string;
+  formato?: string;
+  briefing?: string;
+}): Promise<GenerateFotoOk | GenerateFotoErr> {
+  try {
+    await requireAuth();
+  } catch {
+    return { ok: false, error: "Sessão expirada. Faça login de novo." };
+  }
+  const titulo = (input.titulo ?? "").trim();
+  if (!titulo && !input.tema) {
+    return { ok: false, error: "Informe pelo menos o título ou tema antes de gerar." };
+  }
+
+  const prompt = buildCarrosselPrompt({
+    titulo: titulo || (input.tema ?? "Sindicompany"),
+    tema: input.tema,
+    formato: input.formato,
+    briefing: input.briefing,
+  });
+
+  const result = await generateImage(prompt, {
+    size: "1024x1792",
+    quality: "hd",
+    style: "natural",
+  });
+  if (!result.ok) {
+    return { ok: false, error: result.error };
+  }
+
+  let bytes: Buffer;
+  try {
+    bytes = await downloadImageBytes(result.url);
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Falha ao baixar a imagem gerada.",
+    };
+  }
+
+  let publicUrl: string;
+  try {
+    publicUrl = await uploadCarrosselFotoBytes(bytes);
+  } catch (e) {
+    return {
+      ok: false,
+      error: `Falha ao subir pro Storage: ${describeError(e)}`,
+    };
+  }
+  return { ok: true, publicUrl, revisedPrompt: result.revised_prompt };
 }

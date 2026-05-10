@@ -1,0 +1,135 @@
+/**
+ * Geração de imagens via DALL-E 3 (OpenAI). Usado pra criar a foto da
+ * capa do carrossel Instagram a partir do briefing da editora — quando
+ * ela não quer fazer upload manual.
+ *
+ * Não usa SDK pra evitar dependência adicional; chama a REST API direto.
+ */
+
+const OPENAI_API = "https://api.openai.com/v1/images/generations";
+
+export interface DalleResult {
+  ok: true;
+  /** URL temporária da OpenAI (expira em ~1h) — precisa ser baixada e
+   *  re-uploadada pra storage estável. */
+  url: string;
+  /** Prompt revisado pela OpenAI (eles ajustam pra moderation/quality). */
+  revised_prompt?: string;
+}
+
+export interface DalleError {
+  ok: false;
+  error: string;
+}
+
+interface DalleOptions {
+  /** "1024x1024" (quadrada), "1792x1024" (landscape) ou "1024x1792" (portrait/4:5).
+   *  Pra carrossel Instagram (4:5), use portrait. */
+  size?: "1024x1024" | "1792x1024" | "1024x1792";
+  /** "standard" ou "hd". HD custa o dobro mas dá detalhes melhores. */
+  quality?: "standard" | "hd";
+  /** "vivid" (dramático) ou "natural" (mais sóbrio). Para editorial Sindicompany,
+   *  "natural" funciona melhor (estilo fotojornalismo). */
+  style?: "vivid" | "natural";
+}
+
+export async function generateImage(
+  prompt: string,
+  opts: DalleOptions = {},
+): Promise<DalleResult | DalleError> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return { ok: false, error: "OPENAI_API_KEY ausente nas variáveis de ambiente." };
+  }
+
+  const body = {
+    model: "dall-e-3",
+    prompt,
+    n: 1,
+    size: opts.size ?? "1024x1792",
+    quality: opts.quality ?? "hd",
+    style: opts.style ?? "natural",
+    response_format: "url",
+  };
+
+  let res: Response;
+  try {
+    res = await fetch(OPENAI_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? `Falha de rede: ${e.message}` : "Falha de rede.",
+    };
+  }
+
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const j = await res.json();
+      detail = j?.error?.message ?? JSON.stringify(j);
+    } catch {
+      detail = await res.text().catch(() => "");
+    }
+    return {
+      ok: false,
+      error: `OpenAI retornou ${res.status}: ${detail.slice(0, 200)}`,
+    };
+  }
+
+  let json: { data?: Array<{ url?: string; revised_prompt?: string }> };
+  try {
+    json = await res.json();
+  } catch {
+    return { ok: false, error: "OpenAI retornou resposta não-JSON." };
+  }
+
+  const item = json.data?.[0];
+  if (!item?.url) {
+    return { ok: false, error: "Resposta sem URL de imagem." };
+  }
+  return { ok: true, url: item.url, revised_prompt: item.revised_prompt };
+}
+
+/** Baixa a imagem temporária da OpenAI e devolve os bytes. URL da OpenAI
+ *  expira em ~1h, então sempre re-upload pra Supabase. */
+export async function downloadImageBytes(url: string): Promise<Buffer> {
+  const res = await fetch(url, {
+    headers: { "User-Agent": "sindicompany-painel/1.0" },
+  });
+  if (!res.ok) {
+    throw new Error(`Download da imagem falhou: HTTP ${res.status}`);
+  }
+  const ab = await res.arrayBuffer();
+  return Buffer.from(ab);
+}
+
+/** Constrói um prompt editorial pra DALL-E baseado no briefing do
+ *  carrossel. O estilo é fotojornalismo brasileiro de condomínio
+ *  (real, sem ilustração, sem texto na imagem). */
+export function buildCarrosselPrompt(input: {
+  titulo: string;
+  tema?: string | null;
+  formato?: string | null;
+  briefing?: string | null;
+}): string {
+  const partes = [
+    "Editorial photograph for Brazilian Instagram carousel cover (4:5 vertical).",
+    `Subject/theme: ${input.tema ?? input.titulo}.`,
+  ];
+  if (input.formato) partes.push(`Format: ${input.formato.replaceAll("_", " ")}.`);
+  if (input.briefing) {
+    const brief = input.briefing.slice(0, 500);
+    partes.push(`Context/briefing: ${brief}`);
+  }
+  partes.push(
+    "Style: candid documentary photography, real Brazilian condominium setting (lobby, hallway, common area, garden, balcony as appropriate). Natural daylight, shallow depth of field, journalistic framing. People are diverse (when present), in everyday moments, no posing. Cinematic warm tones (sand, mint accents, onix shadows). Photorealistic, hyper-detailed, no illustration, no graphic art, NO TEXT IN THE IMAGE, no logos, no watermarks. Composition leaves the bottom half slightly less busy so a text overlay can be added later in post-production.",
+  );
+  return partes.join(" ");
+}
