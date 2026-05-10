@@ -260,6 +260,21 @@ export async function generateFotoCapaWithAI(input: {
     };
   }
 
+  // DALL-E 3 só entrega 1024x1024, 1024x1792 ou 1792x1024 — nenhum é
+  // 4:5. Pedimos vertical (1024x1792) e cropamos pro centro 4:5
+  // (1024x1280) antes de salvar, que é a proporção do feed Instagram.
+  try {
+    const { default: sharp } = await import("sharp");
+    bytes = await sharp(bytes)
+      .resize({ width: 1024, height: 1280, fit: "cover", position: "centre" })
+      .png()
+      .toBuffer();
+  } catch (e) {
+    // Se sharp falhar, segue com a imagem original — o engine Python
+    // ainda crop pra 4:5 quando compõe a capa.
+    console.warn("sharp crop falhou, usando imagem original:", e);
+  }
+
   let publicUrl: string;
   try {
     publicUrl = await uploadCarrosselFotoBytes(bytes);

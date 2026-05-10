@@ -148,20 +148,6 @@ export default async function NovoCarrosselPage({
             </select>
           </Field>
 
-          <Field
-            label="Briefing (opcional)"
-            hint="Conte o ângulo, contexto ou dado relevante. Quanto mais específico, melhor."
-          >
-            <textarea
-              name="briefing"
-              rows={4}
-              defaultValue={v("briefing")}
-              maxLength={2000}
-              placeholder="Ex: O síndico João reduziu a inadimplência de 12% pra 1,3% em 8 meses…"
-              className={inputCls}
-            />
-          </Field>
-
           <div className="flex gap-3 pt-4 items-center">
             <button
               type="submit"
