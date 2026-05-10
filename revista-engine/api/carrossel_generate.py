@@ -717,9 +717,9 @@ def _slide_html(
         pagination_font = 77
         badge_font = 80
 
-    # Fundo Carrossel: usado como icon-bg grande nos slides internos
-    # e na CTA (cycle pelo bucket __icon-carrossel/).
-    icon_url_internal = _icon_for_slide(slide_idx)
+    # Fundo Carrossel: usado como icon-bg grande nos slides internos.
+    # CTA NAO recebe — fica so com onix + pattern.
+    icon_url_internal = "" if is_cta else _icon_for_slide(slide_idx)
     icon_bg_div = (
         '<div class="icon-bg"></div>' if icon_url_internal else ""
     )
