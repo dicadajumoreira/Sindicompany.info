@@ -547,6 +547,15 @@ def _slide_html(
     background-position: center;
     background-repeat: no-repeat;
   }}
+  .vignette {{
+    /* Vignette cinematografica — escurece sutilmente os cantos pra
+       dar profundidade e foco no centro da foto. */
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at center,
+      transparent 50%,
+      rgba(26,28,41,0.45) 100%);
+    pointer-events: none;
+  }}
   .pattern-bg-capa {{
     /* Pattern da marca em 10% sobre a foto da capa. Mesma regra
        dos slides internos: cover preserva aspect ratio, no-repeat,
@@ -595,6 +604,14 @@ def _slide_html(
     padding: 22px 40px;
     border-radius: 10px;
     margin-bottom: 60px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  }}
+  .accent-line {{
+    /* Barra fina mint sob o badge — assinatura editorial. */
+    width: 180px; height: 6px;
+    background: {p["mint"]};
+    margin-bottom: 50px;
+    border-radius: 3px;
   }}
   .capa-titulo {{
     font-weight: 900;
@@ -641,9 +658,11 @@ def _slide_html(
 <body>
   {bg}
   {capa_pattern_div}
+  <div class="vignette"></div>
   <div class="overlay"></div>
   <div class="content">
     <span class="badge">Sindicompany</span>
+    <div class="accent-line"></div>
     <h1 class="capa-titulo">{_h(titulo)}</h1>
     {body_html}
   </div>
@@ -744,6 +763,8 @@ def _slide_html(
     # Imagem mantem a cor original — sem filter pra preservar a paleta
     # subida no admin Fundo Carrossel.
     icon_bleed_side = "right" if slide_idx % 2 == 0 else "left"
+    # Numero editorial vai no lado OPOSTO pra equilibrar a massa visual.
+    icon_bleed_side_oposto = "left" if slide_idx % 2 == 0 else "right"
 
     return f"""
 <!doctype html><html><head><meta charset="utf-8">
@@ -771,19 +792,39 @@ def _slide_html(
     opacity: 0.10;
     pointer-events: none;
   }}
-  .corner {{
+  .frame-corner {{
+    /* Molduras editoriais finas no canto superior direito —
+       substitui a bola antiga, vibe revista premium. */
     position: absolute;
     top: 180px; right: 180px;
-    width: 140px; height: 140px;
-    border-radius: 50%;
-    background: {accent};
-    opacity: 0.35;
+    width: 180px; height: 180px;
+    border-top: 6px solid {accent};
+    border-right: 6px solid {accent};
+    opacity: 0.55;
+  }}
+  .bignum {{
+    /* Numero gigante do slide como elemento editorial — opacidade
+       baixa pra nao competir com texto principal. Usa o accent pra
+       reforco de marca. Posicionado oposto ao Fundo Carrossel
+       (pares: esquerda; impares: direita) pra equilibrar massa. */
+    position: absolute;
+    bottom: 200px;
+    {icon_bleed_side_oposto}: 180px;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 720px;
+    font-weight: 900;
+    line-height: 0.85;
+    color: {accent};
+    opacity: 0.10;
+    letter-spacing: -0.04em;
+    pointer-events: none;
   }}
   .content {{
     position: absolute;
     left: 180px; right: 180px;
     top: 50%;
     transform: translateY(-50%);
+    z-index: 2;
   }}
   .badge {{
     display: inline-block;
@@ -795,7 +836,15 @@ def _slide_html(
     text-transform: uppercase;
     padding: 22px 40px;
     border-radius: 10px;
-    margin-bottom: 80px;
+    margin-bottom: 50px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  }}
+  .accent-line {{
+    /* Barra fina abaixo do badge — assinatura editorial. */
+    width: 180px; height: 6px;
+    background: {accent};
+    margin-bottom: 50px;
+    border-radius: 3px;
   }}
   .slide-titulo {{
     font-weight: 800;
@@ -890,9 +939,11 @@ def _slide_html(
   {pattern_div}
   {slide_foto_div}
   {icon_bg_div}
-  <div class="corner"></div>
+  <div class="frame-corner"></div>
+  <div class="bignum">{slide_idx:02d}</div>
   <div class="content">
     <span class="badge">{_h(badge_label)}</span>
+    <div class="accent-line"></div>
     <h2 class="slide-titulo">{_h(titulo)}</h2>
     {body_html}
   </div>
