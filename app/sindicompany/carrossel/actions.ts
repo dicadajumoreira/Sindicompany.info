@@ -316,30 +316,17 @@ export async function generateFotoCapaWithAI(input: {
     style: "natural",
   });
 
-  // Fallback: se o filtro bloqueou a descricao do usuario, tenta de
-  // novo com a cena derivada da copy (mais sanitizada). Pelo menos a
-  // editora recebe ALGUMA imagem em vez de erro 400.
-  const wasBlocked =
-    !result.ok && /safety|content[_ ]policy|content[_ ]filter|policy violation|blocked/i.test(result.error);
-  if (wasBlocked && userDesc) {
-    const cena = await descreverCenaParaCapa({
-      tema: carrossel.tema,
-      tituloCapa,
-      subtitulo,
-    });
-    const fallbackScene = cena.ok ? cena.sceneEn : "";
-    result = await generateImage(buildPrompt(fallbackScene), {
-      size: "1024x1792",
-      quality: "standard",
-      style: "natural",
-    });
-  }
+  // Sem auto-retry server-side: o caminho de retry chamava mais um
+  // GPT (~5s) + outro DALL-E (~10-15s), facil estourar o cap de 26s
+  // do Netlify Functions e voltar 504 / 'unexpected response' pra
+  // editora. Se o filtro bloquear, devolvemos a mensagem direta e
+  // a editora reescreve a descricao.
 
   if (!result.ok) {
     return {
       ok: false,
       error: /safety|content[_ ]policy|content[_ ]filter/i.test(result.error)
-        ? `A OpenAI bloqueou a geração mesmo após sanitizar. Tente reescrever a descrição com cenas mais neutras (ambiente, objetos, clima) ou faça upload manual. (${result.error})`
+        ? `A OpenAI bloqueou a geração. Reescreva a descrição com cenas mais neutras (ambiente, objetos, clima) ou faça upload manual. (${result.error})`
         : result.error,
     };
   }
