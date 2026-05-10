@@ -5,6 +5,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { getCarrossel } from "@/lib/sindicompany/carrosseis";
 import { DashboardShell } from "../../../shell";
 import { CarrosselFotoUpload } from "../../foto-upload";
+import { SlideFotoUpload } from "../../slide-foto-upload";
 import { finalizarCarrosselAction } from "../../actions";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +76,29 @@ export default async function FotoCapaPage({
             carrosselId={carrossel.id}
             initialUrl={carrossel.foto_capa_url ?? undefined}
           />
+        </section>
+
+        <section className="rounded-xl border border-onix-100 bg-white p-6 mb-6">
+          <h2 className="text-sm font-semibold text-onix-900 mb-1">
+            Fotos por slide (opcional)
+          </h2>
+          <p className="text-xs text-g60 mb-4">
+            Suba uma foto pra cada slide se quiser substituir o fundo padrão
+            (cor + pattern). Slides sem foto continuam com o tema da marca.
+          </p>
+          <div className="space-y-2">
+            {Array.from(
+              { length: Math.max(0, (carrossel.n_slides ?? 6) - 1) },
+              (_, i) => i + 1,
+            ).map((slideIdx) => (
+              <SlideFotoUpload
+                key={slideIdx}
+                carrosselId={carrossel.id}
+                slideIdx={slideIdx}
+                initialUrl={carrossel.slide_fotos?.[slideIdx] ?? null}
+              />
+            ))}
+          </div>
         </section>
 
         <form action={finalizarCarrosselAction.bind(null, carrossel.id)}>

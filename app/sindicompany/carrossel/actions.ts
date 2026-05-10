@@ -218,6 +218,32 @@ export async function finalizarCarrosselAction(
   redirect("/sindicompany/carrossel");
 }
 
+export async function salvarSlideFotoAction(
+  carrosselId: string,
+  slideIdx: number,
+  fotoUrl: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await requireAuth();
+  } catch {
+    return { ok: false, error: "Sessão expirada." };
+  }
+  if (!Number.isInteger(slideIdx) || slideIdx < 0 || slideIdx > 9) {
+    return { ok: false, error: "Índice de slide inválido." };
+  }
+  try {
+    const carrossel = await getCarrossel(carrosselId);
+    if (!carrossel) return { ok: false, error: "Carrossel não encontrado." };
+    const fotos: (string | null)[] = (carrossel.slide_fotos ?? []).slice();
+    while (fotos.length <= slideIdx) fotos.push(null);
+    fotos[slideIdx] = fotoUrl || null;
+    await updateCarrossel(carrosselId, { slide_fotos: fotos });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: describeError(e) };
+  }
+}
+
 export async function salvarFotoCapaAction(
   carrosselId: string,
   fotoUrl: string,

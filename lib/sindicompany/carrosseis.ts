@@ -24,6 +24,7 @@ export interface Carrossel {
   status: CarrosselStatus;
   png_paths: string[] | null;
   zip_url: string | null;
+  slide_fotos: string[] | null;
   legenda: string | null;
   erro_mensagem: string | null;
   gerado_em: string | null;
@@ -48,6 +49,7 @@ export async function updateCarrossel(
     foto_capa_url: string;
     copy_options: CarrosselCopy[];
     copy_selected: number | null;
+    slide_fotos: (string | null)[];
     status: CarrosselStatus;
   }>,
 ): Promise<void> {

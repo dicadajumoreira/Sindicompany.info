@@ -121,6 +121,47 @@ def _pattern_for_slide(slide_idx: int) -> str:
 _ICON_CACHE: str | None = None
 _ICONS_LIST_CACHE: list[str] | None = None
 _ICON_SLOT_CACHE: dict[int, str] = {}
+_LOGO_SLOT_CACHE: dict[int, str] = {}
+
+
+def _logo_slot_data_url(slot: int) -> str:
+    """Devolve data URL do logo em __logos/logo-{slot}.X. Cache por
+    slot. String vazia se nao houver."""
+    if slot in _LOGO_SLOT_CACHE:
+        return _LOGO_SLOT_CACHE[slot]
+    base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    if not base:
+        _LOGO_SLOT_CACHE[slot] = ""
+        return ""
+    for ext in ("png", "svg", "webp", "jpg", "jpeg"):
+        url = (
+            f"{base}/storage/v1/object/public/"
+            f"condominios-fotos/__logos/logo-{slot}.{ext}"
+        )
+        try:
+            req = urllib.request.Request(
+                url, headers={"User-Agent": "carrossel-engine/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status != 200:
+                    continue
+                content = resp.read()
+                ctype = (
+                    resp.headers.get("Content-Type", "image/png")
+                    .split(";")[0]
+                    .strip()
+                )
+            b64 = base64.b64encode(content).decode("ascii")
+            url_str = f"data:{ctype};base64,{b64}"
+            _LOGO_SLOT_CACHE[slot] = url_str
+            print(f"[carrossel] logo-{slot}.{ext} carregado", flush=True)
+            return url_str
+        except urllib.error.HTTPError:
+            continue
+        except Exception:  # noqa: BLE001
+            break
+    _LOGO_SLOT_CACHE[slot] = ""
+    return ""
 
 
 def _icon_slot_data_url(slot: int) -> str:
@@ -452,12 +493,20 @@ def _slide_html(
     titulo: str,
     body: str,
     foto_capa_url: str = "",
+    foto_slide_url: str = "",
     is_capa: bool = False,
 ) -> str:
     """Monta o HTML de um único slide pronto pra renderizar."""
     p = PALETTE
     epilogue_url = (
         "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;800;900&display=swap"
+    )
+    # Logo 5 sempre no topo de TODOS os slides (capa + internos + CTA)
+    logo_top_url = _logo_slot_data_url(5)
+    logo_top_img = (
+        f'<img class="logo-top" src="{logo_top_url}" alt="" />'
+        if logo_top_url
+        else ""
     )
 
     if is_capa:
@@ -579,6 +628,15 @@ def _slide_html(
     width: 440px; height: 440px;
     object-fit: contain;
   }}
+  .logo-top {{
+    /* Logo 5 da marca no topo de TODOS os slides, centralizado. */
+    position: absolute;
+    top: 100px; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+  }}
 </style></head>
 <body>
   {bg}
@@ -589,6 +647,7 @@ def _slide_html(
     <h1 class="capa-titulo">{_h(titulo)}</h1>
     {body_html}
   </div>
+  {logo_top_img}
   <div class="handle">@sindicompanybr</div>
   {icon_img}
 </body></html>
@@ -663,6 +722,13 @@ def _slide_html(
     icon_url_internal = _icon_for_slide(slide_idx)
     icon_bg_div = (
         '<div class="icon-bg"></div>' if icon_url_internal else ""
+    )
+    # Foto opcional por slide (sobrescreve cor de fundo + pattern
+    # quando a editora subiu uma na Etapa 3).
+    slide_foto_div = (
+        '<div class="slide-foto"></div><div class="slide-foto-overlay"></div>'
+        if foto_slide_url
+        else ""
     )
     # Brand-icon do canto inferior direito: SO aparece em CTA (Icon 6
     # em __icons/). Slides internos comuns ficam sem corner — Fundo
@@ -774,6 +840,34 @@ def _slide_html(
     width: 440px; height: 440px;
     object-fit: contain;
   }}
+  .logo-top {{
+    /* Logo 5 da marca no topo de TODOS os slides, centralizado. */
+    position: absolute;
+    top: 100px; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+  }}
+  .slide-foto {{
+    /* Foto opcional por slide (sobrescreve cor de fundo + pattern).
+       Cobre o slide inteiro. Renderiza so quando a editora subiu uma
+       foto pro slide na Etapa 3. */
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url('{foto_slide_url}');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }}
+  .slide-foto-overlay {{
+    /* Gradiente escuro pra texto ficar legivel sobre a foto. */
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg,
+      rgba(26,28,41,0.30) 0%,
+      rgba(26,28,41,0.55) 60%,
+      rgba(26,28,41,0.85) 100%
+    );
+  }}
   .icon-bg {{
     /* Imagem 'Fundo Carrossel': 90% da largura do slide (~2765px),
        grudada no canto INFERIOR direito ou esquerdo (pares -> direita,
@@ -794,6 +888,7 @@ def _slide_html(
 </style></head>
 <body>
   {pattern_div}
+  {slide_foto_div}
   {icon_bg_div}
   <div class="corner"></div>
   <div class="content">
@@ -801,6 +896,7 @@ def _slide_html(
     <h2 class="slide-titulo">{_h(titulo)}</h2>
     {body_html}
   </div>
+  {logo_top_img}
   <div class="handle">@sindicompanybr</div>
   {icon_img_internal}
 </body></html>
@@ -882,8 +978,17 @@ def gerar_carrossel(carrossel_id: str) -> int:
         png_urls: list[str] = []
         png_bytes_list: list[bytes] = []
         foto_capa = (carrossel.get("foto_capa_url") or "").strip()
+        slide_fotos = carrossel.get("slide_fotos") or []
 
         for i, s in enumerate(slides, start=1):
+            # slide_fotos eh indexado 0-based: posicao 0 = slide 1 (capa),
+            # posicao 1 = slide 2, posicao 2 = slide 3, etc. Capa usa
+            # foto_capa_url separadamente, entao aqui so importa pros
+            # internos + CTA.
+            foto_slide = ""
+            if 0 <= (i - 1) < len(slide_fotos):
+                foto_slide = (slide_fotos[i - 1] or "").strip() if slide_fotos[i - 1] else ""
+
             html = _slide_html(
                 slide_idx=i,
                 total=n_total,
@@ -891,6 +996,7 @@ def gerar_carrossel(carrossel_id: str) -> int:
                 titulo=str(s.get("titulo") or ""),
                 body=str(s.get("body") or ""),
                 foto_capa_url=foto_capa,
+                foto_slide_url=foto_slide,
                 is_capa=(i == 1),
             )
             print(f"[carrossel] renderizando slide {i}/{n_total}…", flush=True)
