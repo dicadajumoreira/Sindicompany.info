@@ -8,6 +8,11 @@ import { CarrosselAutoRefresh } from "./refresh";
 import { LegendaCopy } from "./legenda-copy";
 import { RegenerateButton } from "./regenerate-button";
 
+// Sem cache: status do carrossel muda em background (workflow GitHub),
+// queremos ver mudanças sem esperar revalidação automática.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const STATUS_LABEL: Record<string, string> = {
   rascunho: "Rascunho",
   em_producao: "Em produção",
@@ -134,9 +139,17 @@ export default async function CarrosselDetailPage({
         {/* Slides gerados */}
         {slides.length > 0 && (
           <section className="mb-6">
-            <h2 className="text-xs uppercase tracking-wider text-mint-700 font-semibold mb-3">
-              Slides ({slides.length})
-            </h2>
+            <div className="flex items-center justify-between mb-3 gap-3">
+              <h2 className="text-xs uppercase tracking-wider text-mint-700 font-semibold">
+                Slides ({slides.length})
+              </h2>
+              <a
+                href={`/sindicompany/carrossel/${carrossel.id}/preview`}
+                className="inline-flex items-center px-3 py-1.5 rounded-lg bg-mint-600 text-white text-sm font-medium hover:bg-mint-700"
+              >
+                ▶ Abrir carrossel
+              </a>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {slides.map((url, i) => (
                 <a
@@ -144,7 +157,7 @@ export default async function CarrosselDetailPage({
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block rounded-lg overflow-hidden border border-onix-100 bg-onix-50 hover:ring-2 hover:ring-mint-400"
+                  className="block rounded-lg overflow-hidden border border-onix-100 bg-onix-50 hover:ring-2 hover:ring-mint-400 relative"
                   style={{ aspectRatio: "4/5" }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -153,13 +166,34 @@ export default async function CarrosselDetailPage({
                     alt={`Slide ${i + 1}`}
                     className="w-full h-full object-cover"
                   />
+                  <span className="absolute top-2 left-2 bg-onix-900/80 text-white text-xs font-semibold px-2 py-0.5 rounded">
+                    {i + 1}
+                  </span>
                 </a>
               ))}
             </div>
             <p className="text-xs text-g60 mt-2">
-              Clique numa miniatura pra abrir o PNG em 4K. Salve cada um com botão direito → "Salvar imagem como…".
+              Clique numa miniatura pra abrir o PNG em 4K (botão direito → "Salvar imagem como…"), ou clique em "Abrir carrossel" pra navegar slide a slide.
             </p>
           </section>
+        )}
+
+        {/* Status: publicada mas sem PNGs salvos — diagnóstico */}
+        {carrossel.status === "publicada" && slides.length === 0 && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900 mb-6">
+            <strong>Status &apos;publicada&apos; mas sem PNGs salvos.</strong> O
+            workflow pode ter falhado durante o upload dos slides. Confira os
+            logs em{" "}
+            <a
+              href="https://github.com/dicadajumoreira/Sindicompany.info/actions/workflows/generate-carrossel.yml"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-medium"
+            >
+              GitHub Actions
+            </a>{" "}
+            ou clique em <em>Gerar de novo</em> acima pra retry.
+          </div>
         )}
 
         {/* Legenda */}
