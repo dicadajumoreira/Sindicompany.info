@@ -193,6 +193,71 @@ export async function listPatternUrls(): Promise<(string | null)[]> {
   return bySlot;
 }
 
+// =============================================================================
+// Assets globais — Icons e Logos
+// Mesma logica de Patterns: slots fixos no bucket publico, prefix
+// proprio (__icons / __logos), util pra reaproveitar nos slides.
+// =============================================================================
+
+export const ICON_MAX_SLOTS = 20;
+export const LOGO_MAX_SLOTS = 10;
+
+async function _createSlotUploadIntent(
+  prefix: string,
+  basename: string,
+  slot: number,
+  ext: string,
+): Promise<{ token: string; path: string; publicUrl: string }> {
+  const e = ext.toLowerCase().replace(/^\./, "");
+  const path = `${prefix}/${basename}-${slot}.${e}`;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUploadUrl(path, { upsert: true });
+  if (error) throw error;
+  const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return { token: data.token, path, publicUrl: pub.publicUrl };
+}
+
+async function _listSlotUrls(
+  prefix: string,
+  basename: string,
+  max: number,
+): Promise<(string | null)[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .list(prefix, { limit: 100 });
+  if (error || !data) return Array(max).fill(null);
+  const bySlot: (string | null)[] = Array(max).fill(null);
+  const re = new RegExp(`^${basename}-(\\d{1,2})\\.(png|jpg|jpeg|webp|svg)$`, "i");
+  for (const obj of data) {
+    const m = obj.name.match(re);
+    if (!m) continue;
+    const slot = parseInt(m[1], 10);
+    if (slot < 1 || slot > max) continue;
+    const { data: pub } = supabase.storage
+      .from(BUCKET)
+      .getPublicUrl(`${prefix}/${obj.name}`);
+    bySlot[slot - 1] = `${pub.publicUrl}?v=${obj.updated_at ?? obj.created_at ?? Date.now()}`;
+  }
+  return bySlot;
+}
+
+export function createIconUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__icons", "icon", slot, ext);
+}
+export function listIconUrls() {
+  return _listSlotUrls("__icons", "icon", ICON_MAX_SLOTS);
+}
+
+export function createLogoUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__logos", "logo", slot, ext);
+}
+export function listLogoUrls() {
+  return _listSlotUrls("__logos", "logo", LOGO_MAX_SLOTS);
+}
+
 /** Sobe o arquivo de prestação de contas (imagem ou PDF) atrelado a
  *  uma revista específica. Mantido para fluxos que ainda usam upload
  *  via Server Action (testes locais e arquivos pequenos). O fluxo

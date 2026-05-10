@@ -5,14 +5,19 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { slugifyCondo } from "@/lib/sindicompany/condominios";
 import {
   createEventosZipUploadIntent,
+  createIconUploadIntent,
+  createLogoUploadIntent,
   createManutencaoCapaUploadIntent,
   createManutencaoZipUploadIntent,
   createPatternUploadIntent,
   createPrestacaoUploadIntent,
+  ICON_MAX_SLOTS,
+  LOGO_MAX_SLOTS,
 } from "@/lib/sindicompany/condominios-db";
 
 const ALLOWED_PRESTACAO_EXT = new Set(["jpg", "jpeg", "png", "webp", "pdf"]);
 const ALLOWED_IMG_EXT = new Set(["jpg", "jpeg", "png", "webp"]);
+const ALLOWED_VECTOR_EXT = new Set(["jpg", "jpeg", "png", "webp", "svg"]);
 
 async function requireAuth() {
   const store = await cookies();
@@ -184,4 +189,47 @@ export async function getPatternUploadIntent(
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Falha desconhecida." };
   }
+}
+
+async function _slotIntent(
+  ext: string,
+  slot: number,
+  max: number,
+  label: string,
+  create: (s: number, e: string) => Promise<{ token: string; path: string; publicUrl: string }>,
+): Promise<UploadIntentResult | UploadIntentError> {
+  try {
+    await requireAuth();
+  } catch {
+    return { ok: false, error: "Sessao expirada. Faca login de novo." };
+  }
+  if (!Number.isInteger(slot) || slot < 1 || slot > max) {
+    return { ok: false, error: `Slot invalido (1 a ${max}).` };
+  }
+  const e = ext.toLowerCase().replace(/^\./, "");
+  if (!ALLOWED_VECTOR_EXT.has(e)) {
+    return { ok: false, error: `${label} precisa ser jpg, png, webp ou svg.` };
+  }
+  try {
+    const intent = await create(slot, e);
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const uploadUrl = `${baseUrl}/storage/v1/object/upload/sign/condominios-fotos/${intent.path}?token=${intent.token}`;
+    return {
+      ok: true,
+      uploadUrl,
+      token: intent.token,
+      path: intent.path,
+      publicUrl: intent.publicUrl,
+    };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Falha desconhecida." };
+  }
+}
+
+export async function getIconUploadIntent(slot: number, ext: string) {
+  return _slotIntent(ext, slot, ICON_MAX_SLOTS, "Icon", createIconUploadIntent);
+}
+
+export async function getLogoUploadIntent(slot: number, ext: string) {
+  return _slotIntent(ext, slot, LOGO_MAX_SLOTS, "Logo", createLogoUploadIntent);
 }

@@ -21,6 +21,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Carrosséis", href: "/sindicompany/carrossel", emoji: "🎠" },
   { label: "Condomínios", href: "/sindicompany/condominios", emoji: "🏢" },
   { label: "Patterns", href: "/sindicompany/patterns", emoji: "🎨" },
+  { label: "Icons", href: "/sindicompany/icons", emoji: "✦" },
+  { label: "Logotipos", href: "/sindicompany/logos", emoji: "🏷️" },
 ];
 
 function renderItem(item: NavItem, depth = 0): React.ReactNode {
