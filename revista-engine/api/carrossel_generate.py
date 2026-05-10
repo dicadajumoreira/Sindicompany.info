@@ -431,7 +431,7 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         f"'rica diversidade', 'não apenas X, mas também Y', 'mergulhando em', "
         f"'celebrando a', 'fomentando o', 'pavimentando o caminho'.\n"
         f"- Sem emoji, sem negrito mecânico, sem listas com cabeçalho colado em dois-pontos.\n"
-        f"- LEGENDA Instagram: 4-6 linhas, hook na primeira, 5-8 hashtags na "
+        f"- LEGENDA Instagram: 4-6 linhas, hook na primeira, EXATAMENTE 3 hashtags na "
         f"última linha. Tom humano, não corporativo.\n\n"
         f"Devolva JSON estrito (sem markdown):\n"
         f'{{ "slides": [{{"tipo":"capa","titulo":"...","body":"..."}}, '

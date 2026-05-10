@@ -134,7 +134,7 @@ export async function gerarTresCopies(input: {
     `- Versão A: emocional, conta uma história curta\n` +
     `- Versão B: dado/fato direto, mais informativa\n` +
     `- Versão C: provocativa, faz uma pergunta forte e desafia o senso comum\n\n` +
-    `LEGENDA Instagram (pra cada versão): 4-6 linhas, hook na primeira, 5-8 hashtags na última linha.\n\n` +
+    `LEGENDA Instagram (pra cada versão): 4-6 linhas, hook na primeira, EXATAMENTE 3 hashtags na última linha.\n\n` +
     `Devolva JSON estrito (sem markdown):\n` +
     `{ "options": [\n` +
     `  { "slides": [{"tipo":"capa","titulo":"...","body":"..."}, ... total ${input.n_slides} slides], "legenda":"..." },\n` +
