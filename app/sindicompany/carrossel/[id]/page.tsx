@@ -196,6 +196,25 @@ export default async function CarrosselDetailPage({
           </div>
         )}
 
+        {/* Diagnóstico bruto — sempre visível pra ajudar a depurar */}
+        <details className="rounded-xl border border-onix-100 bg-onix-50 px-5 py-3 text-xs text-g60">
+          <summary className="cursor-pointer font-semibold text-onix-900">
+            Diagnóstico (clique pra expandir)
+          </summary>
+          <div className="mt-3 space-y-2 font-mono">
+            <div><strong>id:</strong> {carrossel.id}</div>
+            <div><strong>status:</strong> {carrossel.status}</div>
+            <div><strong>n_slides:</strong> {carrossel.n_slides ?? "(null)"}</div>
+            <div><strong>png_paths:</strong> {JSON.stringify(carrossel.png_paths)}</div>
+            <div><strong>foto_capa_url:</strong> {carrossel.foto_capa_url ?? "(null)"}</div>
+            <div><strong>legenda len:</strong> {(carrossel.legenda ?? "").length}</div>
+            <div><strong>erro_mensagem:</strong> {carrossel.erro_mensagem ?? "(null)"}</div>
+            <div><strong>gerado_em:</strong> {carrossel.gerado_em ?? "(null)"}</div>
+            <div><strong>created_at:</strong> {carrossel.created_at}</div>
+            <div><strong>updated_at:</strong> {carrossel.updated_at}</div>
+          </div>
+        </details>
+
         {/* Legenda */}
         {carrossel.legenda && (
           <section className="rounded-xl border border-onix-100 bg-white p-6">
