@@ -434,9 +434,10 @@ def _slide_html(
     letter-spacing: 0.08em;
   }}
   .brand-icon {{
+    /* +100% sobre o tamanho anterior (220 -> 440) pra reforcar a marca. */
     position: absolute;
     bottom: 80px; right: 180px;
-    width: 220px; height: 220px;
+    width: 440px; height: 440px;
     object-fit: contain;
   }}
 </style></head>
@@ -526,6 +527,9 @@ def _slide_html(
         f'<img class="brand-icon" src="{icon_url_internal}" alt="" />'
         if icon_url_internal
         else ""
+    )
+    icon_bg_div = (
+        '<div class="icon-bg"></div>' if icon_url_internal else ""
     )
 
     return f"""
@@ -638,6 +642,7 @@ def _slide_html(
 </style></head>
 <body>
   {pattern_div}
+  {icon_bg_div}
   <div class="corner"></div>
   <div class="content">
     <span class="badge">{_h(badge_label)}</span>
