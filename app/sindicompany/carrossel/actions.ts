@@ -256,13 +256,14 @@ export async function generateFotoCapaWithAI(input: {
   }
 
   // Lê o registro pra usar a copy escolhida como contexto editorial
-  let carrossel;
+  let carrosselRow: Awaited<ReturnType<typeof getCarrossel>>;
   try {
-    carrossel = await getCarrossel(input.carrosselId);
+    carrosselRow = await getCarrossel(input.carrosselId);
   } catch (e) {
     return { ok: false, error: `Banco indisponível: ${describeError(e)}` };
   }
-  if (!carrossel) return { ok: false, error: "Carrossel não encontrado." };
+  if (!carrosselRow) return { ok: false, error: "Carrossel não encontrado." };
+  const carrossel = carrosselRow;
 
   const idx = carrossel.copy_selected ?? 0;
   const copy = carrossel.copy_options?.[idx];
@@ -292,32 +293,54 @@ export async function generateFotoCapaWithAI(input: {
     if (cena.ok) subject = cena.sceneEn;
   }
 
-  const prompt = subject
-    ? `Ultra-realistic editorial photograph, 8K quality, hyper-detailed, ` +
-      `for Brazilian Instagram cover (4:5 vertical). ` +
-      `Scene: ${subject} ` +
-      `Style: cinematic documentary photo of a real Brazilian residential ` +
-      `building setting, professional DSLR camera, natural daylight, shallow ` +
-      `depth of field, sharp focus on subject, photorealistic textures, ` +
-      `crisp details on every surface, no text, no logos. ` +
-      `Composition: subject occupies the TOP HALF of the frame; bottom half ` +
-      `is calmer (sky, wall, blurred background) so 50% of the image can be ` +
-      `covered by a text overlay added later.`
-    : buildCarrosselPromptSafe({
-        titulo: tituloCapa,
-        tema: carrossel.tema,
-      });
+  function buildPrompt(scene: string): string {
+    return scene
+      ? `Ultra-realistic editorial photograph, 8K quality, hyper-detailed, ` +
+        `for Brazilian Instagram cover (4:5 vertical). ` +
+        `Scene: ${scene} ` +
+        `Style: cinematic documentary photo of a real Brazilian residential ` +
+        `building setting, professional DSLR camera, natural daylight, shallow ` +
+        `depth of field, sharp focus on subject, photorealistic textures, ` +
+        `crisp details on every surface, no text, no logos. ` +
+        `Composition: subject occupies the TOP HALF of the frame; bottom half ` +
+        `is calmer (sky, wall, blurred background) so 50% of the image can be ` +
+        `covered by a text overlay added later.`
+      : buildCarrosselPromptSafe({
+          titulo: tituloCapa,
+          tema: carrossel.tema,
+        });
+  }
 
-  const result = await generateImage(prompt, {
+  let result = await generateImage(buildPrompt(subject), {
     size: "1024x1792",
     quality: "standard",
     style: "natural",
   });
+
+  // Fallback: se o filtro bloqueou a descricao do usuario, tenta de
+  // novo com a cena derivada da copy (mais sanitizada). Pelo menos a
+  // editora recebe ALGUMA imagem em vez de erro 400.
+  const wasBlocked =
+    !result.ok && /safety|content[_ ]policy|content[_ ]filter|policy violation|blocked/i.test(result.error);
+  if (wasBlocked && userDesc) {
+    const cena = await descreverCenaParaCapa({
+      tema: carrossel.tema,
+      tituloCapa,
+      subtitulo,
+    });
+    const fallbackScene = cena.ok ? cena.sceneEn : "";
+    result = await generateImage(buildPrompt(fallbackScene), {
+      size: "1024x1792",
+      quality: "standard",
+      style: "natural",
+    });
+  }
+
   if (!result.ok) {
     return {
       ok: false,
-      error: /safety|content[_ ]policy/i.test(result.error)
-        ? `A OpenAI bloqueou a geração. Tente trocar o tema ou faça upload manual. (${result.error})`
+      error: /safety|content[_ ]policy|content[_ ]filter/i.test(result.error)
+        ? `A OpenAI bloqueou a geração mesmo após sanitizar. Tente reescrever a descrição com cenas mais neutras (ambiente, objetos, clima) ou faça upload manual. (${result.error})`
         : result.error,
     };
   }

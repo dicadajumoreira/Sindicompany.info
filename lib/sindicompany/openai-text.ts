@@ -155,8 +155,14 @@ export async function traduzirDescricaoUsuario(
     `clothing, gender, environment, objects, colors, time of day, mood.\n` +
     `- Do NOT add scenes or details the author did not mention.\n` +
     `- Do NOT remove details (do not 'simplify').\n` +
-    `- Only neutralize words DALL-E blocks: replace weapons/violence/drugs/` +
-    `crime/illegal acts with neutral equivalents. Keep brand-free.\n` +
+    `- Sanitize words that DALL-E commonly blocks: replace ` +
+    `weapons/violence/drugs/crime/illegal acts with neutral equivalents; ` +
+    `replace specific real-person names (politicians, celebrities) with ` +
+    `'a person'; replace specific brand names ('Apple iPhone' -> ` +
+    `'a smartphone'); replace 'briga'/'conflito' with 'conversation' or ` +
+    `'meeting'; replace 'inadimplencia'/'divida' with 'paperwork' or ` +
+    `'documents'; replace 'seguranca'/'security guard' with 'concierge' ` +
+    `or 'doorman'.\n` +
     `- Output: a single English sentence/paragraph faithful to the original. ` +
     `No quotes, no commentary.\n` +
     `- Output JSON: {"desc_en": "..."}\n\n` +
