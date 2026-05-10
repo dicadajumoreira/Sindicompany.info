@@ -41,7 +41,22 @@ async function chat(prompt: string): Promise<ChatOk | ChatErr> {
           {
             role: "system",
             content:
-              "Você é editor de conteúdo da Sindicompany para Instagram. Tom alegre, amigável, objetivo. Português brasileiro com acentos corretos. Sem travessão. Frases curtas.",
+              "Você é editor de conteúdo da Sindicompany para Instagram. " +
+              "Escreva como humano, não como IA. Tom direto, com opinião, " +
+              "frases curtas misturadas com longas. Português brasileiro " +
+              "com TODOS os acentos corretos (é, ê, ã, õ, ç, etc). Revise " +
+              "cada palavra: 'sao' -> 'são', 'voce' -> 'você', " +
+              "'sindico' -> 'síndico', 'condominio' -> 'condomínio'. " +
+              "ZERO travessão (—), zero emoji, zero negrito mecânico. " +
+              "ZERO clichê de IA: nada de 'papel fundamental', 'momento " +
+              "crucial', 'cenário em constante evolução', 'destacando a " +
+              "importância', 'o futuro é promissor', 'juntos somos mais " +
+              "fortes', 'destaca-se', 'vibrante', 'no coração de', 'em " +
+              "meio a', 'reflete a', 'simboliza a', 'evidencia a', 'não " +
+              "apenas X, mas também Y', 'um verdadeiro testemunho', " +
+              "'desafios e oportunidades', 'rica diversidade'. Use voz " +
+              "ativa, sujeito explícito, exemplos concretos. " +
+              "Aspas retas, não curvas.",
           },
           { role: "user", content: prompt },
         ],
@@ -100,9 +115,21 @@ export async function gerarTresCopies(input: {
     `- SLIDE 1 (capa): título-gancho curto que dá curiosidade em 1.5s. Body opcional, máx 8 palavras.\n` +
     `- SLIDES INTERNOS: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras).\n` +
     `- ÚLTIMO SLIDE: pergunta SIM/NÃO simples ou call-to-action.\n` +
-    `- Português brasileiro com acentos corretos. Fale 'você'.\n` +
-    `- NUNCA usar travessão (—). Substituir por vírgula, ponto ou dois-pontos.\n` +
-    `- LISTA NEGRA: 'papel fundamental', 'momento crucial', 'cenário em constante evolução', 'destacando a importância', 'o futuro é promissor', 'juntos somos mais fortes'.\n\n` +
+    `\nREGRAS DE PORTUGUÊS (humanização):\n` +
+    `- Acentos corretos em TODA palavra: você, síndico, condomínio, gestão, está, são, taxa, é, à, é assembléia.\n` +
+    `- Fale 'você', voz ativa, sujeito explícito.\n` +
+    `- NUNCA travessão (—) em nenhum slide. Use vírgula, ponto, dois-pontos ou parênteses.\n` +
+    `- NUNCA aspas curvas (“ ”) — só aspas retas (\").\n` +
+    `- Frases curtas e longas misturadas. Tom direto, com opinião quando couber.\n` +
+    `- Use exemplos concretos (números, ações, situações reais) em vez de abstrações.\n` +
+    `- LISTA NEGRA (palavras/frases proibidas, escritas literais ou com sinônimo claro):\n` +
+    `  'papel fundamental', 'momento crucial', 'cenário em constante evolução', 'destacando a importância',\n` +
+    `  'o futuro é promissor', 'juntos somos mais fortes', 'destaca-se', 'se destaca', 'vibrante',\n` +
+    `  'no coração de', 'em meio a', 'reflete a', 'simboliza a', 'evidencia a', 'um verdadeiro testemunho',\n` +
+    `  'desafios e oportunidades', 'rica diversidade', 'não apenas X, mas também Y',\n` +
+    `  'mergulhando em', 'celebrando a', 'fomentando o', 'pavimentando o caminho'.\n` +
+    `- Sem emoji, sem negrito mecânico, sem listas com cabeçalho colado em dois-pontos.\n` +
+    `- ANTES DE GERAR cada texto, revise mentalmente acento por acento. Se 'voce' aparecer, é erro: troque pra 'você'.\n\n` +
     `CADA UMA DAS 3 VERSÕES DEVE TER ÂNGULO DIFERENTE:\n` +
     `- Versão A: emocional, conta uma história curta\n` +
     `- Versão B: dado/fato direto, mais informativa\n` +
