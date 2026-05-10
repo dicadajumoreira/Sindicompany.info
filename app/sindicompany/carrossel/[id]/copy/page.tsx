@@ -4,7 +4,10 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { getCarrossel, type CarrosselCopy } from "@/lib/sindicompany/carrosseis";
 import { DashboardShell } from "../../../shell";
-import { escolherCopyAction } from "../../actions";
+import {
+  escolherCopyAction,
+  regenerarCopiesAction,
+} from "../../actions";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -38,18 +41,34 @@ export default async function EscolherCopyPage({
           ← Voltar
         </Link>
 
-        <header className="mb-8">
-          <Stepper step={2} />
-          <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2 mt-6">
-            Etapa 2 · Escolher copy
+        <header className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <Stepper step={2} />
+            <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2 mt-6">
+              Etapa 2 · Escolher copy
+            </div>
+            <h1 className="text-3xl font-bold text-onix-900">
+              Qual versão você quer publicar?
+            </h1>
+            <p className="text-sm text-g60 mt-2 max-w-2xl">
+              A IA gerou 3 ângulos diferentes pro mesmo briefing. Leia os
+              slides, compare a legenda, e escolha a que mais combina com o tom
+              da marca.
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-onix-900">
-            Qual versão você quer publicar?
-          </h1>
-          <p className="text-sm text-g60 mt-2 max-w-2xl">
-            A IA gerou 3 ângulos diferentes pro mesmo briefing. Leia os slides,
-            compare a legenda, e escolha a que mais combina com o tom da marca.
-          </p>
+          {copies.length > 0 && (
+            <form
+              action={regenerarCopiesAction.bind(null, carrossel.id)}
+              className="shrink-0 mt-2"
+            >
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-onix-200 bg-white hover:bg-onix-50 text-onix-900 text-sm font-medium px-3 py-2"
+              >
+                ↻ Gerar 3 opções novas
+              </button>
+            </form>
+          )}
         </header>
 
         {copies.length === 0 ? (

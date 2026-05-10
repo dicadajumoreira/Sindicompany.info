@@ -46,7 +46,7 @@ export async function updateCarrossel(
   patch: Partial<{
     foto_capa_url: string;
     copy_options: CarrosselCopy[];
-    copy_selected: number;
+    copy_selected: number | null;
     status: CarrosselStatus;
   }>,
 ): Promise<void> {

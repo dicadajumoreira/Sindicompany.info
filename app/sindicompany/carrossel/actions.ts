@@ -163,6 +163,32 @@ export async function escolherCopyAction(
   redirect(`/sindicompany/carrossel/${carrosselId}/foto`);
 }
 
+/** Re-roda gerarTresCopies pro mesmo briefing e sobrescreve copy_options.
+ *  Reseta copy_selected pra null pra editora não enviar pra etapa 3 sem
+ *  revisar de novo. Usado quando nenhuma das 3 copies anteriores serviu. */
+export async function regenerarCopiesAction(carrosselId: string): Promise<void> {
+  await requireAuth();
+  const carrossel = await getCarrossel(carrosselId);
+  if (!carrossel) {
+    redirect("/sindicompany/carrossel");
+  }
+  const copies = await gerarTresCopies({
+    titulo: carrossel.titulo,
+    tema: carrossel.tema ?? "",
+    formato: carrossel.formato ?? "",
+    n_slides: carrossel.n_slides ?? 6,
+    briefing: carrossel.briefing ?? undefined,
+  });
+  if (copies.ok) {
+    await updateCarrossel(carrosselId, {
+      copy_options: copies.copies,
+      copy_selected: null,
+    });
+  }
+  revalidatePath(`/sindicompany/carrossel/${carrosselId}/copy`);
+  redirect(`/sindicompany/carrossel/${carrosselId}/copy`);
+}
+
 // =============================================================================
 // Etapa 3: foto + dispara geração final dos PNGs
 // =============================================================================
