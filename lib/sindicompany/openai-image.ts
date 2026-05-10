@@ -175,7 +175,11 @@ export function buildCarrosselPromptSafe(input: {
     `Editorial photograph for Brazilian Instagram cover (4:5 vertical). ` +
     `Subject: ${tema}. ` +
     `Style: candid documentary photo, real Brazilian residential building setting, ` +
-    `natural daylight, shallow depth of field, photorealistic, no text, no logos.`
+    `natural daylight, shallow depth of field, photorealistic, no text, no logos. ` +
+    `Color palette dominated by Sindicompany brand pastels: mint cyan #84C7D3, ` +
+    `warm sand beige #DABDA9, soft lavender #B8C0FF, white #FFFFFF, light gray ` +
+    `#F4F4F5. Airy and low-saturation. Avoid heavy reds, oranges, dark blues, ` +
+    `forest greens or saturated primaries.`
   );
 }
 

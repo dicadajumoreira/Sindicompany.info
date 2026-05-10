@@ -302,6 +302,12 @@ export async function generateFotoCapaWithAI(input: {
         `building setting, professional DSLR camera, natural daylight, shallow ` +
         `depth of field, sharp focus on subject, photorealistic textures, ` +
         `crisp details on every surface, no text, no logos. ` +
+        `Color palette MUST be dominated by Sindicompany brand pastels: ` +
+        `mint cyan #84C7D3, warm sand beige #DABDA9, soft lavender #B8C0FF, ` +
+        `pure white #FFFFFF and very light gray #F4F4F5. Walls, clothing, ` +
+        `furniture, plants and ambient light should pull toward this airy, ` +
+        `low-saturation pastel range. Avoid heavy reds, oranges, dark blues, ` +
+        `forest greens or saturated primaries. ` +
         `Composition: subject occupies the TOP HALF of the frame; bottom half ` +
         `is calmer (sky, wall, blurred background) so 50% of the image can be ` +
         `covered by a text overlay added later.`
