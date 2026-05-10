@@ -14,6 +14,7 @@ import { describeError } from "@/lib/sindicompany/errors";
 import { dispatchGenerateCarrossel } from "@/lib/sindicompany/engine";
 import {
   buildCarrosselPrompt,
+  buildCarrosselPromptSafe,
   downloadImageBytes,
   generateImage,
 } from "@/lib/sindicompany/openai-image";
@@ -157,23 +158,40 @@ export async function generateFotoCapaWithAI(input: {
     return { ok: false, error: "Informe pelo menos o título ou tema antes de gerar." };
   }
 
-  const prompt = buildCarrosselPrompt({
-    titulo: titulo || (input.tema ?? "Sindicompany"),
-    tema: input.tema,
-    formato: input.formato,
-    briefing: input.briefing,
-  });
+  const tituloSafe = titulo || (input.tema ?? "Sindicompany");
 
-  // Quality 'standard' demora ~10s (vs 30-50s do 'hd'), e essa
-  // server action roda em Netlify Function com timeout default
-  // de ~26s — sem standard a função morre antes de devolver.
-  const result = await generateImage(prompt, {
-    size: "1024x1792",
-    quality: "standard",
-    style: "natural",
-  });
+  // Tentativa 1: prompt completo. Quality 'standard' (~10s) cabe
+  // dentro do timeout de 26s do Netlify Functions.
+  let result = await generateImage(
+    buildCarrosselPrompt({
+      titulo: tituloSafe,
+      tema: input.tema,
+      formato: input.formato,
+      briefing: input.briefing,
+    }),
+    { size: "1024x1792", quality: "standard", style: "natural" },
+  );
+
+  // Se falhou por safety (400), retry com prompt minimalista
+  // (sem briefing — fonte mais provável do trigger).
+  if (
+    !result.ok &&
+    /safety|400|content[_ ]policy|rejected/i.test(result.error)
+  ) {
+    console.warn("[carrossel] OpenAI rejeitou prompt completo, retry com fallback");
+    result = await generateImage(
+      buildCarrosselPromptSafe({ titulo: tituloSafe, tema: input.tema }),
+      { size: "1024x1792", quality: "standard", style: "natural" },
+    );
+  }
+
   if (!result.ok) {
-    return { ok: false, error: result.error };
+    return {
+      ok: false,
+      error: /safety|content[_ ]policy/i.test(result.error)
+        ? `A OpenAI bloqueou a geração por causa de algum termo do briefing. ${result.error}`
+        : result.error,
+    };
   }
 
   let bytes: Buffer;

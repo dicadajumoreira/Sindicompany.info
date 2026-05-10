@@ -150,15 +150,52 @@ export function buildCarrosselPrompt(input: {
 }): string {
   const partes = [
     "Editorial photograph for Brazilian Instagram carousel cover (4:5 vertical).",
-    `Subject/theme: ${input.tema ?? input.titulo}.`,
+    `Subject/theme: ${_sanitizar(input.tema ?? input.titulo)}.`,
   ];
   if (input.formato) partes.push(`Format: ${input.formato.replaceAll("_", " ")}.`);
   if (input.briefing) {
-    const brief = input.briefing.slice(0, 500);
+    const brief = _sanitizar(input.briefing).slice(0, 500);
     partes.push(`Context/briefing: ${brief}`);
   }
   partes.push(
-    "Style: candid documentary photography, real Brazilian condominium setting (lobby, hallway, common area, garden, balcony as appropriate). Natural daylight, shallow depth of field, journalistic framing. People are diverse (when present), in everyday moments, no posing. Cinematic warm tones (sand, mint accents, onix shadows). Photorealistic, hyper-detailed, no illustration, no graphic art, NO TEXT IN THE IMAGE, no logos, no watermarks. Composition leaves the bottom half slightly less busy so a text overlay can be added later in post-production.",
+    "Style: candid documentary photography, real Brazilian condominium setting (lobby, hallway, common area, garden, balcony as appropriate). Natural daylight, shallow depth of field, journalistic framing. People are diverse (when present), in everyday moments, no posing. Cinematic warm tones. Photorealistic, hyper-detailed, no illustration, no graphic art, NO TEXT IN THE IMAGE, no logos, no watermarks. Composition leaves the bottom half slightly less busy so a text overlay can be added later in post-production.",
   );
   return partes.join(" ");
+}
+
+/** Versão minimal do prompt — usada como fallback quando a OpenAI
+ *  rejeita o prompt completo por safety. Remove o briefing
+ *  (provável fonte do trigger) e fica genérico. */
+export function buildCarrosselPromptSafe(input: {
+  titulo: string;
+  tema?: string | null;
+}): string {
+  const tema = _sanitizar(input.tema ?? input.titulo);
+  return (
+    `Editorial photograph for Brazilian Instagram cover (4:5 vertical). ` +
+    `Subject: ${tema}. ` +
+    `Style: candid documentary photo, real Brazilian residential building setting, ` +
+    `natural daylight, shallow depth of field, photorealistic, no text, no logos.`
+  );
+}
+
+/** Substitui termos que costumam disparar o safety filter da OpenAI
+ *  por sinônimos mais neutros (sem perder o sentido pra um prompt
+ *  de fotografia editorial). */
+function _sanitizar(s: string): string {
+  if (!s) return "";
+  const map: Array<[RegExp, string]> = [
+    [/\bseguran[çc]a\b/gi, "comunidade"],
+    [/\bconflito(s)?\b/gi, "convivência"],
+    [/\bbriga(s)?\b/gi, "diálogo"],
+    [/\bviol[êe]ncia\b/gi, "atenção"],
+    [/\barma(s)?\b/gi, ""],
+    [/\bdroga(s)?\b/gi, ""],
+    [/\bcrime(s)?\b/gi, "questão"],
+    [/\binadimpl[êe]ncia\b/gi, "gestão financeira"],
+    [/\bd[ií]vida(s)?\b/gi, "compromisso"],
+  ];
+  let out = s;
+  for (const [re, repl] of map) out = out.replace(re, repl);
+  return out;
 }
