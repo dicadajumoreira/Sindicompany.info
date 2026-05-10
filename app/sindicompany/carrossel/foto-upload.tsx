@@ -79,13 +79,14 @@ export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
     }
     setStatus("generating");
 
-    // Race contra timeout client-side de 25s. Server action no Netlify
-    // tem cap de 26s — se não responder em 25s assumimos que travou
-    // e mostramos mensagem útil em vez de loading infinito.
+    // Race contra timeout client-side de 40s. Netlify Functions cap
+    // em 26s; mas com cold start + DALL-E + download + upload pode
+    // chegar perto desse limite. Damos uma folga pra mostrar erro
+    // útil só quando realmente travou.
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(
         () => reject(new Error("timeout")),
-        25_000,
+        40_000,
       ),
     );
 
@@ -104,7 +105,7 @@ export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
       setStatus("error");
       setErrorMsg(
         e instanceof Error && e.message === "timeout"
-          ? "A geração demorou mais que 25s e foi interrompida. Tente de novo ou faça upload manual."
+          ? "A geração demorou mais que 40s e foi interrompida. Tente de novo ou faça upload manual."
           : (e instanceof Error ? e.message : "Falha desconhecida."),
       );
       return;

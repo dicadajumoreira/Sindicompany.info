@@ -160,36 +160,20 @@ export async function generateFotoCapaWithAI(input: {
 
   const tituloSafe = titulo || (input.tema ?? "Sindicompany");
 
-  // Tentativa 1: prompt completo. Quality 'standard' (~10s) cabe
-  // dentro do timeout de 26s do Netlify Functions.
-  let result = await generateImage(
-    buildCarrosselPrompt({
-      titulo: tituloSafe,
-      tema: input.tema,
-      formato: input.formato,
-      briefing: input.briefing,
-    }),
+  // Uma única tentativa com prompt minimalista (sanitizado, sem
+  // briefing). Cabe em ~10-12s, dentro do timeout de 26s do Netlify
+  // Functions com folga pra download + upload pro Storage.
+  // Se a editora quiser uma imagem mais específica, faz upload manual.
+  const result = await generateImage(
+    buildCarrosselPromptSafe({ titulo: tituloSafe, tema: input.tema }),
     { size: "1024x1792", quality: "standard", style: "natural" },
   );
-
-  // Se falhou por safety (400), retry com prompt minimalista
-  // (sem briefing — fonte mais provável do trigger).
-  if (
-    !result.ok &&
-    /safety|400|content[_ ]policy|rejected/i.test(result.error)
-  ) {
-    console.warn("[carrossel] OpenAI rejeitou prompt completo, retry com fallback");
-    result = await generateImage(
-      buildCarrosselPromptSafe({ titulo: tituloSafe, tema: input.tema }),
-      { size: "1024x1792", quality: "standard", style: "natural" },
-    );
-  }
 
   if (!result.ok) {
     return {
       ok: false,
       error: /safety|content[_ ]policy/i.test(result.error)
-        ? `A OpenAI bloqueou a geração por causa de algum termo do briefing. ${result.error}`
+        ? `A OpenAI bloqueou a geração por causa de algum termo do tema. Tente trocar o tema ou faça upload manual. (${result.error})`
         : result.error,
     };
   }
