@@ -73,6 +73,19 @@ export default async function CarrosselDetailPage({
   const isProducing = carrossel.status === "em_producao" || carrossel.status === "rascunho";
   const slides = carrossel.png_paths ?? [];
 
+  // ZIP URL: prefere o campo do DB; se a coluna ainda nao foi
+  // criada (migration 20260524 nao rodada), o engine ainda sobe o
+  // zip pro Storage no caminho conhecido — derivamos a URL publica
+  // direto, evitando a editora ficar sem botao de download.
+  const supabaseBase = (
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
+  ).replace(/\/$/, "");
+  const derivedZipUrl =
+    !carrossel.zip_url && slides.length > 0 && supabaseBase
+      ? `${supabaseBase}/storage/v1/object/public/condominios-fotos/__carrosseis/${carrossel.id}/slides.zip`
+      : "";
+  const zipHref = carrossel.zip_url || derivedZipUrl;
+
   return (
     <DashboardShell>
       <CarrosselAutoRefresh active={isProducing} />
@@ -158,9 +171,9 @@ export default async function CarrosselDetailPage({
                 Slides ({slides.length})
               </h2>
               <div className="flex items-center gap-2">
-                {carrossel.zip_url && (
+                {zipHref && (
                   <a
-                    href={carrossel.zip_url}
+                    href={zipHref}
                     download
                     className="inline-flex items-center px-3 py-1.5 rounded-lg border border-onix-200 bg-white hover:bg-onix-50 text-onix-900 text-sm font-medium"
                   >
