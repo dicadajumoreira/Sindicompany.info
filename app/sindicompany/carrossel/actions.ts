@@ -357,14 +357,15 @@ export async function generateFotoCapaWithAI(input: {
 
   // DALL-E 3 só entrega 1024x1024, 1024x1792 ou 1792x1024 — nenhum é
   // 4:5. Pedimos vertical (1024x1792) e cropamos pro centro 4:5
-  // (1024x1280) antes de salvar, que é a proporção do feed Instagram.
+  // (1080x1350) antes de salvar — tamanho oficial do feed Instagram
+  // (escala leve de 1024->1080 + crop vertical pra 4:5 exato).
   // sharp eh dep explicita em package.json — se falhar aqui o erro
   // vira pra editora em vez de silenciar (antes salvavamos 1024x1792
   // sem aviso, virou bug).
   try {
     const sharp = (await import("sharp")).default;
     bytes = await sharp(bytes)
-      .resize({ width: 1024, height: 1280, fit: "cover", position: "centre" })
+      .resize({ width: 1080, height: 1350, fit: "cover", position: "centre" })
       .png()
       .toBuffer();
   } catch (e) {

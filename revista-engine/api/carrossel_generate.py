@@ -95,6 +95,54 @@ def _pattern_for_slide(slide_idx: int) -> str:
         return ""
     return pats[(slide_idx - 1) % len(pats)]
 
+
+_ICON_CACHE: str | None = None
+
+
+def _icon_data_url() -> str:
+    """Devolve data URL do icon principal (slot 1 em __icons/icon-1.X)
+    pra usar como marca no canto inferior direito dos slides. Cache
+    no processo. String vazia se nao houver."""
+    global _ICON_CACHE
+    if _ICON_CACHE is not None:
+        return _ICON_CACHE
+    base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    if not base:
+        _ICON_CACHE = ""
+        return ""
+    for ext in ("png", "svg", "webp", "jpg", "jpeg"):
+        url = (
+            f"{base}/storage/v1/object/public/"
+            f"condominios-fotos/__icons/icon-1.{ext}"
+        )
+        try:
+            req = urllib.request.Request(
+                url, headers={"User-Agent": "carrossel-engine/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status != 200:
+                    continue
+                content = resp.read()
+                ctype = (
+                    resp.headers.get("Content-Type", "image/png")
+                    .split(";")[0]
+                    .strip()
+                )
+            b64 = base64.b64encode(content).decode("ascii")
+            _ICON_CACHE = f"data:{ctype};base64,{b64}"
+            print(f"[carrossel] icon-1.{ext} carregado", flush=True)
+            return _ICON_CACHE
+        except urllib.error.HTTPError:
+            continue
+        except Exception as e:  # noqa: BLE001
+            print(
+                f"[carrossel] icon-1.{ext} falhou: {type(e).__name__}: {e}",
+                flush=True,
+            )
+            break
+    _ICON_CACHE = ""
+    return ""
+
 BUCKET = "condominios-fotos"
 SLIDE_W = 3072
 SLIDE_H = 3839  # 4:5 vertical
@@ -263,6 +311,10 @@ def _slide_html(
             else f'<div class="hero-img" style="background: linear-gradient(135deg, {p["mint"]} 0%, {p["onix"]} 100%);"></div>'
         )
         body_html = f'<p class="capa-body">{_h(body)}</p>' if body else ""
+        icon_url = _icon_data_url()
+        icon_img = (
+            f'<img class="brand-icon" src="{icon_url}" alt="" />' if icon_url else ""
+        )
         return f"""
 <!doctype html><html><head><meta charset="utf-8">
 <link href="{epilogue_url}" rel="stylesheet">
@@ -343,6 +395,12 @@ def _slide_html(
     color: {p["mint"]};
     letter-spacing: 0.08em;
   }}
+  .brand-icon {{
+    position: absolute;
+    bottom: 80px; right: 180px;
+    width: 220px; height: 220px;
+    object-fit: contain;
+  }}
 </style></head>
 <body>
   {bg}
@@ -353,6 +411,7 @@ def _slide_html(
     {body_html}
   </div>
   <div class="handle">@sindicompanybr</div>
+  {icon_img}
 </body></html>
 """
 
@@ -403,6 +462,13 @@ def _slide_html(
         handle_font = 77
         pagination_font = 77
         badge_font = 80
+
+    icon_url_internal = _icon_data_url()
+    icon_img_internal = (
+        f'<img class="brand-icon" src="{icon_url_internal}" alt="" />'
+        if icon_url_internal
+        else ""
+    )
 
     return f"""
 <!doctype html><html><head><meta charset="utf-8">
@@ -490,11 +556,19 @@ def _slide_html(
   }}
   .pagination {{
     position: absolute;
-    bottom: 120px; right: 180px;
+    bottom: 220px; right: 180px;
     font-size: {pagination_font}px;
     font-weight: 700;
     color: {fg_color};
     opacity: 0.55;
+  }}
+  .brand-icon {{
+    /* Icone da marca no canto inferior direito de cada slide.
+       Slot 1 em __icons/icon-1 — fica vazio se nao houver. */
+    position: absolute;
+    bottom: 80px; right: 180px;
+    width: 220px; height: 220px;
+    object-fit: contain;
   }}
 </style></head>
 <body>
@@ -507,6 +581,7 @@ def _slide_html(
   </div>
   <div class="handle">@sindicompanybr</div>
   <div class="pagination">{slide_idx} / {total}</div>
+  {icon_img_internal}
 </body></html>
 """
 
