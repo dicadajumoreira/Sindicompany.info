@@ -618,8 +618,23 @@ def _slide_html(
        Slot 1 em __icons/icon-1 — fica vazio se nao houver. */
     position: absolute;
     bottom: 80px; right: 180px;
-    width: 220px; height: 220px;
+    width: 440px; height: 440px;
     object-fit: contain;
+  }}
+  .icon-bg {{
+    /* Icone grande de fundo a 15% opacity, sobreposto ao pattern.
+       Centralizado, sem repeat. Faz o slide ter respiração de marca
+       sem competir com o conteudo. */
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2200px; height: 2200px;
+    background-image: url('{icon_url_internal}');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;
+    opacity: 0.15;
+    pointer-events: none;
   }}
 </style></head>
 <body>
