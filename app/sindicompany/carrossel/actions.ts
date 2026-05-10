@@ -103,7 +103,12 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
   await requireAuth();
 
   const titulo = getStr(formData, "titulo");
-  const tema = getStr(formData, "tema");
+  const temaSelecionado = getStr(formData, "tema");
+  const temaOutro = getStr(formData, "tema_outro");
+  // 'Outro' eh um marcador da UI — substitui pelo texto livre que a
+  // editora digitou na caixa que aparece quando seleciona 'Outro'.
+  const tema =
+    temaSelecionado === "Outro" ? temaOutro : temaSelecionado;
   const formato = getStr(formData, "formato");
   const briefing = getStr(formData, "briefing");
   const n_slides_raw = parseInt(getStr(formData, "n_slides"), 10);
@@ -112,7 +117,14 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
     : 6;
 
   if (!titulo) backTo("/sindicompany/carrossel/novo", "Informe o título do carrossel.", formData);
-  if (!tema) backTo("/sindicompany/carrossel/novo", "Selecione o tema.", formData);
+  if (!temaSelecionado) backTo("/sindicompany/carrossel/novo", "Selecione o tema.", formData);
+  if (temaSelecionado === "Outro" && !temaOutro) {
+    backTo(
+      "/sindicompany/carrossel/novo",
+      "Descreva o tema na caixa de texto.",
+      formData,
+    );
+  }
   if (!formato) backTo("/sindicompany/carrossel/novo", "Selecione o formato.", formData);
 
   const input: CarrosselInput = {

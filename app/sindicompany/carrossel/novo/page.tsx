@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { DashboardShell } from "../../shell";
 import { iniciarCarrosselAction } from "../actions";
+import { TemaPicker } from "./tema-picker";
 
 const TEMAS = [
   "Direitos do morador",
@@ -96,15 +97,12 @@ export default async function NovoCarrosselPage({
             />
           </Field>
 
-          <Field label="Tema" hint="Assunto principal do carrossel.">
-            <select name="tema" defaultValue={v("tema")} required className={inputCls}>
-              <option value="">— Selecione —</option>
-              {TEMAS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+          <Field label="Tema" hint="Assunto principal do carrossel. Selecione 'Outro' pra digitar um tema livre.">
+            <TemaPicker
+              temas={TEMAS}
+              defaultTema={v("tema")}
+              defaultTemaOutro={v("tema_outro")}
+            />
           </Field>
 
           <Field label="Formato" hint="Como o conteúdo é apresentado.">
