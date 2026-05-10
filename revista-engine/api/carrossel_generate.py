@@ -429,23 +429,31 @@ def _slide_html(
     # Slides internos: cada slide ganha uma cor de fundo diferente,
     # ciclando pares e impares por listas separadas. Garante que
     # consecutivos nao repitam (pares cycle 2, impares cycle 3).
+    # Excecao: ULTIMO SLIDE (CTA) sempre fundo onix pra fechar o
+    # carrossel com peso de marca.
     is_cta = tipo == "cta" or slide_idx == total
-    pares = [p["mint"], p["sand"]]
-    impares = [p["lavender"], p["white"], p["gray_5"]]
-    if slide_idx % 2 == 0:
-        bg_color = pares[(slide_idx // 2 - 1) % len(pares)]
-    else:
-        bg_color = impares[((slide_idx - 1) // 2 - 1) % len(impares)]
-
-    fg_color = p["onix"]
-    # Accent: nas cores muito claras (white / gray_5) usa mint pra
-    # destacar; nas medias (mint / sand / lavender) usa onix solido.
-    if bg_color in (p["white"], p["gray_5"]):
+    if is_cta:
+        bg_color = p["onix"]
+        fg_color = p["white"]
         accent = p["mint"]
         accent_text = p["onix"]
     else:
-        accent = p["onix"]
-        accent_text = p["white"]
+        pares = [p["mint"], p["sand"]]
+        impares = [p["lavender"], p["white"], p["gray_5"]]
+        if slide_idx % 2 == 0:
+            bg_color = pares[(slide_idx // 2 - 1) % len(pares)]
+        else:
+            bg_color = impares[((slide_idx - 1) // 2 - 1) % len(impares)]
+
+        fg_color = p["onix"]
+        # Accent: nas cores muito claras (white / gray_5) usa mint pra
+        # destacar; nas medias (mint / sand / lavender) usa onix solido.
+        if bg_color in (p["white"], p["gray_5"]):
+            accent = p["mint"]
+            accent_text = p["onix"]
+        else:
+            accent = p["onix"]
+            accent_text = p["white"]
 
     badge_label = (
         "Sindicompany"
