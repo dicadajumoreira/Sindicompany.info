@@ -106,7 +106,7 @@ class Theme:
 
         local_paths: dict[int, Path] = {}
         if patterns_dir and patterns_dir.exists():
-            for i in range(1, 11):
+            for i in range(1, 21):
                 for ext in suportados:
                     p = patterns_dir / f"pattern-{i}{ext}"
                     if p.exists():
@@ -121,7 +121,7 @@ class Theme:
         if supabase_url:
             import urllib.error
             import urllib.request
-            for i in range(1, 11):
+            for i in range(1, 21):
                 if i in local_paths:
                     continue  # já tem local, pula remoto
                 for ext in (".png", ".jpg", ".jpeg", ".webp"):
@@ -154,7 +154,7 @@ class Theme:
                         break
 
         # Consolida em ordem 1..10, descartando slots vazios
-        for i in range(1, 11):
+        for i in range(1, 21):
             if i in local_paths:
                 encontrados_data_urls.append(self._image_to_data_url(local_paths[i]))
             elif i in remote_data_urls:

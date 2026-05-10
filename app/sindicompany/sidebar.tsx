@@ -3,17 +3,60 @@ import { logoutAction } from "./login/actions";
 
 interface NavItem {
   label: string;
-  href: string;
+  href?: string;
   emoji?: string;
+  children?: NavItem[];
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Revistas", href: "/sindicompany/dashboard", emoji: "📕" },
-  { label: "Editorial mensal", href: "/sindicompany/editorial", emoji: "📅" },
+  {
+    label: "Revistas",
+    href: "/sindicompany/dashboard",
+    emoji: "📕",
+    children: [
+      { label: "Edições", href: "/sindicompany/dashboard" },
+      { label: "Editorial mensal", href: "/sindicompany/editorial" },
+    ],
+  },
   { label: "Carrosséis", href: "/sindicompany/carrossel", emoji: "🎠" },
   { label: "Condomínios", href: "/sindicompany/condominios", emoji: "🏢" },
   { label: "Patterns", href: "/sindicompany/patterns", emoji: "🎨" },
 ];
+
+function renderItem(item: NavItem, depth = 0): React.ReactNode {
+  const padding = depth === 0 ? "px-3" : "pl-10 pr-3";
+  const fontSize = depth === 0 ? "text-sm font-medium" : "text-xs font-normal";
+  const opacity = depth === 0 ? "text-white/85" : "text-white/65";
+
+  const inner = (
+    <span className="flex items-center gap-3">
+      {item.emoji && <span className="text-base">{item.emoji}</span>}
+      <span>{item.label}</span>
+    </span>
+  );
+
+  return (
+    <div key={item.label}>
+      {item.href ? (
+        <Link
+          href={item.href}
+          className={`flex items-center ${padding} py-2 rounded-md ${fontSize} ${opacity} hover:bg-white/10 hover:text-white transition-colors`}
+        >
+          {inner}
+        </Link>
+      ) : (
+        <div className={`flex items-center ${padding} py-2 ${fontSize} ${opacity}`}>
+          {inner}
+        </div>
+      )}
+      {item.children && (
+        <div className="mt-0.5 mb-1 space-y-0.5">
+          {item.children.map((child) => renderItem(child, depth + 1))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SindicompanySidebar() {
   return (
@@ -23,7 +66,7 @@ export function SindicompanySidebar() {
         <img
           src="https://raw.githubusercontent.com/dicadajumoreira/Sindicompany/main/Logotipo%20Sindicompany%201.png"
           alt="Sindicompany"
-          className="h-8 w-auto mb-3 invert brightness-0 contrast-100"
+          className="h-8 w-auto mb-3"
           style={{ filter: "brightness(0) invert(1)" }}
         />
         <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-mint-400">
@@ -31,17 +74,8 @@ export function SindicompanySidebar() {
         </span>
       </Link>
 
-      <nav className="flex-1 flex flex-col gap-1">
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-white/85 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            {item.emoji && <span className="text-base">{item.emoji}</span>}
-            <span>{item.label}</span>
-          </Link>
-        ))}
+      <nav className="flex-1 flex flex-col gap-0.5">
+        {NAV_ITEMS.map((item) => renderItem(item))}
       </nav>
 
       <form action={logoutAction} className="pt-4 border-t border-white/10">

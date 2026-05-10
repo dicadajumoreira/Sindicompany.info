@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
-import { listPatternUrls } from "@/lib/sindicompany/condominios-db";
+import { listPatternUrls, PATTERN_MAX_SLOTS } from "@/lib/sindicompany/condominios-db";
 import { PatternSlot } from "./pattern-slot";
 import { DashboardShell } from "../shell";
 
@@ -13,7 +13,7 @@ export default async function PatternsPage() {
     redirect("/sindicompany/login");
   }
 
-  let urls: (string | null)[] = Array(10).fill(null);
+  let urls: (string | null)[] = Array(PATTERN_MAX_SLOTS).fill(null);
   try {
     urls = await listPatternUrls();
   } catch {
@@ -39,14 +39,14 @@ export default async function PatternsPage() {
         </h1>
         <p className="text-sm text-g60 max-w-2xl">
           Imagens que vão como detalhe sutil no fundo de todas as páginas
-          (com 6% de opacidade). Suba até 10 patterns — eles ciclam ao
+          (com baixa opacidade). Suba até 20 patterns — eles ciclam ao
           longo das páginas. Suportado: JPG, PNG, WebP. Máx 20MB cada.
           Recomenda-se imagens de pelo menos 1500px no maior lado.
         </p>
       </header>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((slot) => (
+        {Array.from({ length: PATTERN_MAX_SLOTS }, (_, i) => i + 1).map((slot) => (
           <PatternSlot
             key={slot}
             slot={slot}

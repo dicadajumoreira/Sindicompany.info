@@ -163,8 +163,8 @@ export async function getPatternUploadIntent(
   } catch {
     return { ok: false, error: "Sessao expirada. Faca login de novo." };
   }
-  if (!Number.isInteger(slot) || slot < 1 || slot > 10) {
-    return { ok: false, error: "Slot invalido (1 a 10)." };
+  if (!Number.isInteger(slot) || slot < 1 || slot > 20) {
+    return { ok: false, error: "Slot invalido (1 a 20)." };
   }
   const e = ext.toLowerCase().replace(/^\./, "");
   if (!ALLOWED_IMG_EXT.has(e)) {
