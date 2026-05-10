@@ -23,6 +23,7 @@ import {
 import {
   descreverCenaParaCapa,
   gerarTresCopies,
+  traduzirDescricaoUsuario,
 } from "@/lib/sindicompany/openai-text";
 
 const ALLOWED_IMG_EXT = new Set(["jpg", "jpeg", "png", "webp"]);
@@ -270,19 +271,26 @@ export async function generateFotoCapaWithAI(input: {
   const subtitulo = slide1?.body || "";
 
   // Pipeline 2 estágios pra evitar safety filter:
-  // 1) Se a editora descreveu a imagem, traduz a descricao dela pra
-  //    cena visual em ingles. Se nao descreveu, GPT-4o-mini deriva
-  //    a cena a partir da copy escolhida (titulo + body do slide 1).
-  // 2) Essa cena vira o subject do prompt do DALL-E. Tem fallback pro
-  //    builder antigo se a tradução falhar.
+  // 1a) Se a editora descreveu a imagem manualmente, traduz a descricao
+  //     dela com fidelidade (preserva detalhes, so neutraliza palavras
+  //     que DALL-E bloqueia).
+  // 1b) Se NAO descreveu, deriva uma cena a partir da copy escolhida
+  //     (titulo + body do slide 1). Esse caminho transforma temas
+  //     abstratos ("seguranca", "conflito") em cenas concretas.
+  // 2) A cena vira o Subject do prompt do DALL-E.
   let subject = "";
   const userDesc = (input.userPrompt ?? "").trim();
-  const cena = await descreverCenaParaCapa({
-    tema: carrossel.tema,
-    tituloCapa: userDesc || tituloCapa,
-    subtitulo: userDesc ? "" : subtitulo,
-  });
-  if (cena.ok) subject = cena.sceneEn;
+  if (userDesc) {
+    const t = await traduzirDescricaoUsuario(userDesc);
+    if (t.ok) subject = t.descEn;
+  } else {
+    const cena = await descreverCenaParaCapa({
+      tema: carrossel.tema,
+      tituloCapa,
+      subtitulo,
+    });
+    if (cena.ok) subject = cena.sceneEn;
+  }
 
   const prompt = subject
     ? `Ultra-realistic editorial photograph, 8K quality, hyper-detailed, ` +

@@ -139,6 +139,42 @@ export async function gerarTresCopies(input: {
   return { ok: true, copies: normalized };
 }
 
+/** Traduz fielmente a descricao livre que a editora escreveu na
+ *  textarea 'Descrever a imagem'. Diferente de descreverCenaParaCapa,
+ *  NAO inventa cena nem reduz detalhes — preserva pessoas, ambientes,
+ *  objetos, cores, climas que ela mencionou. So neutraliza palavras
+ *  que DALL-E bloqueia (violencia, armas, drogas, marcas comerciais).
+ *  Se nada precisar mudar, devolve traducao literal. */
+export async function traduzirDescricaoUsuario(
+  descPt: string,
+): Promise<{ ok: true; descEn: string } | { ok: false; error: string }> {
+  const prompt =
+    `Translate this Brazilian Portuguese photo description into English ` +
+    `for a DALL-E prompt. Rules:\n` +
+    `- Preserve EVERY visual detail the author wrote: people, age, ` +
+    `clothing, gender, environment, objects, colors, time of day, mood.\n` +
+    `- Do NOT add scenes or details the author did not mention.\n` +
+    `- Do NOT remove details (do not 'simplify').\n` +
+    `- Only neutralize words DALL-E blocks: replace weapons/violence/drugs/` +
+    `crime/illegal acts with neutral equivalents. Keep brand-free.\n` +
+    `- Output: a single English sentence/paragraph faithful to the original. ` +
+    `No quotes, no commentary.\n` +
+    `- Output JSON: {"desc_en": "..."}\n\n` +
+    `INPUT:\n${descPt}`;
+
+  const r = await chat(prompt);
+  if (!r.ok) return { ok: false, error: r.error };
+  let parsed: { desc_en?: string };
+  try {
+    parsed = JSON.parse(r.content);
+  } catch {
+    return { ok: false, error: "Traducao do prompt: JSON invalido." };
+  }
+  const desc = (parsed.desc_en ?? "").trim();
+  if (!desc) return { ok: false, error: "Traducao vazia." };
+  return { ok: true, descEn: desc };
+}
+
 /** Pega a copy escolhida (em pt-BR, podendo conter palavras "sensíveis"
  *  como conflito/inadimplência) e devolve UMA frase em inglês, neutra,
  *  100% visual/fotográfica, pronta pra alimentar o DALL-E sem disparar
