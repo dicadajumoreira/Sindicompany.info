@@ -358,16 +358,21 @@ export async function generateFotoCapaWithAI(input: {
   // DALL-E 3 só entrega 1024x1024, 1024x1792 ou 1792x1024 — nenhum é
   // 4:5. Pedimos vertical (1024x1792) e cropamos pro centro 4:5
   // (1024x1280) antes de salvar, que é a proporção do feed Instagram.
+  // sharp eh dep explicita em package.json — se falhar aqui o erro
+  // vira pra editora em vez de silenciar (antes salvavamos 1024x1792
+  // sem aviso, virou bug).
   try {
-    const { default: sharp } = await import("sharp");
+    const sharp = (await import("sharp")).default;
     bytes = await sharp(bytes)
       .resize({ width: 1024, height: 1280, fit: "cover", position: "centre" })
       .png()
       .toBuffer();
   } catch (e) {
-    // Se sharp falhar, segue com a imagem original — o engine Python
-    // ainda crop pra 4:5 quando compõe a capa.
-    console.warn("sharp crop falhou, usando imagem original:", e);
+    console.error("[carrossel] sharp crop falhou:", e);
+    return {
+      ok: false,
+      error: `Falha ao ajustar imagem pra 4:5: ${e instanceof Error ? e.message : String(e)}`,
+    };
   }
 
   let publicUrl: string;
