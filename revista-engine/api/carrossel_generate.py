@@ -97,6 +97,7 @@ def _pattern_for_slide(slide_idx: int) -> str:
 
 
 _ICON_CACHE: str | None = None
+_ICONS_LIST_CACHE: list[str] | None = None
 
 
 def _icon_data_url() -> str:
@@ -142,6 +143,58 @@ def _icon_data_url() -> str:
             break
     _ICON_CACHE = ""
     return ""
+
+
+def _icons_all_data_urls() -> list[str]:
+    """Baixa todos os icons em __icons/icon-{1..20}.X e devolve lista
+    de data URLs na ordem dos slots. Cache por processo. Slots vazios
+    sao pulados (sem buracos)."""
+    global _ICONS_LIST_CACHE
+    if _ICONS_LIST_CACHE is not None:
+        return _ICONS_LIST_CACHE
+    out: list[str] = []
+    base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    if not base:
+        _ICONS_LIST_CACHE = out
+        return out
+    for i in range(1, 21):
+        for ext in ("png", "svg", "webp", "jpg", "jpeg"):
+            url = (
+                f"{base}/storage/v1/object/public/"
+                f"condominios-fotos/__icons/icon-{i}.{ext}"
+            )
+            try:
+                req = urllib.request.Request(
+                    url, headers={"User-Agent": "carrossel-engine/1.0"}
+                )
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    if resp.status != 200:
+                        continue
+                    content = resp.read()
+                    ctype = (
+                        resp.headers.get("Content-Type", "image/png")
+                        .split(";")[0]
+                        .strip()
+                    )
+                b64 = base64.b64encode(content).decode("ascii")
+                out.append(f"data:{ctype};base64,{b64}")
+                break  # achou nessa ext, vai pro proximo i
+            except urllib.error.HTTPError:
+                continue
+            except Exception:  # noqa: BLE001
+                break
+    _ICONS_LIST_CACHE = out
+    print(f"[carrossel] {len(out)} icon(s) carregado(s)", flush=True)
+    return out
+
+
+def _icon_for_slide(slide_idx: int) -> str:
+    """Cicla entre icons disponiveis pelo indice do slide. String vazia
+    se nenhum icon existir."""
+    icons = _icons_all_data_urls()
+    if not icons:
+        return ""
+    return icons[(slide_idx - 1) % len(icons)]
 
 BUCKET = "condominios-fotos"
 SLIDE_W = 3072
@@ -518,7 +571,7 @@ def _slide_html(
         pagination_font = 77
         badge_font = 80
 
-    icon_url_internal = _icon_data_url()
+    icon_url_internal = _icon_for_slide(slide_idx)
     icon_img_internal = (
         f'<img class="brand-icon" src="{icon_url_internal}" alt="" />'
         if icon_url_internal
@@ -527,6 +580,17 @@ def _slide_html(
     icon_bg_div = (
         '<div class="icon-bg"></div>' if icon_url_internal else ""
     )
+    # Contraste: bg escuro (onix da CTA) inverte o icone pra branco;
+    # bg claro forca o icone a ficar preto solido. Garante leitura
+    # independente da cor original do icone subido.
+    bg_is_dark = bg_color == p["onix"]
+    icon_filter = (
+        "brightness(0) invert(1)" if bg_is_dark else "brightness(0)"
+    )
+    # Half-cropped bleed: alterna lado pra dar variedade visual.
+    # Pares = bleeds direita; impares = bleeds esquerda. Half do width
+    # fica fora da slide.
+    icon_bleed_side = "right" if slide_idx % 2 == 0 else "left"
 
     return f"""
 <!doctype html><html><head><meta charset="utf-8">
@@ -622,18 +686,22 @@ def _slide_html(
     object-fit: contain;
   }}
   .icon-bg {{
-    /* Icone grande de fundo a 15% opacity, sobreposto ao pattern.
-       Centralizado, sem repeat. Faz o slide ter respiração de marca
-       sem competir com o conteudo. */
+    /* Icone grande de fundo: 90% da largura do slide (~2765px),
+       half-cropped — metade pra fora do slide, alternando direita/
+       esquerda por paridade do indice. 15% opacity pra nao competir
+       com o conteudo. CSS filter forca preto/branco conforme a cor
+       do bg pra garantir contraste maximo. */
     position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 2200px; height: 2200px;
+    top: 50%;
+    {icon_bleed_side}: -1383px;
+    transform: translateY(-50%);
+    width: 2765px; height: 2765px;
     background-image: url('{icon_url_internal}');
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;
     opacity: 0.15;
+    filter: {icon_filter};
     pointer-events: none;
   }}
 </style></head>
