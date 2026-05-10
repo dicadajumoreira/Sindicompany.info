@@ -522,12 +522,6 @@ def _slide_html(
         icon_img = (
             f'<img class="brand-icon" src="{icon_url}" alt="" />' if icon_url else ""
         )
-        # Pattern de fundo na capa (mesma logica dos demais slides):
-        # uma instancia que cobre o slide, opacity 10%, sobre a foto.
-        capa_pattern_url = _pattern_for_slide(1)
-        capa_pattern_div = (
-            '<div class="pattern-bg-capa"></div>' if capa_pattern_url else ""
-        )
         return f"""
 <!doctype html><html><head><meta charset="utf-8">
 <link href="{epilogue_url}" rel="stylesheet">
@@ -554,18 +548,6 @@ def _slide_html(
     background: radial-gradient(ellipse at center,
       transparent 50%,
       rgba(26,28,41,0.45) 100%);
-    pointer-events: none;
-  }}
-  .pattern-bg-capa {{
-    /* Pattern da marca em 10% sobre a foto da capa. Mesma regra
-       dos slides internos: cover preserva aspect ratio, no-repeat,
-       centralizado. Fica entre a foto e o overlay. */
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-image: url('{capa_pattern_url}');
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: cover;
-    opacity: 0.10;
     pointer-events: none;
   }}
   .overlay {{
@@ -657,7 +639,6 @@ def _slide_html(
 </style></head>
 <body>
   {bg}
-  {capa_pattern_div}
   <div class="vignette"></div>
   <div class="overlay"></div>
   <div class="content">
