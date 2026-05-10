@@ -22,6 +22,7 @@ import base64
 import io
 import json
 import os
+import random
 import sys
 import traceback
 import urllib.error
@@ -87,10 +88,31 @@ def _patterns_data_urls() -> list[str]:
     return out
 
 
+_PATTERNS_SHUFFLED_CACHE: list[str] | None = None
+
+
+def _patterns_shuffled() -> list[str]:
+    """Mesma lista de _patterns_data_urls(), mas embaralhada uma vez
+    por processo. Como o engine roda um processo novo por carrossel
+    (workflow GitHub Actions), cada carrossel pega uma ordem diferente
+    — evita 'sempre os mesmos patterns na mesma posicao'.
+
+    Dentro do mesmo carrossel, a ordem e estavel — todos os slides
+    leem da mesma lista embaralhada, garantindo variedade entre
+    adjacentes."""
+    global _PATTERNS_SHUFFLED_CACHE
+    if _PATTERNS_SHUFFLED_CACHE is not None:
+        return _PATTERNS_SHUFFLED_CACHE
+    base = list(_patterns_data_urls())
+    random.shuffle(base)
+    _PATTERNS_SHUFFLED_CACHE = base
+    return base
+
+
 def _pattern_for_slide(slide_idx: int) -> str:
-    """Devolve uma data URL ciclando entre patterns disponiveis pelo
+    """Devolve uma data URL ciclando entre patterns aleatorizados pelo
     indice do slide, ou string vazia se nenhum pattern existir."""
-    pats = _patterns_data_urls()
+    pats = _patterns_shuffled()
     if not pats:
         return ""
     return pats[(slide_idx - 1) % len(pats)]
