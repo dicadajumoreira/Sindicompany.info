@@ -75,24 +75,26 @@ async function maybeUploadLogo(
   fd: FormData,
   field: string,
   slug: string,
+  kind: "sindico" | "condominio",
 ): Promise<string | null> {
   const file = fd.get(field);
   if (!(file instanceof File) || file.size === 0) return null;
 
+  const label = kind === "condominio" ? "Logo do condomínio" : "Logo do síndico";
   if (file.size > MAX_PHOTO_BYTES) {
-    backWithError(slug, "Logo maior que 5MB.");
+    backWithError(slug, `${label} maior que 5MB.`);
   }
   if (!ALLOWED_TYPES.has(file.type)) {
-    backWithError(slug, "Logo precisa ser JPG, PNG ou WebP.");
+    backWithError(slug, `${label} precisa ser JPG, PNG ou WebP.`);
   }
 
   const buf = Buffer.from(await file.arrayBuffer());
   const ext = EXT_BY_TYPE[file.type];
   try {
-    return await uploadCondoLogo(slug, buf, file.type, ext);
+    return await uploadCondoLogo(slug, buf, file.type, ext, kind);
   } catch (e) {
     const msg = describeError(e);
-    backWithError(slug, `Falha ao subir logo: ${msg}`);
+    backWithError(slug, `Falha ao subir ${label.toLowerCase()}: ${msg}`);
   }
 }
 
@@ -133,17 +135,21 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   if (!sindico_genero) backWithError(slug, "Selecione o gênero do(a) síndico(a).");
 
   const sindicoFotoExistente = getStr(formData, "sindico_foto_existente");
-  const logoExistente = getStr(formData, "logo_existente");
+  const logoSindicoExistente = getStr(formData, "logo_sindico_existente");
+  const logoCondominioExistente = getStr(formData, "logo_condominio_existente");
 
   const novaFotoSindico = await maybeUploadFoto(formData, "sindico_foto", slug, "sindico");
-  const novoLogo = await maybeUploadLogo(formData, "logo_file", slug);
+  const novoLogoSindico = await maybeUploadLogo(formData, "logo_sindico_file", slug, "sindico");
+  const novoLogoCondominio = await maybeUploadLogo(formData, "logo_condominio_file", slug, "condominio");
 
   const input: CondoMetaInput = {
     nome,
     sindico_nome,
     sindico_genero,
     sindico_foto_path: novaFotoSindico ?? sindicoFotoExistente ?? null,
-    logo_url: novoLogo ?? logoExistente ?? null,
+    logo_url: novoLogoSindico ?? logoSindicoExistente ?? null,
+    logo_condominio_url:
+      novoLogoCondominio ?? logoCondominioExistente ?? null,
   };
 
   try {

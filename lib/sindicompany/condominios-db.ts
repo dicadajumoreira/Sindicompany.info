@@ -15,7 +15,10 @@ export interface CondoMeta {
   sindico_nome: string | null;
   sindico_genero: Genero | null;
   sindico_foto_path: string | null;
+  /** Logo do(a) sindico(a) — default usado na capa/contracapa da revista. */
   logo_url: string | null;
+  /** Logotipo oficial do condominio — opcional, nao substitui o do sindico. */
+  logo_condominio_url: string | null;
   // Campos de gestor abaixo são deprecated em condo_meta — moved to revistas.
   // Mantidos no schema só pra não quebrar dados antigos.
   tem_gestor: boolean;
@@ -30,6 +33,7 @@ export interface CondoMetaInput {
   sindico_genero?: Genero;
   sindico_foto_path?: string | null;
   logo_url?: string | null;
+  logo_condominio_url?: string | null;
 }
 
 export async function getCondoMeta(nome: string): Promise<CondoMeta | null> {
@@ -61,6 +65,7 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
         sindico_genero: input.sindico_genero ?? null,
         sindico_foto_path: input.sindico_foto_path ?? null,
         logo_url: input.logo_url ?? null,
+        logo_condominio_url: input.logo_condominio_url ?? null,
       },
       { onConflict: "nome" },
     )
@@ -297,14 +302,17 @@ export async function uploadManutencaoZip(
   return data.publicUrl;
 }
 
-/** Sobe logotipo do condomínio e retorna URL pública. */
+/** Sobe logotipo (do sindico ou do condominio) e retorna URL pública.
+ *  O `kind` vai pro nome do arquivo pra ficar facil identificar visualmente
+ *  no Storage. Default 'sindico' pra compatibilidade com chamadas antigas. */
 export async function uploadCondoLogo(
   slug: string,
   bytes: Buffer,
   contentType: string,
   ext: string,
+  kind: "sindico" | "condominio" = "sindico",
 ): Promise<string> {
-  const path = `${slug}/logo-${Date.now()}.${ext}`;
+  const path = `${slug}/logo-${kind}-${Date.now()}.${ext}`;
   const supabase = createAdminClient();
   const { error } = await supabase.storage
     .from(BUCKET)

@@ -149,27 +149,31 @@ export default async function EditarCondoPage({
           </Field>
         </section>
 
-        {/* ============ LOGOTIPO DO CONDOMÍNIO ============ */}
+        {/* ============ LOGOTIPO DO SÍNDICO ============ */}
         <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
-            Logotipo do condomínio
+            Logotipo do síndico
           </h2>
           <p className="text-xs text-g60 -mt-3">
-            Vai aparecer no lugar do logo Sindicompany na capa e
-            contracapa da revista deste condomínio.
+            Default usado nas revistas (capa e contracapa). Substitui o logo
+            Sindicompany quando preenchido.
           </p>
 
           <Field
             label="Logo"
-            hint="JPG, PNG ou WebP transparente. Máx 5MB. Use o logo oficial do condomínio."
+            hint="JPG, PNG ou WebP transparente. Máx 5MB."
           >
-            <input type="hidden" name="logo_existente" value={meta?.logo_url ?? ""} />
+            <input
+              type="hidden"
+              name="logo_sindico_existente"
+              value={meta?.logo_url ?? ""}
+            />
             {meta?.logo_url && (
               <div className="mb-3 flex items-start gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={meta.logo_url}
-                  alt={`Logo de ${nome}`}
+                  alt={`Logo do síndico de ${nome}`}
                   className="rounded-lg object-contain bg-onix-50 w-32 h-20 border border-onix-100 p-2"
                 />
                 <span className="text-xs text-g60 mt-1">
@@ -179,7 +183,49 @@ export default async function EditarCondoPage({
             )}
             <input
               type="file"
-              name="logo_file"
+              name="logo_sindico_file"
+              accept="image/jpeg,image/png,image/webp"
+              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+            />
+          </Field>
+        </section>
+
+        {/* ============ LOGOTIPO DO CONDOMÍNIO ============ */}
+        <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
+            Logotipo do condomínio
+          </h2>
+          <p className="text-xs text-g60 -mt-3">
+            Logo oficial do condomínio (placa, fachada, identidade visual).
+            Não substitui o do síndico na revista — fica disponível pra usos
+            específicos (peças avulsas, comunicados, etc).
+          </p>
+
+          <Field
+            label="Logo"
+            hint="JPG, PNG ou WebP transparente. Máx 5MB."
+          >
+            <input
+              type="hidden"
+              name="logo_condominio_existente"
+              value={meta?.logo_condominio_url ?? ""}
+            />
+            {meta?.logo_condominio_url && (
+              <div className="mb-3 flex items-start gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={meta.logo_condominio_url}
+                  alt={`Logo do condomínio ${nome}`}
+                  className="rounded-lg object-contain bg-onix-50 w-32 h-20 border border-onix-100 p-2"
+                />
+                <span className="text-xs text-g60 mt-1">
+                  Logo atual. Suba um novo abaixo para substituir.
+                </span>
+              </div>
+            )}
+            <input
+              type="file"
+              name="logo_condominio_file"
               accept="image/jpeg,image/png,image/webp"
               className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
             />
