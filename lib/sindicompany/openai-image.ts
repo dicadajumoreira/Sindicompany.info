@@ -37,10 +37,31 @@ export async function generateImage(
   prompt: string,
   opts: DalleOptions = {},
 ): Promise<DalleResult | DalleError> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  // Sanitiza a chave: trim de whitespace/quebras de linha + remove
+  // prefixo 'Bearer ' se a editora colou já com header.
+  const rawKey = (process.env.OPENAI_API_KEY ?? "").trim();
+  const apiKey = rawKey.replace(/^Bearer\s+/i, "");
   if (!apiKey) {
     return { ok: false, error: "OPENAI_API_KEY ausente nas variáveis de ambiente." };
   }
+  if (!apiKey.startsWith("sk-")) {
+    return {
+      ok: false,
+      error: "OPENAI_API_KEY não começa com 'sk-' (formato inválido). Verifique a variável no Vercel.",
+    };
+  }
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
+  };
+  // Project keys (sk-proj-...) podem exigir org/project explícito
+  // dependendo da config da conta. Se as envs estiverem setadas,
+  // anexa.
+  const orgId = (process.env.OPENAI_ORGANIZATION ?? "").trim();
+  if (orgId) headers["OpenAI-Organization"] = orgId;
+  const projId = (process.env.OPENAI_PROJECT ?? "").trim();
+  if (projId) headers["OpenAI-Project"] = projId;
 
   const body = {
     model: "dall-e-3",
@@ -56,10 +77,7 @@ export async function generateImage(
   try {
     res = await fetch(OPENAI_API, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers,
       body: JSON.stringify(body),
     });
   } catch (e) {
@@ -76,6 +94,17 @@ export async function generateImage(
       detail = j?.error?.message ?? JSON.stringify(j);
     } catch {
       detail = await res.text().catch(() => "");
+    }
+    // Mensagens mais úteis pra status codes comuns
+    if (res.status === 401) {
+      const isProjKey = apiKey.startsWith("sk-proj-");
+      const dica = isProjKey
+        ? "Sua chave é do tipo 'project' (sk-proj-...). Defina também as variáveis OPENAI_PROJECT (proj_...) e/ou OPENAI_ORGANIZATION (org_...) no Vercel."
+        : "Verifique se OPENAI_API_KEY está correta no Vercel (sem espaços, sem aspas) e se a conta tem créditos.";
+      return {
+        ok: false,
+        error: `OpenAI 401 (auth inválida): ${detail.slice(0, 160)}. ${dica}`,
+      };
     }
     return {
       ok: false,
