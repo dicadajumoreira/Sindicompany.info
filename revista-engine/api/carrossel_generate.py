@@ -189,6 +189,32 @@ def _upload_png(carrossel_id: str, slide_idx: int, png_bytes: bytes) -> str:
     return pub.get("publicUrl") if isinstance(pub, dict) else str(pub)
 
 
+def _upload_slides_zip(
+    carrossel_id: str, png_bytes_por_slide: list[bytes]
+) -> str:
+    """Empacota todos os PNGs em um ZIP e sobe pro bucket. Devolve URL
+    publica. Cada PNG vai como slide-N.png (mesma convencao dos
+    individuais)."""
+    import zipfile
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_STORED) as zf:
+        for i, png in enumerate(png_bytes_por_slide, start=1):
+            zf.writestr(f"slide-{i}.png", png)
+    zip_bytes = buf.getvalue()
+    sb = _sb_client()
+    path = f"__carrosseis/{carrossel_id}/slides.zip"
+    sb.storage.from_(BUCKET).upload(
+        path=path,
+        file=zip_bytes,
+        file_options={"content-type": "application/zip", "upsert": "true"},
+    )
+    pub = sb.storage.from_(BUCKET).get_public_url(path)
+    if isinstance(pub, str):
+        return pub
+    return pub.get("publicUrl") if isinstance(pub, dict) else str(pub)
+
+
 # =============================================================================
 # Copy generation (GPT)
 # =============================================================================
@@ -703,6 +729,7 @@ def gerar_carrossel(carrossel_id: str) -> int:
         # 2. Render + upload de cada slide
         n_total = len(slides)
         png_urls: list[str] = []
+        png_bytes_list: list[bytes] = []
         foto_capa = (carrossel.get("foto_capa_url") or "").strip()
 
         for i, s in enumerate(slides, start=1):
@@ -719,12 +746,22 @@ def gerar_carrossel(carrossel_id: str) -> int:
             png = _render_slide_png(html)
             url = _upload_png(carrossel_id, i, png)
             png_urls.append(url)
+            png_bytes_list.append(png)
             print(f"[carrossel] slide {i} salvo: {url[:80]}", flush=True)
+
+        # 2b. Empacota todos os PNGs num ZIP pra download de uma vez
+        zip_url = ""
+        try:
+            zip_url = _upload_slides_zip(carrossel_id, png_bytes_list)
+            print(f"[carrossel] zip salvo: {zip_url[:80]}", flush=True)
+        except Exception as e:  # noqa: BLE001
+            print(f"[carrossel] falha ao subir zip (segue sem): {e}", flush=True)
 
         # 3. Atualiza registro
         from datetime import datetime, timezone
         _update_carrossel(carrossel_id, {
             "png_paths": png_urls,
+            "zip_url": zip_url or None,
             "legenda": legenda,
             "status": "publicada",
             "gerado_em": datetime.now(timezone.utc).isoformat(),

@@ -23,6 +23,7 @@ export interface Carrossel {
   n_slides: number;
   status: CarrosselStatus;
   png_paths: string[] | null;
+  zip_url: string | null;
   legenda: string | null;
   erro_mensagem: string | null;
   gerado_em: string | null;

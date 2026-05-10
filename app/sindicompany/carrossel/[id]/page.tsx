@@ -153,16 +153,27 @@ export default async function CarrosselDetailPage({
         {/* Slides gerados */}
         {slides.length > 0 && (
           <section className="mb-6">
-            <div className="flex items-center justify-between mb-3 gap-3">
+            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
               <h2 className="text-xs uppercase tracking-wider text-mint-700 font-semibold">
                 Slides ({slides.length})
               </h2>
-              <a
-                href={`/sindicompany/carrossel/${carrossel.id}/preview`}
-                className="inline-flex items-center px-3 py-1.5 rounded-lg bg-mint-600 text-white text-sm font-medium hover:bg-mint-700"
-              >
-                ▶ Abrir carrossel
-              </a>
+              <div className="flex items-center gap-2">
+                {carrossel.zip_url && (
+                  <a
+                    href={carrossel.zip_url}
+                    download
+                    className="inline-flex items-center px-3 py-1.5 rounded-lg border border-onix-200 bg-white hover:bg-onix-50 text-onix-900 text-sm font-medium"
+                  >
+                    ⬇ Baixar ZIP
+                  </a>
+                )}
+                <a
+                  href={`/sindicompany/carrossel/${carrossel.id}/preview`}
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg bg-mint-600 text-white text-sm font-medium hover:bg-mint-700"
+                >
+                  ▶ Abrir carrossel
+                </a>
+              </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {slides.map((url, i) => (
