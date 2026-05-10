@@ -503,14 +503,14 @@ def _slide_html(
     position: relative;
   }}
   .pattern-bg {{
-    /* Pattern da marca em 5% como textura de fundo nos slides internos.
+    /* Pattern da marca em 10% como textura de fundo nos slides internos.
        Tile 800px pra o desenho aparecer claramente em 4K sem ficar
        tao denso que polua o conteudo. */
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     background-image: url('{pattern_url}');
     background-repeat: repeat;
     background-size: 800px 800px;
-    opacity: 0.05;
+    opacity: 0.10;
     pointer-events: none;
   }}
   .corner {{
