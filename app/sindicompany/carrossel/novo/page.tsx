@@ -137,6 +137,23 @@ export default async function NovoCarrosselPage({
           </Field>
 
           <Field
+            label="Quantidade de slides"
+            hint="De 1 a 10. Recomendado: 5 a 7. Mais slides exigem briefing mais detalhado."
+          >
+            <select
+              name="n_slides"
+              defaultValue={v("n_slides") || "6"}
+              className={inputCls}
+            >
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>
+                  {n} slide{n > 1 ? "s" : ""}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field
             label="Foto da capa"
             hint="Imagem real (pessoa, cotidiano, ambiente). Será o slide 1 com texto na metade de baixo. Recomendado: 4:5, alta resolução."
           >

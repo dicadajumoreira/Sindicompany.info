@@ -90,6 +90,10 @@ export async function novoCarrosselAction(formData: FormData): Promise<void> {
   const formato = getStr(formData, "formato");
   const briefing = getStr(formData, "briefing");
   const foto_capa_url = getStr(formData, "foto_capa_url_uploaded") || undefined;
+  const n_slides_raw = parseInt(getStr(formData, "n_slides"), 10);
+  const n_slides = Number.isFinite(n_slides_raw)
+    ? Math.max(1, Math.min(10, n_slides_raw))
+    : 6;
 
   if (!titulo) backWithError("Informe o título do carrossel.", formData);
   if (!tema) backWithError("Selecione o tema.", formData);
@@ -101,6 +105,7 @@ export async function novoCarrosselAction(formData: FormData): Promise<void> {
     formato,
     briefing: briefing || undefined,
     foto_capa_url,
+    n_slides,
   };
 
   let carrossel;

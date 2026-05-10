@@ -113,6 +113,9 @@ export default async function CarrosseisPage() {
                     Formato
                   </th>
                   <th className="text-left font-semibold text-onix-900 px-5 py-3">
+                    Slides
+                  </th>
+                  <th className="text-left font-semibold text-onix-900 px-5 py-3">
                     Status
                   </th>
                   <th className="text-left font-semibold text-onix-900 px-5 py-3">
@@ -136,6 +139,7 @@ export default async function CarrosseisPage() {
                     </td>
                     <td className="px-5 py-3 text-g60">{c.tema ?? "—"}</td>
                     <td className="px-5 py-3 text-g60">{c.formato ?? "—"}</td>
+                    <td className="px-5 py-3 text-g60">{c.n_slides ?? 6}</td>
                     <td className="px-5 py-3">
                       <span
                         className={`inline-block px-2.5 py-0.5 rounded text-xs font-semibold ${STATUS_CLASSES[c.status]}`}

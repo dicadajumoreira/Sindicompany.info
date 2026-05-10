@@ -55,6 +55,7 @@ export default async function CarrosselDetailPage({
         <section className="rounded-xl border border-onix-100 bg-white p-6 space-y-4">
           <Field label="Tema" value={carrossel.tema} />
           <Field label="Formato" value={carrossel.formato} />
+          <Field label="Slides" value={`${carrossel.n_slides ?? 6} slide${(carrossel.n_slides ?? 6) > 1 ? "s" : ""}`} />
           <Field label="Status" value={carrossel.status} />
           {carrossel.foto_capa_url && (
             <div>

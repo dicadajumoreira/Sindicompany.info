@@ -9,6 +9,7 @@ export interface Carrossel {
   formato: string | null;
   briefing: string | null;
   foto_capa_url: string | null;
+  n_slides: number;
   status: CarrosselStatus;
   png_paths: string[] | null;
   legenda: string | null;
@@ -24,6 +25,7 @@ export interface CarrosselInput {
   formato?: string;
   briefing?: string;
   foto_capa_url?: string;
+  n_slides?: number;
 }
 
 const TABLE = "carrosseis";
