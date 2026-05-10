@@ -18,7 +18,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Editorial mensal", href: "/sindicompany/editorial" },
     ],
   },
-  { label: "Carrosséis", href: "/sindicompany/carrossel", emoji: "🎠" },
+  { label: "@sindicompanybr", href: "/sindicompany/carrossel", emoji: "🎠" },
   { label: "Condomínios", href: "/sindicompany/condominios", emoji: "🏢" },
   {
     label: "Assets Sindicompany",
