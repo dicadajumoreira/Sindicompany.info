@@ -629,10 +629,10 @@ def _slide_html(
     object-fit: contain;
   }}
   .logo-top {{
-    /* Logo 5 da marca no topo de TODOS os slides, centralizado. */
+    /* Logo 5 da marca no topo de TODOS os slides, alinhado a
+       esquerda (mesmo padding horizontal de .handle e .content). */
     position: absolute;
-    top: 100px; left: 50%;
-    transform: translateX(-50%);
+    top: 100px; left: 180px;
     width: 700px; max-height: 220px;
     object-fit: contain;
     z-index: 5;
@@ -841,10 +841,10 @@ def _slide_html(
     object-fit: contain;
   }}
   .logo-top {{
-    /* Logo 5 da marca no topo de TODOS os slides, centralizado. */
+    /* Logo 5 da marca no topo de TODOS os slides, alinhado a
+       esquerda (mesmo padding horizontal de .handle e .content). */
     position: absolute;
-    top: 100px; left: 50%;
-    transform: translateX(-50%);
+    top: 100px; left: 180px;
     width: 700px; max-height: 220px;
     object-fit: contain;
     z-index: 5;
