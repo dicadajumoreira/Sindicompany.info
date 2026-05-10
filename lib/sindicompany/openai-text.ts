@@ -138,3 +138,44 @@ export async function gerarTresCopies(input: {
   });
   return { ok: true, copies: normalized };
 }
+
+/** Pega a copy escolhida (em pt-BR, podendo conter palavras "sensíveis"
+ *  como conflito/inadimplência) e devolve UMA frase em inglês, neutra,
+ *  100% visual/fotográfica, pronta pra alimentar o DALL-E sem disparar
+ *  os filtros de safety. */
+export async function descreverCenaParaCapa(input: {
+  tema: string | null;
+  tituloCapa: string;
+  subtitulo: string;
+}): Promise<{ ok: true; sceneEn: string } | { ok: false; error: string }> {
+  const prompt =
+    `Convert this Brazilian Instagram carousel cover into a single English ` +
+    `sentence describing a concrete photographable SCENE for a documentary ` +
+    `editorial photo. Rules:\n` +
+    `- One sentence, max 35 words.\n` +
+    `- Concrete visible objects/setting only (lobby, garden, hallway, ` +
+    `balcony, kitchen, common area, plants, daylight, etc).\n` +
+    `- No abstract concepts (no "security", "conflict", "justice", ` +
+    `"crisis", "debt", "violence"). Translate any negative theme into a ` +
+    `neutral everyday scene about Brazilian condominium life.\n` +
+    `- People (if any): adults in everyday clothes, calm body language, ` +
+    `no weapons, no fighting, no medical emergencies.\n` +
+    `- No brand names, no logos, no text in the image.\n` +
+    `- Output JSON: {"scene_en": "..."}\n\n` +
+    `INPUT (Portuguese):\n` +
+    `Tema: ${input.tema ?? "—"}\n` +
+    `Capa título: ${input.tituloCapa}\n` +
+    `Capa subtítulo: ${input.subtitulo || "—"}`;
+
+  const r = await chat(prompt);
+  if (!r.ok) return { ok: false, error: r.error };
+  let parsed: { scene_en?: string };
+  try {
+    parsed = JSON.parse(r.content);
+  } catch {
+    return { ok: false, error: "Descrição da cena: JSON inválido." };
+  }
+  const scene = (parsed.scene_en ?? "").trim();
+  if (!scene) return { ok: false, error: "Descrição vazia." };
+  return { ok: true, sceneEn: scene };
+}

@@ -19,7 +19,10 @@ import {
   downloadImageBytes,
   generateImage,
 } from "@/lib/sindicompany/openai-image";
-import { gerarTresCopies } from "@/lib/sindicompany/openai-text";
+import {
+  descreverCenaParaCapa,
+  gerarTresCopies,
+} from "@/lib/sindicompany/openai-text";
 
 const ALLOWED_IMG_EXT = new Set(["jpg", "jpeg", "png", "webp"]);
 
@@ -229,12 +232,29 @@ export async function generateFotoCapaWithAI(input: {
   const tituloCapa = slide1?.titulo || carrossel.titulo;
   const subtitulo = slide1?.body || "";
 
-  // Prompt minimalista (já sanitizado em buildCarrosselPromptSafe).
-  // Inclui o título da capa pra contextualizar a foto.
-  const prompt = buildCarrosselPromptSafe({
-    titulo: `${tituloCapa}${subtitulo ? `. ${subtitulo}` : ""}`,
+  // Pipeline 2 estágios pra evitar safety filter:
+  // 1) GPT-4o-mini converte a copy pt-BR (que pode ter palavras como
+  //    "conflito", "inadimplência") numa frase visual neutra em inglês.
+  // 2) Essa cena vira o subject do prompt do DALL-E. Tem fallback pro
+  //    builder antigo se a tradução falhar.
+  let subject = "";
+  const cena = await descreverCenaParaCapa({
     tema: carrossel.tema,
+    tituloCapa,
+    subtitulo,
   });
+  if (cena.ok) subject = cena.sceneEn;
+
+  const prompt = subject
+    ? `Editorial photograph for Brazilian Instagram cover (4:5 vertical). ` +
+      `Scene: ${subject} ` +
+      `Style: candid documentary photo, real Brazilian residential building setting, ` +
+      `natural daylight, shallow depth of field, photorealistic, no text, no logos, ` +
+      `composition leaves the bottom half slightly less busy.`
+    : buildCarrosselPromptSafe({
+        titulo: tituloCapa,
+        tema: carrossel.tema,
+      });
 
   const result = await generateImage(prompt, {
     size: "1024x1792",
