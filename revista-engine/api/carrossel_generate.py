@@ -645,12 +645,10 @@ def _slide_html(
     icon_bg_div = (
         '<div class="icon-bg"></div>' if icon_url_internal else ""
     )
-    # Brand-icon do canto inferior direito: por padrao usa o mesmo
-    # da Fundo Carrossel; CTA forca Icon 6 (slot 6 em __icons/).
-    if is_cta:
-        corner_url = _icon_slot_data_url(6)
-    else:
-        corner_url = icon_url_internal
+    # Brand-icon do canto inferior direito: SO aparece em CTA (Icon 6
+    # em __icons/). Slides internos comuns ficam sem corner — Fundo
+    # Carrossel eh exclusivo da camada de fundo (.icon-bg).
+    corner_url = _icon_slot_data_url(6) if is_cta else ""
     icon_img_internal = (
         f'<img class="brand-icon" src="{corner_url}" alt="" />'
         if corner_url
