@@ -11,6 +11,7 @@ import {
   type CarrosselInput,
 } from "@/lib/sindicompany/carrosseis";
 import { describeError } from "@/lib/sindicompany/errors";
+import { dispatchGenerateCarrossel } from "@/lib/sindicompany/engine";
 import {
   buildCarrosselPrompt,
   downloadImageBytes,
@@ -115,8 +116,19 @@ export async function novoCarrosselAction(formData: FormData): Promise<void> {
     backWithError(`Falha ao criar carrossel: ${describeError(e)}`, formData);
   }
 
+  // Dispara automaticamente o workflow de geração dos PNGs (fire and forget).
+  // Se GITHUB_DISPATCH_TOKEN não estiver setada, vira no-op com warning.
+  await dispatchGenerateCarrossel(carrossel.id);
+
   revalidatePath("/sindicompany/carrossel");
   redirect(`/sindicompany/carrossel/${carrossel.id}`);
+}
+
+/** Re-dispara a geração (pra retry depois de erro ou regerar com inputs novos). */
+export async function regenerateCarrosselAction(carrosselId: string): Promise<void> {
+  await requireAuth();
+  await dispatchGenerateCarrossel(carrosselId);
+  revalidatePath(`/sindicompany/carrossel/${carrosselId}`);
 }
 
 interface GenerateFotoOk {

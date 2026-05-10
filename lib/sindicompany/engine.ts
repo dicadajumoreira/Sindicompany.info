@@ -61,3 +61,50 @@ export async function dispatchGenerateRevista(revistaId: string): Promise<Dispat
     return { triggered: false, reason: "network" };
   }
 }
+
+const CARROSSEL_WORKFLOW_FILE = "generate-carrossel.yml";
+
+/** Dispara o workflow de geração dos PNGs do carrossel Instagram.
+ *  Mesma estratégia do dispatchGenerateRevista — fire and forget. */
+export async function dispatchGenerateCarrossel(
+  carrosselId: string,
+): Promise<DispatchResult> {
+  const token = process.env.GITHUB_DISPATCH_TOKEN;
+  const repo = process.env.GITHUB_REPO;
+
+  if (!token || !repo) {
+    console.warn(
+      "[engine] GITHUB_DISPATCH_TOKEN ou GITHUB_REPO ausente — carrossel não disparado",
+    );
+    return { triggered: false, reason: "missing-env" };
+  }
+
+  const url = `https://api.github.com/repos/${repo}/actions/workflows/${CARROSSEL_WORKFLOW_FILE}/dispatches`;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: JSON.stringify({
+        ref: REF,
+        inputs: { carrossel_id: carrosselId },
+      }),
+    });
+
+    if (res.status === 204) {
+      console.log(`[engine] disparou workflow pra carrossel ${carrosselId}`);
+      return { triggered: true };
+    }
+
+    const text = await res.text();
+    console.error(`[engine] dispatch carrossel falhou (${res.status}):`, text);
+    return { triggered: false, reason: `gh-${res.status}` };
+  } catch (e) {
+    console.error("[engine] erro de rede no dispatch carrossel:", e);
+    return { triggered: false, reason: "network" };
+  }
+}
