@@ -555,12 +555,15 @@ def _slide_html(
   .pattern-bg-cta {{
     /* CTA: Pattern 1 no tamanho ORIGINAL, centralizado, sem resize
        nem repeat. Onix #1A1C29 do body aparece nas bordas se o
-       pattern for menor que o slide. */
+       pattern for menor que o slide. Opacity 0.90 = 10% transparente
+       (deixa o pattern dominante mas suaviza um toque pra o texto
+       branco respirar). */
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     background-image: url('{pattern_url}');
     background-repeat: no-repeat;
     background-position: center center;
     background-size: auto;
+    opacity: 0.90;
     pointer-events: none;
   }}
   .corner {{
@@ -624,14 +627,6 @@ def _slide_html(
     color: {accent};
     letter-spacing: 0.08em;
   }}
-  .pagination {{
-    position: absolute;
-    bottom: 220px; right: 180px;
-    font-size: {pagination_font}px;
-    font-weight: 700;
-    color: {fg_color};
-    opacity: 0.55;
-  }}
   .brand-icon {{
     /* Icone da marca no canto inferior direito de cada slide.
        Slot 1 em __icons/icon-1 — fica vazio se nao houver. */
@@ -650,7 +645,6 @@ def _slide_html(
     {body_html}
   </div>
   <div class="handle">@sindicompanybr</div>
-  <div class="pagination">{slide_idx} / {total}</div>
   {icon_img_internal}
 </body></html>
 """
