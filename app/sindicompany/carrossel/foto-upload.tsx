@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   generateFotoCapaWithAI,
@@ -10,6 +10,7 @@ import {
 const BUCKET = "condominios-fotos";
 
 export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [url, setUrl] = useState(initialUrl ?? "");
   const [status, setStatus] = useState<
     "idle" | "uploading" | "generating" | "ok" | "error"
@@ -60,21 +61,23 @@ export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
     setErrorMsg("");
     setRevisedPrompt("");
     setFilename("");
-    setStatus("generating");
 
-    // Lê tema/formato/briefing/titulo do form pai
-    const form = document.querySelector<HTMLFormElement>("form");
+    // Lê tema/formato/briefing/titulo do form pai (o `closest`
+    // garante que pegamos o form do carrossel, não o de logout
+    // da sidebar).
+    const form = rootRef.current?.closest("form");
     const data = form ? new FormData(form) : null;
-    const titulo = (data?.get("titulo") as string) ?? "";
-    const tema = (data?.get("tema") as string) ?? "";
-    const formato = (data?.get("formato") as string) ?? "";
-    const briefing = (data?.get("briefing") as string) ?? "";
+    const titulo = String(data?.get("titulo") ?? "").trim();
+    const tema = String(data?.get("tema") ?? "").trim();
+    const formato = String(data?.get("formato") ?? "").trim();
+    const briefing = String(data?.get("briefing") ?? "").trim();
 
     if (!titulo && !tema) {
       setStatus("error");
       setErrorMsg("Preencha o título ou tema antes de gerar com IA.");
       return;
     }
+    setStatus("generating");
 
     const result = await generateFotoCapaWithAI({
       titulo,
@@ -95,7 +98,7 @@ export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
   const isBusy = status === "uploading" || status === "generating";
 
   return (
-    <div className="space-y-2">
+    <div ref={rootRef} className="space-y-2">
       <input type="hidden" name="foto_capa_url_uploaded" value={url} />
 
       {url && status === "ok" && (
