@@ -584,15 +584,10 @@ def _slide_html(
     icon_bg_div = (
         '<div class="icon-bg"></div>' if icon_url_internal else ""
     )
-    # Contraste: bg escuro (onix da CTA) inverte o icone pra branco;
-    # bg claro forca o icone a ficar preto solido. Garante leitura
-    # independente da cor original do icone subido.
-    bg_is_dark = bg_color == p["onix"]
-    icon_filter = (
-        "brightness(0) invert(1)" if bg_is_dark else "brightness(0)"
-    )
-    # Posicao do icon de fundo: rente a borda direita nos pares
+    # Posicao do fundo carrossel: rente a borda direita nos pares
     # (2, 4, 6) e rente a borda esquerda nos impares (3, 5, 7).
+    # Imagem mantem a cor original — sem filter pra preservar a paleta
+    # subida no admin Fundo Carrossel.
     icon_bleed_side = "right" if slide_idx % 2 == 0 else "left"
 
     return f"""
@@ -689,24 +684,20 @@ def _slide_html(
     object-fit: contain;
   }}
   .icon-bg {{
-    /* Icone grande de fundo: 90% da largura do slide (~2765px),
-       posicionado RENTE a borda (sem bleed), alternando direita/
-       esquerda pela paridade do indice. Pares (2, 4, 6) -> direita;
-       impares (3, 5, 7) -> esquerda. 15% opacity. CSS filter forca
-       preto/branco conforme a cor do bg pra garantir contraste.
-       background-position alinhado na borda pra o icone ficar 0mm
-       da borda do slide (sem gap mesmo com aspect ratio diferente). */
+    /* Imagem 'Fundo Carrossel': 90% da largura do slide (~2765px),
+       grudada no canto INFERIOR direito ou esquerdo (pares -> direita,
+       impares -> esquerda). 0mm da borda lateral E 0mm da borda
+       inferior. Mantem a cor original do arquivo (sem CSS filter).
+       Opacity 0.15 — suave o suficiente pra nao competir com o texto. */
     position: absolute;
-    top: 50%;
+    bottom: 0;
     {icon_bleed_side}: 0;
-    transform: translateY(-50%);
     width: 2765px; height: 2765px;
     background-image: url('{icon_url_internal}');
     background-repeat: no-repeat;
-    background-position: {icon_bleed_side} center;
+    background-position: {icon_bleed_side} bottom;
     background-size: contain;
     opacity: 0.15;
-    filter: {icon_filter};
     pointer-events: none;
   }}
 </style></head>

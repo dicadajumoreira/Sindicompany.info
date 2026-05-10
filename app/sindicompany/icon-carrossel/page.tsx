@@ -38,15 +38,17 @@ export default async function IconCarrosselPage() {
             Tema · Carrossel Instagram
           </div>
           <h1 className="text-3xl font-bold text-onix-900 mb-2">
-            Icon Carrossel
+            Fundo Carrossel
           </h1>
           <p className="text-sm text-g60 max-w-2xl">
-            Icons que preenchem o fundo dos slides do carrossel
+            Imagens de fundo dos slides do carrossel
             <strong className="text-onix-900"> @sindicompanybr</strong>. Cada
             slot é mapeado pra um slide específico em sequência: o slot{" "}
             <strong>1 vai pro slide 2</strong>, o <strong>2 pro slide 3</strong>,
             o <strong>3 pro slide 4</strong>, e assim por diante. Slide 1 (capa)
-            usa a foto IA. Suporta JPG, PNG, WebP e SVG. Máx 10MB cada.
+            usa a foto IA. As imagens mantêm a cor original e ficam coladas
+            no canto inferior direito/esquerdo do slide (alternando por
+            paridade). Suporta JPG, PNG, WebP e SVG. Máx 10MB cada.
           </p>
         </header>
 
@@ -63,8 +65,8 @@ export default async function IconCarrosselPage() {
         </div>
 
         <div className="mt-8 text-xs text-g60">
-          <strong className="text-onix-900">Como o engine usa:</strong> a engine
-          baixa todos os icons disponíveis em ordem de slot e cicla pelo índice
+          <strong className="text-onix-900">Como o engine usa:</strong> baixa
+          todas as imagens disponíveis em ordem de slot e cicla pelo índice
           do slide (slide 2 → slot 1, slide 3 → slot 2, …). Slots vazios são
           pulados. SVG é recomendado pra escalar sem perda em 4K.
         </div>

@@ -22,7 +22,7 @@ export function IconCarrosselSlot({ slot, initialUrl }: IconCarrosselSlotProps) 
     setErrorMsg("");
     if (file.size > 10 * 1024 * 1024) {
       setStatus("error");
-      setErrorMsg("Icon maior que 10MB.");
+      setErrorMsg("Imagem maior que 10MB.");
       return;
     }
     setStatus("uploading");
@@ -61,7 +61,7 @@ export function IconCarrosselSlot({ slot, initialUrl }: IconCarrosselSlotProps) 
     <div className="flex flex-col gap-2 rounded-lg border border-onix-100 bg-white p-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold uppercase tracking-wider text-mint-700">
-          Icon {slot}
+          Fundo {slot}
         </span>
         {status === "ok" && (
           <span className="text-[10px] text-g60">Salvo</span>
