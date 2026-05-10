@@ -693,7 +693,9 @@ def _slide_html(
        posicionado RENTE a borda (sem bleed), alternando direita/
        esquerda pela paridade do indice. Pares (2, 4, 6) -> direita;
        impares (3, 5, 7) -> esquerda. 15% opacity. CSS filter forca
-       preto/branco conforme a cor do bg pra garantir contraste. */
+       preto/branco conforme a cor do bg pra garantir contraste.
+       background-position alinhado na borda pra o icone ficar 0mm
+       da borda do slide (sem gap mesmo com aspect ratio diferente). */
     position: absolute;
     top: 50%;
     {icon_bleed_side}: 0;
@@ -701,7 +703,7 @@ def _slide_html(
     width: 2765px; height: 2765px;
     background-image: url('{icon_url_internal}');
     background-repeat: no-repeat;
-    background-position: center center;
+    background-position: {icon_bleed_side} center;
     background-size: contain;
     opacity: 0.15;
     filter: {icon_filter};
