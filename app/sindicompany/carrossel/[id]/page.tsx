@@ -56,6 +56,20 @@ export default async function CarrosselDetailPage({
   }
   if (!carrossel) notFound();
 
+  // Wizard incompleto: redireciona pra etapa pendente em vez de mostrar
+  // a tela de detalhe (que assumiria PNGs prontos).
+  if (carrossel.status === "rascunho") {
+    const hasCopies = (carrossel.copy_options?.length ?? 0) > 0;
+    const hasSelected =
+      typeof carrossel.copy_selected === "number" && carrossel.copy_selected >= 0;
+    if (hasCopies && !hasSelected) {
+      redirect(`/sindicompany/carrossel/${carrossel.id}/copy`);
+    }
+    if (hasCopies && hasSelected && !carrossel.png_paths?.length) {
+      redirect(`/sindicompany/carrossel/${carrossel.id}/foto`);
+    }
+  }
+
   const isProducing = carrossel.status === "em_producao" || carrossel.status === "rascunho";
   const slides = carrossel.png_paths ?? [];
 
