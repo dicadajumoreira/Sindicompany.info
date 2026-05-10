@@ -462,8 +462,20 @@ def _slide_html(
     )
 
     body_html = f'<p class="slide-body">{_h(body)}</p>' if body else ""
-    pattern_url = _pattern_for_slide(slide_idx)
-    pattern_div = '<div class="pattern-bg"></div>' if pattern_url else ""
+
+    # Pattern de fundo:
+    # - Slides internos: pattern ciclando, tile 800x800, 10% opacity
+    # - CTA (ultimo): SEMPRE Pattern 1, tamanho ORIGINAL (sem
+    #   redimensionar), centralizado, sobre o fundo onix.
+    if is_cta:
+        pats = _patterns_data_urls()
+        pattern_url = pats[0] if pats else ""
+        pattern_div = (
+            '<div class="pattern-bg-cta"></div>' if pattern_url else ""
+        )
+    else:
+        pattern_url = _pattern_for_slide(slide_idx)
+        pattern_div = '<div class="pattern-bg"></div>' if pattern_url else ""
 
     # Tamanhos calibrados pra Instagram (1080w display). Slide 4K
     # = 2.844x, por isso CSS px = display px * 2.844 (arredondado).
@@ -511,6 +523,17 @@ def _slide_html(
     background-repeat: repeat;
     background-size: 800px 800px;
     opacity: 0.10;
+    pointer-events: none;
+  }}
+  .pattern-bg-cta {{
+    /* CTA: Pattern 1 no tamanho ORIGINAL, centralizado, sem resize
+       nem repeat. Onix #1A1C29 do body aparece nas bordas se o
+       pattern for menor que o slide. */
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url('{pattern_url}');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: auto;
     pointer-events: none;
   }}
   .corner {{
