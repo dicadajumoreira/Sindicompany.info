@@ -20,9 +20,15 @@ const NAV_ITEMS: NavItem[] = [
   },
   { label: "Carrosséis", href: "/sindicompany/carrossel", emoji: "🎠" },
   { label: "Condomínios", href: "/sindicompany/condominios", emoji: "🏢" },
-  { label: "Patterns", href: "/sindicompany/patterns", emoji: "🎨" },
-  { label: "Icons", href: "/sindicompany/icons", emoji: "✦" },
-  { label: "Logotipos", href: "/sindicompany/logos", emoji: "🏷️" },
+  {
+    label: "Assets Sindicompany",
+    emoji: "🎨",
+    children: [
+      { label: "Patterns", href: "/sindicompany/patterns" },
+      { label: "Icons", href: "/sindicompany/icons" },
+      { label: "Logotipos", href: "/sindicompany/logos" },
+    ],
+  },
 ];
 
 function renderItem(item: NavItem, depth = 0): React.ReactNode {
