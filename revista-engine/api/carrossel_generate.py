@@ -439,11 +439,27 @@ def gerar_carrossel(carrossel_id: str) -> int:
 
         _update_carrossel(carrossel_id, {"status": "em_producao", "erro_mensagem": None})
 
-        # 1. Copy via GPT
-        copy = _gerar_copy(carrossel)
-        slides = copy["slides"]
-        legenda = copy.get("legenda") or ""
-        print(f"[carrossel] copy gerado: {len(slides)} slides", flush=True)
+        # 1. Copy: prefere a copy escolhida pela editora no wizard.
+        #    Cai no _gerar_copy só pra registros legacy sem copy_options.
+        copy_options = carrossel.get("copy_options") or []
+        copy_selected = carrossel.get("copy_selected")
+        chosen = None
+        if isinstance(copy_options, list) and copy_options:
+            idx = copy_selected if isinstance(copy_selected, int) else 0
+            if 0 <= idx < len(copy_options):
+                chosen = copy_options[idx]
+        if chosen and isinstance(chosen, dict) and chosen.get("slides"):
+            slides = list(chosen.get("slides") or [])
+            legenda = chosen.get("legenda") or ""
+            print(
+                f"[carrossel] usando copy salva (idx={copy_selected}): {len(slides)} slides",
+                flush=True,
+            )
+        else:
+            copy = _gerar_copy(carrossel)
+            slides = copy["slides"]
+            legenda = copy.get("legenda") or ""
+            print(f"[carrossel] copy gerado pelo engine: {len(slides)} slides", flush=True)
 
         # 2. Render + upload de cada slide
         n_total = len(slides)

@@ -166,15 +166,29 @@ export async function escolherCopyAction(
 
 export async function finalizarCarrosselAction(
   carrosselId: string,
-  fotoUrl: string,
 ): Promise<void> {
   await requireAuth();
-  if (fotoUrl) {
-    await updateCarrossel(carrosselId, { foto_capa_url: fotoUrl });
-  }
   await dispatchGenerateCarrossel(carrosselId);
   revalidatePath(`/sindicompany/carrossel/${carrosselId}`);
   redirect(`/sindicompany/carrossel/${carrosselId}`);
+}
+
+export async function salvarFotoCapaAction(
+  carrosselId: string,
+  fotoUrl: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await requireAuth();
+  } catch {
+    return { ok: false, error: "Sessão expirada." };
+  }
+  if (!fotoUrl) return { ok: false, error: "URL vazia." };
+  try {
+    await updateCarrossel(carrosselId, { foto_capa_url: fotoUrl });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: describeError(e) };
+  }
 }
 
 // =============================================================================

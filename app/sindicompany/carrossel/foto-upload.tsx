@@ -1,16 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   generateFotoCapaWithAI,
   getCarrosselFotoUploadIntent,
+  salvarFotoCapaAction,
 } from "./actions";
 
 const BUCKET = "condominios-fotos";
 
-export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
-  const rootRef = useRef<HTMLDivElement>(null);
+export function CarrosselFotoUpload({
+  carrosselId,
+  initialUrl,
+}: {
+  carrosselId: string;
+  initialUrl?: string;
+}) {
   const [url, setUrl] = useState(initialUrl ?? "");
   const [status, setStatus] = useState<
     "idle" | "uploading" | "generating" | "ok" | "error"
@@ -51,6 +57,11 @@ export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
       }
       setUrl(intent.publicUrl);
       setStatus("ok");
+      const saved = await salvarFotoCapaAction(carrosselId, intent.publicUrl);
+      if (!saved.ok) {
+        setStatus("error");
+        setErrorMsg(`Foto enviada, mas falhou ao salvar: ${saved.error}`);
+      }
     } catch (e) {
       setStatus("error");
       setErrorMsg(e instanceof Error ? e.message : "Falha desconhecida.");
@@ -61,44 +72,16 @@ export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
     setErrorMsg("");
     setRevisedPrompt("");
     setFilename("");
-
-    // Lê tema/formato/briefing/titulo do form pai (o `closest`
-    // garante que pegamos o form do carrossel, não o de logout
-    // da sidebar).
-    const form = rootRef.current?.closest("form");
-    const data = form ? new FormData(form) : null;
-    const titulo = String(data?.get("titulo") ?? "").trim();
-    const tema = String(data?.get("tema") ?? "").trim();
-    const formato = String(data?.get("formato") ?? "").trim();
-    const briefing = String(data?.get("briefing") ?? "").trim();
-
-    if (!titulo && !tema) {
-      setStatus("error");
-      setErrorMsg("Preencha o título ou tema antes de gerar com IA.");
-      return;
-    }
     setStatus("generating");
 
-    // Race contra timeout client-side de 40s. Netlify Functions cap
-    // em 26s; mas com cold start + DALL-E + download + upload pode
-    // chegar perto desse limite. Damos uma folga pra mostrar erro
-    // útil só quando realmente travou.
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error("timeout")),
-        40_000,
-      ),
+      setTimeout(() => reject(new Error("timeout")), 40_000),
     );
 
     let result;
     try {
       result = await Promise.race([
-        generateFotoCapaWithAI({
-          titulo,
-          tema: tema || undefined,
-          formato: formato || undefined,
-          briefing: briefing || undefined,
-        }),
+        generateFotoCapaWithAI({ carrosselId }),
         timeoutPromise,
       ]);
     } catch (e) {
@@ -106,7 +89,9 @@ export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
       setErrorMsg(
         e instanceof Error && e.message === "timeout"
           ? "A geração demorou mais que 40s e foi interrompida. Tente de novo ou faça upload manual."
-          : (e instanceof Error ? e.message : "Falha desconhecida."),
+          : e instanceof Error
+            ? e.message
+            : "Falha desconhecida.",
       );
       return;
     }
@@ -124,21 +109,20 @@ export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
   const isBusy = status === "uploading" || status === "generating";
 
   return (
-    <div ref={rootRef} className="space-y-2">
-      <input type="hidden" name="foto_capa_url_uploaded" value={url} />
-
+    <div className="space-y-3">
       {url && status === "ok" && (
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={url}
             alt="Foto da capa"
-            className="w-24 rounded object-cover bg-onix-50"
+            className="w-32 rounded-lg object-cover bg-onix-50 border border-onix-100"
             style={{ aspectRatio: "4/5" }}
           />
           <div className="flex-1">
-            <p className="text-xs text-g60">
-              {filename || (revisedPrompt ? "Foto gerada por IA" : "Foto pronta")}
+            <p className="text-xs text-mint-700 font-semibold">Foto pronta ✓</p>
+            <p className="text-xs text-g60 mt-0.5">
+              {filename || (revisedPrompt ? "Foto gerada por IA" : "")}
             </p>
             {revisedPrompt && (
               <p className="text-[10px] text-g60 mt-1 line-clamp-3">
@@ -173,7 +157,9 @@ export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
 
       {status === "uploading" && <p className="text-xs text-g60">Enviando…</p>}
       {status === "generating" && (
-        <p className="text-xs text-g60">Gerando imagem com IA (até 30s)…</p>
+        <p className="text-xs text-g60">
+          Gerando imagem com IA usando a copy escolhida (até 30s)…
+        </p>
       )}
       {status === "error" && (
         <p className="text-xs text-red-700">{errorMsg}</p>
