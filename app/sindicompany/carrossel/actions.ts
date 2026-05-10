@@ -152,9 +152,12 @@ export async function generateFotoCapaWithAI(input: {
     briefing: input.briefing,
   });
 
+  // Quality 'standard' demora ~10s (vs 30-50s do 'hd'), e essa
+  // server action roda em Netlify Function com timeout default
+  // de ~26s — sem standard a função morre antes de devolver.
   const result = await generateImage(prompt, {
     size: "1024x1792",
-    quality: "hd",
+    quality: "standard",
     style: "natural",
   });
   if (!result.ok) {

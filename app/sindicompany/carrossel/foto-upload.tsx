@@ -79,12 +79,37 @@ export function CarrosselFotoUpload({ initialUrl }: { initialUrl?: string }) {
     }
     setStatus("generating");
 
-    const result = await generateFotoCapaWithAI({
-      titulo,
-      tema: tema || undefined,
-      formato: formato || undefined,
-      briefing: briefing || undefined,
-    });
+    // Race contra timeout client-side de 25s. Server action no Netlify
+    // tem cap de 26s — se não responder em 25s assumimos que travou
+    // e mostramos mensagem útil em vez de loading infinito.
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error("timeout")),
+        25_000,
+      ),
+    );
+
+    let result;
+    try {
+      result = await Promise.race([
+        generateFotoCapaWithAI({
+          titulo,
+          tema: tema || undefined,
+          formato: formato || undefined,
+          briefing: briefing || undefined,
+        }),
+        timeoutPromise,
+      ]);
+    } catch (e) {
+      setStatus("error");
+      setErrorMsg(
+        e instanceof Error && e.message === "timeout"
+          ? "A geração demorou mais que 25s e foi interrompida. Tente de novo ou faça upload manual."
+          : (e instanceof Error ? e.message : "Falha desconhecida."),
+      );
+      return;
+    }
+
     if (!result.ok) {
       setStatus("error");
       setErrorMsg(result.error);
