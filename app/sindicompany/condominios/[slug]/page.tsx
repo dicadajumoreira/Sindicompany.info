@@ -164,8 +164,11 @@ export default async function EditarCondoPage({
             </Field>
           </div>
 
-          <Field label="Gênero">
-            <div className="flex gap-4 mt-1">
+          <Field
+            label="Tipo / gênero"
+            hint="Quando for 'Empresa' (administradora), a revista fala com os moradores como uma equipe (nós), não como pessoa. Nesse caso, o 'Nome' acima é o nome da empresa."
+          >
+            <div className="flex gap-4 mt-1 flex-wrap">
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="radio"
@@ -185,12 +188,21 @@ export default async function EditarCondoPage({
                 />
                 Síndico
               </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="sindico_genero"
+                  value="empresa"
+                  defaultChecked={meta?.sindico_genero === "empresa"}
+                />
+                Empresa / Administradora
+              </label>
             </div>
           </Field>
 
           <Field
-            label="Foto"
-            hint="JPG, PNG ou WebP. Máx 5MB. Aparece na seção 'Carta do Síndico' da revista."
+            label="Foto / logo"
+            hint="JPG, PNG ou WebP. Máx 5MB. Aparece na seção 'Carta do Síndico' da revista. Para empresa, pode usar o logo dela."
           >
             {sindicoFotoUrl && (
               <div className="mb-3 flex items-center gap-3">

@@ -132,10 +132,12 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   const sindico_nome = getStr(formData, "sindico_nome");
   const generoRaw = getStr(formData, "sindico_genero");
   const sindico_genero: Genero | undefined =
-    generoRaw === "masculino" || generoRaw === "feminino" ? generoRaw : undefined;
+    generoRaw === "masculino" || generoRaw === "feminino" || generoRaw === "empresa"
+      ? generoRaw
+      : undefined;
 
-  if (!sindico_nome) backWithError(slug, "Informe o nome do(a) síndico(a).");
-  if (!sindico_genero) backWithError(slug, "Selecione o gênero do(a) síndico(a).");
+  if (!sindico_nome) backWithError(slug, "Informe o nome do(a) síndico(a) ou da empresa.");
+  if (!sindico_genero) backWithError(slug, "Selecione o tipo (síndica / síndico / empresa).");
 
   const sindicoFotoExistente = getStr(formData, "sindico_foto_existente");
   const logoSindicoExistente = getStr(formData, "logo_sindico_existente");

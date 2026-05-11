@@ -9,7 +9,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type RevistaStatus = "em_producao" | "publicada" | "erro";
-export type Genero = "masculino" | "feminino";
+// 'empresa' = sindicatura feita por uma administradora/empresa — o
+// texto da revista se dirige aos moradores como uma EQUIPE (1a pessoa
+// do plural), nao como individuo.
+export type Genero = "masculino" | "feminino" | "empresa";
 
 export interface Revista {
   id: string;

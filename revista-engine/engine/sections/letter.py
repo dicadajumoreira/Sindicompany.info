@@ -32,6 +32,8 @@ from .base import A4, MOBILE, Section
 def _saudacao(genero: str, n_pessoas: int = 1) -> str:
     """Decide o título da seção em função de gênero/quantidade."""
     g = (genero or "masculino").strip().lower()
+    if g == "empresa":
+        return "Carta da Administradora"
     if n_pessoas >= 2:
         return "Carta dos Síndicos" if g != "feminino" else "Carta das Síndicas"
     return "Carta da Síndica" if g == "feminino" else "Carta do Síndico"
@@ -61,9 +63,10 @@ class Letter(Section):
                     "ideal 350-450)"
                 )
         genero = inputs.get("genero", "masculino")
-        if genero not in ("masculino", "feminino"):
+        if genero not in ("masculino", "feminino", "empresa"):
             errors.append(
-                f"Carta: 'genero' deve ser 'masculino' ou 'feminino' (recebido {genero!r})"
+                f"Carta: 'genero' deve ser 'masculino', 'feminino' ou 'empresa' "
+                f"(recebido {genero!r})"
             )
         return errors
 
@@ -83,9 +86,13 @@ class Letter(Section):
     def _render(self, inputs: dict, theme, *, scale: str) -> str:
         nome = (inputs.get("nome_sindico") or "").strip()
         genero = inputs.get("genero", "masculino").strip().lower()
-        cargo = (inputs.get("cargo") or
-                 ("Síndica Profissional" if genero == "feminino" else "Síndico Profissional")
-                 ).strip()
+        if genero == "empresa":
+            _cargo_default = "Administradora"
+        elif genero == "feminino":
+            _cargo_default = "Síndica Profissional"
+        else:
+            _cargo_default = "Síndico Profissional"
+        cargo = (inputs.get("cargo") or _cargo_default).strip()
         foto = (inputs.get("foto_sindico") or "").strip()
         object_position = (inputs.get("object_position") or "center 20%").strip()
         texto = (inputs.get("texto") or "").strip()

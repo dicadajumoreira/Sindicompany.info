@@ -37,7 +37,14 @@ export default async function RevistaBoasVindasPage({
   const meta = await getCondoMeta(nome).catch(() => null);
 
   const sindicoNome = meta?.sindico_nome ?? "";
-  const sindicoTitulo = meta?.sindico_genero === "feminino" ? "Síndica" : "Síndico";
+  // 'empresa' = sindicatura feita por administradora -> a revista fala
+  // aos moradores como uma equipe (1a pessoa do plural).
+  const ehEmpresa = meta?.sindico_genero === "empresa";
+  const sindicoTitulo = ehEmpresa
+    ? "Administradora"
+    : meta?.sindico_genero === "feminino"
+      ? "Síndica"
+      : "Síndico";
   const logoUrl = meta?.logo_url ?? null;
   const sindicoFoto = meta?.sindico_foto_path ? getCondoFotoPublicUrl(meta.sindico_foto_path) : null;
   const temGestor = !!(meta?.gestor_nome && meta.gestor_nome.trim());
@@ -102,7 +109,7 @@ export default async function RevistaBoasVindasPage({
             />
           ) : (
             <div style={{ position: "absolute", top: "18mm", left: "16mm", fontSize: "11pt", letterSpacing: ".3em", textTransform: "uppercase", color: "rgba(255,255,255,.85)" }}>
-              {sindicoTitulo} {sindicoNome}
+              {ehEmpresa ? sindicoNome : `${sindicoTitulo} ${sindicoNome}`}
             </div>
           )}
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "90mm 24mm 40mm", textAlign: "center", color: "#fff" }}>
@@ -125,21 +132,32 @@ export default async function RevistaBoasVindasPage({
               Carta de agradecimento
             </div>
             <h2 style={{ fontSize: "20pt", fontWeight: 800, margin: "0 0 6mm", lineHeight: 1.1 }}>
-              Obrigado pelo voto de confiança.
+              {ehEmpresa ? "Obrigado pela confiança." : "Obrigado pelo voto de confiança."}
             </h2>
             <div style={{ fontSize: "11.5pt", lineHeight: 1.6, color: "#3a3d4a", textAlign: "justify" }}>
               <p style={{ margin: "0 0 4mm" }}>
-                Caro morador do Condomínio {nome},
+                {ehEmpresa
+                  ? `Prezados moradores do Condomínio ${nome},`
+                  : `Caro morador do Condomínio ${nome},`}
               </p>
+              {ehEmpresa ? (
+                <p style={{ margin: "0 0 4mm" }}>
+                  É com gratidão que recebemos a confiança de vocês para
+                  administrar o condomínio. Assumimos esse papel com
+                  responsabilidade e o compromisso de cuidar do lar de vocês com
+                  transparência, organização e atenção a cada morador.
+                </p>
+              ) : (
+                <p style={{ margin: "0 0 4mm" }}>
+                  É com gratidão que recebo a confiança de vocês na minha eleição
+                  como {sindicoTitulo.toLowerCase()}. Assumo esse papel com
+                  responsabilidade e o compromisso de cuidar do nosso lar com
+                  transparência, organização e atenção a cada um de vocês.
+                </p>
+              )}
               <p style={{ margin: "0 0 4mm" }}>
-                É com gratidão que recebo a confiança de vocês na minha eleição
-                como {sindicoTitulo.toLowerCase()}. Assumo esse papel com
-                responsabilidade e o compromisso de cuidar do nosso lar com
-                transparência, organização e atenção a cada um de vocês.
-              </p>
-              <p style={{ margin: "0 0 4mm" }}>
-                A partir de agora, contamos com a estrutura da Sindicompany pra
-                profissionalizar a gestão — e com vocês pra construir uma
+                A partir de agora, contamos com a estrutura da Sindicompany para
+                profissionalizar a gestão, e com vocês para construir uma
                 convivência melhor todos os dias.
               </p>
               {comunidadeUrl && (
@@ -150,7 +168,11 @@ export default async function RevistaBoasVindasPage({
                 </p>
               )}
               <p style={{ margin: "4mm 0 0", fontWeight: 700 }}>
-                {sindicoNome ? `${sindicoTitulo} ${sindicoNome}` : sindicoTitulo}
+                {ehEmpresa
+                  ? sindicoNome || "Administradora"
+                  : sindicoNome
+                    ? `${sindicoTitulo} ${sindicoNome}`
+                    : sindicoTitulo}
               </p>
             </div>
 

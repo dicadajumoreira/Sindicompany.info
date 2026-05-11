@@ -435,7 +435,28 @@ def gerar_carta_sindico(
 
     advert = revista.get("multas_advertencias_obs") or ""
 
-    pronome = "a síndica" if genero == "feminino" else "o síndico"
+    eh_empresa = genero == "empresa"
+    if eh_empresa:
+        pronome = "a administradora"
+    elif genero == "feminino":
+        pronome = "a síndica"
+    else:
+        pronome = "o síndico"
+
+    if eh_empresa:
+        tom_pessoa = (
+            "Tom: caloroso, próximo, em PRIMEIRA PESSOA DO PLURAL — quem assina "
+            f"é a administradora '{nome}' como equipe, então use 'nós', 'nossa "
+            "equipe', 'cuidamos', 'estamos'. NUNCA escreva em primeira pessoa do "
+            f"singular. Assine ao final apenas com '{nome}' (sem 'síndico' ou "
+            "'síndica' antes)."
+        )
+        estrutura_assinatura = f"5) Encerramento caloroso, assinado por {nome}"
+    else:
+        tom_pessoa = (
+            "Tom: caloroso, próximo, em primeira pessoa do singular."
+        )
+        estrutura_assinatura = f"5) Encerramento caloroso, assinado por {nome}"
 
     prompt = (
         f"Escreva a carta de {pronome} '{nome}' pra revista mensal do condomínio "
@@ -449,34 +470,57 @@ def gerar_carta_sindico(
         f"2) Reflexão sobre o tema da carta conectando com a realidade do condomínio\n"
         f"3) Comentário sobre a matéria de capa do mês como convite à leitura\n"
         f"4) Menção à receita do mês quando fizer sentido\n"
-        f"5) Encerramento caloroso, assinado por {nome}\n\n"
+        f"{estrutura_assinatura}\n\n"
         f"REGRA IMPORTANTE: NÃO mencione eventos do condomínio. Os eventos têm "
-        f"caderno próprio na revista — a carta deve focar no tema editorial, "
+        f"caderno próprio na revista. A carta deve focar no tema editorial, "
         f"não em listar acontecimentos.\n\n"
-        f"Tom: caloroso, próximo, em primeira pessoa do singular. "
+        f"{tom_pessoa} "
         f"4 a 5 parágrafos. Total entre 300 e 400 palavras (limite estrito "
         f"para caber na página A4 sem cortar)."
     )
 
-    fallback = (
-        f"Queridos moradores do {condominio}, é com alegria que escrevo essa carta "
-        f"para abrir nossa edição de {mes_nome}. {titulo_carta} é o tema que escolhemos "
-        f"para guiar este mês, e ele tem tudo a ver com a forma como vivemos juntos por aqui.\n\n"
-        f"Cada edição é uma oportunidade de olhar pro condomínio com novos olhos. {mes_nome} "
-        f"traz suas próprias particularidades, e a matéria de capa, que fala sobre {materia_capa}, "
-        f"convida todos nós a refletir sobre como podemos construir uma convivência mais leve "
-        f"e mais humana no nosso dia a dia. São conversas simples, mas que fazem diferença.\n\n"
-        f"Como gosto sempre de lembrar, condomínio bom é aquele em que todo mundo se sente "
-        f"em casa. Isso não acontece sozinho. Acontece quando cada morador faz a sua parte, "
-        f"quando a gestão escuta, quando os funcionários são tratados com respeito, quando "
-        f"as crianças podem brincar sem medo e quando os mais velhos encontram aqui um lugar "
-        f"de acolhimento. É um trabalho coletivo, contínuo, que vale a pena.\n\n"
-        f"Aproveitem também a receita do mês, {receita}, que vem para a mesa com o sabor "
-        f"de quem conhece a estação. E na agenda cultural vocês encontram sugestões para "
-        f"sair do prédio e descobrir o que a cidade tem oferecido por aí.\n\n"
-        f"Boa leitura, e um abraço para todas as famílias do {condominio}.\n\n"
-        f"{nome}"
-    )
+    if eh_empresa:
+        fallback = (
+            f"Queridos moradores do {condominio}, é com alegria que abrimos a edição "
+            f"de {mes_nome}. {titulo_carta} é o tema que escolhemos para guiar este mês, "
+            f"e ele tem tudo a ver com a forma como vocês vivem juntos por aqui.\n\n"
+            f"Cada edição é uma oportunidade de olhar para o condomínio com novos olhos. "
+            f"{mes_nome} traz suas próprias particularidades, e a matéria de capa, que fala "
+            f"sobre {materia_capa}, convida todos a refletir sobre como construir uma "
+            f"convivência mais leve e mais humana no dia a dia. São conversas simples, "
+            f"mas que fazem diferença.\n\n"
+            f"Condomínio bom é aquele em que todo mundo se sente em casa. Isso não acontece "
+            f"sozinho. Acontece quando cada morador faz a sua parte, quando a gestão escuta, "
+            f"quando os funcionários são tratados com respeito, quando as crianças podem "
+            f"brincar sem medo e quando os mais velhos encontram aqui um lugar de acolhimento. "
+            f"É um trabalho coletivo, contínuo, que vale a pena, e a nossa equipe está aqui "
+            f"para fazer a parte dela.\n\n"
+            f"Aproveitem também a receita do mês, {receita}, que vem para a mesa com o sabor "
+            f"de quem conhece a estação. E na agenda cultural vocês encontram sugestões para "
+            f"sair do prédio e descobrir o que a cidade tem oferecido por aí.\n\n"
+            f"Boa leitura, e um abraço para todas as famílias do {condominio}.\n\n"
+            f"{nome}"
+        )
+    else:
+        fallback = (
+            f"Queridos moradores do {condominio}, é com alegria que escrevo essa carta "
+            f"para abrir nossa edição de {mes_nome}. {titulo_carta} é o tema que escolhemos "
+            f"para guiar este mês, e ele tem tudo a ver com a forma como vivemos juntos por aqui.\n\n"
+            f"Cada edição é uma oportunidade de olhar pro condomínio com novos olhos. {mes_nome} "
+            f"traz suas próprias particularidades, e a matéria de capa, que fala sobre {materia_capa}, "
+            f"convida todos nós a refletir sobre como podemos construir uma convivência mais leve "
+            f"e mais humana no nosso dia a dia. São conversas simples, mas que fazem diferença.\n\n"
+            f"Como gosto sempre de lembrar, condomínio bom é aquele em que todo mundo se sente "
+            f"em casa. Isso não acontece sozinho. Acontece quando cada morador faz a sua parte, "
+            f"quando a gestão escuta, quando os funcionários são tratados com respeito, quando "
+            f"as crianças podem brincar sem medo e quando os mais velhos encontram aqui um lugar "
+            f"de acolhimento. É um trabalho coletivo, contínuo, que vale a pena.\n\n"
+            f"Aproveitem também a receita do mês, {receita}, que vem para a mesa com o sabor "
+            f"de quem conhece a estação. E na agenda cultural vocês encontram sugestões para "
+            f"sair do prédio e descobrir o que a cidade tem oferecido por aí.\n\n"
+            f"Boa leitura, e um abraço para todas as famílias do {condominio}.\n\n"
+            f"{nome}"
+        )
 
     return _gerar_carta(prompt, fallback)
 

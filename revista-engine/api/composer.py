@@ -138,6 +138,8 @@ def _cargo_sindico(condo_meta: dict[str, Any] | None) -> str:
     if not condo_meta:
         return "Síndico(a)"
     g = condo_meta.get("sindico_genero")
+    if g == "empresa":
+        return "Administradora"
     return "Síndica" if g == "feminino" else "Síndico"
 
 
@@ -146,12 +148,18 @@ def _build_chamadas(revista: dict[str, Any], editorial: dict[str, Any] | None, c
     ed = editorial or {}
     chamadas: list[str] = []
 
-    # 1. Carta do(a) síndico(a)
-    sindico_titulo = "Síndica" if (condo or {}).get("sindico_genero") == "feminino" else "Síndico"
-    if ed.get("carta_sindico_tema"):
-        chamadas.append(f"Carta do(a) {sindico_titulo} · {ed['carta_sindico_tema']}")
+    # 1. Carta do(a) síndico(a) / da administradora
+    _g = (condo or {}).get("sindico_genero")
+    if _g == "empresa":
+        carta_label = "Carta da Administradora"
+    elif _g == "feminino":
+        carta_label = "Carta da Síndica"
     else:
-        chamadas.append(f"Carta do(a) {sindico_titulo}")
+        carta_label = "Carta do Síndico"
+    if ed.get("carta_sindico_tema"):
+        chamadas.append(f"{carta_label} · {ed['carta_sindico_tema']}")
+    else:
+        chamadas.append(carta_label)
 
     # 2. Matéria de capa
     if ed.get("materia_capa_titulo"):
@@ -476,9 +484,7 @@ def build_inputs_from_db(
         colophon_inputs["nome_sindico"] = cd["sindico_nome"]
         colophon_inputs["cargo_sindico"] = _cargo_sindico(condo)
     # Label dinâmico do bloco de crédito conforme gênero do(a) síndico(a)
-    colophon_inputs["label_sindico"] = (
-        "Síndica" if (cd.get("sindico_genero") == "feminino") else "Síndico"
-    )
+    colophon_inputs["label_sindico"] = _cargo_sindico(condo)
     # Equipe do condomínio: lista fixa padrão. Se houver gestor
     # preenchido, ele entra como primeiro item; senão usa só os papéis
     # genéricos abaixo.
