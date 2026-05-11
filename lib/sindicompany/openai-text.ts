@@ -41,22 +41,22 @@ async function chat(prompt: string): Promise<ChatOk | ChatErr> {
           {
             role: "system",
             content:
-              "Você é editor de conteúdo da Sindicompany para Instagram. " +
-              "Escreva como humano, não como IA. Tom direto, com opinião, " +
-              "frases curtas misturadas com longas. Português brasileiro " +
-              "com TODOS os acentos corretos (é, ê, ã, õ, ç, etc). Revise " +
-              "cada palavra: 'sao' -> 'são', 'voce' -> 'você', " +
-              "'sindico' -> 'síndico', 'condominio' -> 'condomínio'. " +
-              "ZERO travessão (—), zero emoji, zero negrito mecânico. " +
-              "ZERO clichê de IA: nada de 'papel fundamental', 'momento " +
-              "crucial', 'cenário em constante evolução', 'destacando a " +
-              "importância', 'o futuro é promissor', 'juntos somos mais " +
-              "fortes', 'destaca-se', 'vibrante', 'no coração de', 'em " +
-              "meio a', 'reflete a', 'simboliza a', 'evidencia a', 'não " +
-              "apenas X, mas também Y', 'um verdadeiro testemunho', " +
-              "'desafios e oportunidades', 'rica diversidade'. Use voz " +
-              "ativa, sujeito explícito, exemplos concretos. " +
-              "Aspas retas, não curvas.",
+              "Você é redator do Instagram @sindicompanybr (Sindicompany — " +
+              "síndicos profissionais, SP e RJ). Escreve como pessoa " +
+              "inteligente corrigindo um amigo, NUNCA como empresa instruindo " +
+              "cliente. Voz: começa dentro da cabeça do leitor, frases curtas " +
+              "(um sujeito, um predicado, acabou), tom direto, sem rodeios. " +
+              "Português brasileiro com TODOS os acentos corretos (você, " +
+              "síndico, condomínio, gestão, está, são). " +
+              "PROIBIDO: gerúndio (evitando, garantindo, proporcionando), " +
+              "linguagem corporativa (soluções integradas, atendimento " +
+              "acolhedor, gestão eficiente, excelência), frases de introdução " +
+              "(é importante ressaltar, levando em consideração, nesse " +
+              "contexto, vale destacar), CTA comercial em corpo de post " +
+              "educativo (Fale com a Sindicompany, Entre em contato), " +
+              "travessão (—), aspas curvas (“ ”), emoji decorativo, negrito " +
+              "mecânico. Use apenas aspas retas (\"). Sempre termine cada " +
+              "post (legenda) com 'Por mais lares. 🏡'.",
           },
           { role: "user", content: prompt },
         ],
@@ -103,40 +103,40 @@ export async function gerarTresCopies(input: {
 }): Promise<{ ok: true; copies: CarrosselCopy[] } | { ok: false; error: string }> {
   const formato_label = input.formato.replaceAll("_", " ");
   const prompt =
-    `Você está criando 3 versões DIFERENTES de copy pra um carrossel ` +
-    `do Instagram da Sindicompany (@sindicompanybr, gestão condominial).\n\n` +
+    `Crie 3 VERSÕES de copy pra um carrossel do @sindicompanybr.\n\n` +
     `BRIEFING:\n` +
     `- Título interno: ${input.titulo}\n` +
     `- Tema: ${input.tema}\n` +
     `- Formato: ${formato_label}\n` +
     `- Quantidade de slides: ${input.n_slides}\n` +
     (input.briefing ? `- Contexto extra: ${input.briefing}\n` : "") +
-    `\nCONTEXTO OBRIGATÓRIO:\n` +
-    `- O carrossel sempre fala de CONDOMÍNIO e VIVÊNCIA DE CONDOMÍNIO. Cada copy precisa ancorar o tema dentro do dia a dia do condomínio: assembleia, taxa, sindico, morador, area comum, regulamento, convivencia, fachada, manutencao, etc. Pelo menos UM dos slides deve mencionar literalmente "condomínio" ou "condominial".\n` +
-    `\nREGRAS POR SLIDE:\n` +
-    `- SLIDE 1 (capa): título-gancho curto que JÁ INTRODUZ o tema do carrossel (não fique só na curiosidade — o leitor precisa entender em 1.5s do que se trata). O tema "${input.tema}" deve aparecer literal ou em paráfrase clara no título, sempre ancorado no contexto condominial. Body opcional, máx 20 palavras (capa inteira soma no máximo 20 palavras).\n` +
-    `- SLIDES INTERNOS: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras).\n` +
-    `- ÚLTIMO SLIDE: pergunta SIM/NÃO simples ou call-to-action.\n` +
-    `\nREGRAS DE PORTUGUÊS (humanização):\n` +
-    `- Acentos corretos em TODA palavra: você, síndico, condomínio, gestão, está, são, taxa, é, à, é assembléia.\n` +
-    `- Fale 'você', voz ativa, sujeito explícito.\n` +
-    `- NUNCA travessão (—) em nenhum slide. Use vírgula, ponto, dois-pontos ou parênteses.\n` +
-    `- NUNCA aspas curvas (“ ”) — só aspas retas (\").\n` +
-    `- Frases curtas e longas misturadas. Tom direto, com opinião quando couber.\n` +
-    `- Use exemplos concretos (números, ações, situações reais) em vez de abstrações.\n` +
-    `- LISTA NEGRA (palavras/frases proibidas, escritas literais ou com sinônimo claro):\n` +
-    `  'papel fundamental', 'momento crucial', 'cenário em constante evolução', 'destacando a importância',\n` +
-    `  'o futuro é promissor', 'juntos somos mais fortes', 'destaca-se', 'se destaca', 'vibrante',\n` +
-    `  'no coração de', 'em meio a', 'reflete a', 'simboliza a', 'evidencia a', 'um verdadeiro testemunho',\n` +
-    `  'desafios e oportunidades', 'rica diversidade', 'não apenas X, mas também Y',\n` +
-    `  'mergulhando em', 'celebrando a', 'fomentando o', 'pavimentando o caminho'.\n` +
-    `- Sem emoji, sem negrito mecânico, sem listas com cabeçalho colado em dois-pontos.\n` +
-    `- ANTES DE GERAR cada texto, revise mentalmente acento por acento. Se 'voce' aparecer, é erro: troque pra 'você'.\n\n` +
-    `CADA UMA DAS 3 VERSÕES DEVE TER ÂNGULO DIFERENTE:\n` +
-    `- Versão A: emocional, conta uma história curta\n` +
-    `- Versão B: dado/fato direto, mais informativa\n` +
-    `- Versão C: provocativa, faz uma pergunta forte e desafia o senso comum\n\n` +
-    `LEGENDA Instagram (pra cada versão): 4-6 linhas, hook na primeira, EXATAMENTE 3 hashtags na última linha.\n\n` +
+    `\nESTRUTURA OBRIGATÓRIA (em todas as 3 versões):\n` +
+    `Distribuir nos slides + repetir na LEGENDA, na ordem:\n` +
+    `  1. CENA — situação concreta vivida pelo morador/síndico no condomínio. Sem introdução, sem "você já passou por isso?". Começa no meio.\n` +
+    `  2. SUPOSIÇÃO DO LEITOR — escreva em voz alta o que ele pensa ali. Termine com "né?" ou "certo?".\n` +
+    `  3. CONTRADIÇÃO — máx 3 palavras. Ex: "Não necessariamente.", "Depende.", "Errado.", "Não é bem assim."\n` +
+    `  4. EXPLICAÇÃO — uma ideia por frase. Sem subordinação. Sem gerúndio. Em posts educativos, INCLUIR pelo menos UMA âncora: número de artigo (ex: "Código Civil, art. 1.335"), decisão judicial com número (ex: "STJ, REsp 1.699.022/SP, 2019") OU dado com fonte nomeada (ex: "ABSCond, 2025").\n` +
+    `  5. FECHAMENTO — frase paradoxal/quotável que inverte expectativa. Curta. Memorável.\n` +
+    `  6. CTA — pergunta binária ou de escala. Ex: "Comenta SIM ou NÃO.", "De 0 a 5, quantos você já viu aqui?", "Mito ou Verdade no seu condomínio?"\n` +
+    `  7. ASSINATURA — sempre exatamente: "Por mais lares. 🏡"\n\n` +
+    `MAPEAMENTO PRA SLIDES (n=${input.n_slides}):\n` +
+    `- SLIDE 1 (capa): a CENA + começo da SUPOSIÇÃO. Tema "${input.tema}" deve aparecer literal ou em paráfrase clara, ancorado no contexto condominial. Capa inteira (titulo + body) tem no máximo 20 palavras.\n` +
+    `- SLIDE 2: termina a SUPOSIÇÃO + a CONTRADIÇÃO (máx 3 palavras como destaque).\n` +
+    `- SLIDES 3 até pen-último: EXPLICAÇÃO uma ideia por slide. Inclua a ÂNCORA jurídica/dado/decisão judicial em pelo menos um deles.\n` +
+    `- ÚLTIMO SLIDE: FECHAMENTO (frase quotável) + CTA binário/escala. Sem assinatura aqui — assinatura só na legenda.\n` +
+    `- Cada slide interno: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras).\n\n` +
+    `LEGENDA Instagram (pra cada versão): replica os 7 passos em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com "Por mais lares. 🏡" e EXATAMENTE 3 hashtags na linha seguinte ao "Por mais lares".\n\n` +
+    `CONTEXTO CONDOMINIAL — todas as 3 versões falam do dia a dia do condomínio: assembleia, taxa, síndico, morador, área comum, regulamento, convivência, fachada, manutenção. Pelo menos UM slide menciona "condomínio" ou "condominial" literal.\n\n` +
+    `VARIAÇÃO ENTRE AS 3 VERSÕES (mesmo voice, cenas diferentes):\n` +
+    `- Versão A: cena cotidiana doméstica (apartamento, garagem, elevador)\n` +
+    `- Versão B: cena de governança/financeira (assembleia, taxa, prestação de contas)\n` +
+    `- Versão C: cena de conflito interpessoal (vizinho, regimento, mediação)\n\n` +
+    `REGRAS DE PORTUGUÊS (humanização):\n` +
+    `- Acentos corretos em TODA palavra: você, síndico, condomínio, gestão, está, são, é, à.\n` +
+    `- Fale "você", voz ativa, sujeito explícito.\n` +
+    `- NUNCA: gerúndio (evitando, garantindo, proporcionando), travessão (—), aspas curvas (" "), emoji decorativo no corpo do slide, frases de introdução tipo "é importante ressaltar", CTA comercial ("Fale com a Sindicompany").\n` +
+    `- LISTA NEGRA: papel fundamental, momento crucial, cenário em constante evolução, destacando a importância, o futuro é promissor, juntos somos mais fortes, destaca-se, vibrante, no coração de, em meio a, reflete a, simboliza a, evidencia a, um verdadeiro testemunho, desafios e oportunidades, rica diversidade, não apenas X mas também Y, mergulhando em, celebrando a, fomentando o, pavimentando o caminho.\n` +
+    `- Use exemplos concretos (artigos de lei, REsp, números, ações reais) em vez de abstrações.\n\n` +
     `Devolva JSON estrito (sem markdown):\n` +
     `{ "options": [\n` +
     `  { "slides": [{"tipo":"capa","titulo":"...","body":"..."}, ... total ${input.n_slides} slides], "legenda":"..." },\n` +
