@@ -142,8 +142,8 @@ export default async function DashboardPage({
           </Link>
         </section>
       ) : revistas.length > 0 ? (
-        <section className="bg-white rounded-xl border border-onix-100 overflow-hidden">
-          <table className="w-full text-sm">
+        <section className="bg-white rounded-xl border border-onix-100 overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="border-b border-onix-100 text-left">
                 <th className="px-6 py-3 font-semibold text-xs uppercase tracking-wider text-mint-700">

@@ -80,11 +80,12 @@ export default async function EditorialListPage() {
         </div>
       )}
 
-      <section className="bg-white rounded-xl border border-onix-100 overflow-hidden">
+      <section className="bg-white rounded-xl border border-onix-100">
         <h2 className="px-6 py-3 border-b border-onix-100 text-xs uppercase tracking-wider font-semibold text-mint-700">
           Próximas edições
         </h2>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[640px]">
           <thead className="bg-onix-50">
             <tr className="text-left">
               <th className="px-6 py-3 font-semibold text-xs uppercase tracking-wider text-mint-700">Edição</th>
@@ -134,14 +135,16 @@ export default async function EditorialListPage() {
             })}
           </tbody>
         </table>
+        </div>
       </section>
 
       {items.filter((e) => !proximos.some((p) => p.mes === e.mes && p.ano === e.ano)).length > 0 && (
-        <section className="bg-white rounded-xl border border-onix-100 overflow-hidden mt-8">
+        <section className="bg-white rounded-xl border border-onix-100 mt-8">
           <h2 className="px-6 py-3 border-b border-onix-100 text-xs uppercase tracking-wider font-semibold text-mint-700">
             Edições anteriores
           </h2>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <tbody>
               {items
                 .filter((e) => !proximos.some((p) => p.mes === e.mes && p.ano === e.ano))
@@ -168,6 +171,7 @@ export default async function EditorialListPage() {
                 })}
             </tbody>
           </table>
+          </div>
         </section>
       )}
     </main>

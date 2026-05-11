@@ -100,8 +100,8 @@ export default async function CarrosseisPage() {
         )}
 
         {carrosseis.length > 0 && (
-          <div className="rounded-xl border border-onix-100 bg-white overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="rounded-xl border border-onix-100 bg-white overflow-x-auto">
+            <table className="w-full text-sm min-w-[720px]">
               <thead className="bg-onix-50">
                 <tr>
                   <th className="text-left font-semibold text-onix-900 px-5 py-3">
