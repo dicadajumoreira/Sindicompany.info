@@ -153,26 +153,26 @@ export default async function RevistaBoasVindasPage({
 
             {/* Dados do síndico / gestor em destaque */}
             <div style={{ display: "flex", gap: "8mm", marginTop: "10mm", flexWrap: "wrap" }}>
-              {!ocultarSindico && (
-                <div style={{ flex: 1, minWidth: "70mm", background: "#F4F4F5", borderRadius: "4mm", padding: "6mm" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "4mm" }}>
-                    {sindicoFoto && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={sindicoFoto} alt={sindicoNome} style={{ width: "16mm", height: "16mm", borderRadius: "50%", objectFit: "cover" }} />
-                    )}
-                    <div>
-                      <div style={{ fontSize: "8pt", letterSpacing: ".2em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700 }}>{sindicoTitulo}</div>
-                      <div style={{ fontSize: "13pt", fontWeight: 800 }}>{sindicoNome || "—"}</div>
-                    </div>
-                  </div>
-                  {(meta?.sindico_whatsapp || meta?.sindico_email) && (
-                    <div style={{ marginTop: "4mm", fontSize: "10pt", color: "#3a3d4a" }}>
-                      {meta?.sindico_whatsapp && <div>WhatsApp: {meta.sindico_whatsapp}</div>}
-                      {meta?.sindico_email && <div>E-mail: {meta.sindico_email}</div>}
-                    </div>
+              <div style={{ flex: 1, minWidth: "70mm", background: "#F4F4F5", borderRadius: "4mm", padding: "6mm" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "4mm" }}>
+                  {sindicoFoto && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={sindicoFoto} alt={sindicoNome} style={{ width: "16mm", height: "16mm", borderRadius: "50%", objectFit: "cover" }} />
                   )}
+                  <div>
+                    {/* Nome em cima, cargo embaixo */}
+                    <div style={{ fontSize: "13pt", fontWeight: 800, lineHeight: 1.2 }}>{sindicoNome || "—"}</div>
+                    <div style={{ fontSize: "9pt", letterSpacing: ".14em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginTop: "1mm" }}>{sindicoTitulo}</div>
+                  </div>
                 </div>
-              )}
+                {/* Telefone e e-mail so quando NAO esta oculto */}
+                {!ocultarSindico && (meta?.sindico_whatsapp || meta?.sindico_email) && (
+                  <div style={{ marginTop: "4mm", fontSize: "10pt", color: "#3a3d4a" }}>
+                    {meta?.sindico_whatsapp && <div>WhatsApp: {meta.sindico_whatsapp}</div>}
+                    {meta?.sindico_email && <div>E-mail: {meta.sindico_email}</div>}
+                  </div>
+                )}
+              </div>
               {temGestor && (
                 <div style={{ flex: 1, minWidth: "70mm", background: "#F4F4F5", borderRadius: "4mm", padding: "6mm" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "4mm" }}>
@@ -181,8 +181,8 @@ export default async function RevistaBoasVindasPage({
                       <img src={gestorFoto} alt={gestorNome} style={{ width: "16mm", height: "16mm", borderRadius: "50%", objectFit: "cover" }} />
                     )}
                     <div>
-                      <div style={{ fontSize: "8pt", letterSpacing: ".2em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700 }}>{gestorCargo}</div>
-                      <div style={{ fontSize: "13pt", fontWeight: 800 }}>{gestorNome}</div>
+                      <div style={{ fontSize: "13pt", fontWeight: 800, lineHeight: 1.2 }}>{gestorNome}</div>
+                      <div style={{ fontSize: "9pt", letterSpacing: ".14em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginTop: "1mm" }}>{gestorCargo}</div>
                     </div>
                   </div>
                   {(meta?.gestor_whatsapp || meta?.gestor_email) && (
