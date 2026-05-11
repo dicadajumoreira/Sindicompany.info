@@ -43,7 +43,7 @@ async function maybeUploadFoto(
   fd: FormData,
   field: string,
   slug: string,
-  role: "sindico" | "gestor",
+  role: string,
 ): Promise<string | null> {
   const file = fd.get(field);
   if (!(file instanceof File) || file.size === 0) return null;
@@ -157,11 +157,14 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   const sindico_whatsapp = getStr(formData, "sindico_whatsapp");
   const gestor_email = getStr(formData, "gestor_email");
   const gestor_whatsapp = getStr(formData, "gestor_whatsapp");
+  const comunidade_url = getStr(formData, "comunidade_url");
+  const comunidadeQrExistente = getStr(formData, "comunidade_qr_existente");
 
   const novaFotoSindico = await maybeUploadFoto(formData, "sindico_foto", slug, "sindico");
   const novaFotoGestor = temGestor
     ? await maybeUploadFoto(formData, "gestor_foto", slug, "gestor")
     : null;
+  const novoQrComunidade = await maybeUploadFoto(formData, "comunidade_qr", slug, "comunidade-qr");
   const novoLogoSindico = await maybeUploadLogo(formData, "logo_sindico_file", slug, "sindico");
   const novoLogoCondominio = await maybeUploadLogo(formData, "logo_condominio_file", slug, "condominio");
 
@@ -183,6 +186,8 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
     gestor_email: gestor_nome ? gestor_email || null : null,
     gestor_whatsapp: gestor_nome ? gestor_whatsapp || null : null,
     is_by_sindico,
+    comunidade_url: comunidade_url || null,
+    comunidade_qrcode_path: novoQrComunidade ?? comunidadeQrExistente ?? null,
   };
 
   try {

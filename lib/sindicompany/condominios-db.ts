@@ -31,6 +31,10 @@ export interface CondoMeta {
   gestor_whatsapp: string | null;
   /** Sindico faz parte do By Sindicompany — revista usa logo do By. */
   is_by_sindico: boolean;
+  /** Link da comunidade do condominio (grupo, app, etc). */
+  comunidade_url: string | null;
+  /** QR code da comunidade — imagem subida no Storage. */
+  comunidade_qrcode_path: string | null;
   updated_at: string;
 }
 
@@ -49,6 +53,8 @@ export interface CondoMetaInput {
   gestor_email?: string | null;
   gestor_whatsapp?: string | null;
   is_by_sindico?: boolean;
+  comunidade_url?: string | null;
+  comunidade_qrcode_path?: string | null;
 }
 
 /** Titulo do gestor conforme o genero. */
@@ -97,6 +103,8 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
     gestor_email: input.gestor_email ?? null,
     gestor_whatsapp: input.gestor_whatsapp ?? null,
     is_by_sindico: !!input.is_by_sindico,
+    comunidade_url: input.comunidade_url ?? null,
+    comunidade_qrcode_path: input.comunidade_qrcode_path ?? null,
   };
 
   let lastErr: { message?: string } | null = null;
@@ -460,10 +468,11 @@ export async function uploadCondoLogo(
   return data.publicUrl;
 }
 
-/** Sobe foto e retorna o storage path. */
+/** Sobe foto/imagem do condominio e retorna o storage path. `role`
+ *  vira parte do nome do arquivo (sindico, gestor, comunidade-qr, ...). */
 export async function uploadCondoFoto(
   slug: string,
-  role: "sindico" | "gestor",
+  role: string,
   bytes: Buffer,
   contentType: string,
   ext: string,

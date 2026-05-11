@@ -52,6 +52,9 @@ export default async function EditarCondoPage({
   const gestorFotoUrl = meta?.gestor_foto_path
     ? getCondoFotoPublicUrl(meta.gestor_foto_path)
     : null;
+  const comunidadeQrUrl = meta?.comunidade_qrcode_path
+    ? getCondoFotoPublicUrl(meta.comunidade_qrcode_path)
+    : null;
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
@@ -394,10 +397,59 @@ export default async function EditarCondoPage({
           </Field>
         </section>
 
-        <p className="text-xs text-g60">
-          Gestor agora é cadastrado por edição (em &quot;Nova revista&quot;), porque
-          pode mudar de uma edição pra outra.
-        </p>
+        {/* ============ COMUNIDADE DO CONDOMÍNIO ============ */}
+        <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
+            Comunidade do condomínio
+          </h2>
+          <p className="text-xs text-g60 -mt-3">
+            Link da comunidade (grupo, app, canal) e o QR code que leva pra
+            ela. Aparecem na revista. Ambos opcionais.
+          </p>
+
+          <Field label="Link da comunidade">
+            <input
+              type="text"
+              name="comunidade_url"
+              defaultValue={meta?.comunidade_url ?? ""}
+              maxLength={500}
+              placeholder="https://chat.whatsapp.com/... ou link do app"
+              className={inputCls}
+            />
+          </Field>
+
+          <Field
+            label="QR code da comunidade"
+            hint="JPG, PNG ou WebP. Máx 5MB. Suba a imagem do QR code."
+          >
+            <input
+              type="hidden"
+              name="comunidade_qr_existente"
+              value={meta?.comunidade_qrcode_path ?? ""}
+            />
+            {comunidadeQrUrl && (
+              <div className="mb-3 flex items-center gap-3">
+                <Image
+                  src={comunidadeQrUrl}
+                  alt="QR code da comunidade"
+                  width={96}
+                  height={96}
+                  unoptimized
+                  className="rounded object-contain bg-white w-24 h-24 border border-onix-100 p-1"
+                />
+                <span className="text-xs text-g60">
+                  QR atual. Suba um novo abaixo para substituir.
+                </span>
+              </div>
+            )}
+            <input
+              type="file"
+              name="comunidade_qr"
+              accept="image/jpeg,image/png,image/webp"
+              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+            />
+          </Field>
+        </section>
 
         <div className="flex gap-3 pt-2">
           <button
