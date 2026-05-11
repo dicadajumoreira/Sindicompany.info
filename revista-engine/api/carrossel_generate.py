@@ -553,7 +553,9 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         formato,
         f"FORMATO: {formato_label} (estrutura livre, mantendo a voz e os 7 passos).",
     )
-    obj_map = {
+    casa = chr(0x1F3E1)
+    is_by = _BRAND == "bysindicompany"
+    obj_map_sindico = {
         "comentarios": "OBJETIVO: GERAR COMENTARIOS. CTA SEMPRE binario (SIM/NAO, "
         "CONCORDO/DISCORDO, MORADOR CERTO/SINDICO CERTO). Tema com dois lados "
         "defensaveis. Ultimo slide nomeia os dois lados. Sucesso = debate, nao alcance.",
@@ -568,9 +570,31 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         "muito acessivel, sem juridiques. Primeiro o problema conhecido, depois o "
         "que ele nao sabia. CTA depende do tema (salvar OU debate binario).",
     }
+    obj_map_by = {
+        "comentarios": "OBJETIVO: DEBATE ENTRE SINDICOS. Identificacao + divisao "
+        "entre sindicos profissionais. CTA tipo 'SINDICO OPERACIONAL ou ESTRATEGICO', "
+        "'COBRARIA ou RELEVARIA', 'DEMITIRIA ou TREINARIA'. Temas: sindico que faz "
+        "tudo sozinho, excesso de WhatsApp, conselho toxico, sindrome do sindico 24h, "
+        "romantizacao da sobrecarga. NUNCA dica de condominio pro morador.",
+        "salvamentos": "OBJETIVO: CRESCIMENTO PROFISSIONAL DO SINDICO. Ferramenta/"
+        "framework/checklist que melhora a gestao. Muito escaneavel e pratico. CTA "
+        "'Salva isso', 'Todo sindico precisa guardar', 'Manda pra outro sindico'.",
+        "clientes": "OBJETIVO: ATRAIR SINDICOS PRO BY SINDICOMPANY. O sindico pensa "
+        "'nao quero crescer sozinho'. By como ELITE DE MERCADO/estrutura/posicionamento "
+        "- nunca franquia, nunca recrutamento comum. Mostra bastidores, equipe, "
+        "suporte, processos, networking. Dor: fazer tudo sozinho, refem do WhatsApp, "
+        "nao conseguir crescer. CTA seletivo ('Talvez o proximo passo da sua "
+        "sindicatura seja esse', 'Nem todo sindico esta pronto pra crescer assim').",
+        "autoridade": "OBJETIVO: POSICIONAR AUTORIDADE NO MERCADO. Eleva o By como "
+        "REFERENCIA em sindicatura profissional. Linguagem sofisticada, estrategica, "
+        "menos emocional, menos humor. Temas: futuro da sindicatura, profissionalizacao "
+        "do mercado, erros estruturais do setor, gestao por dados, sindico como "
+        "empresario. CTA institucional ('O mercado mudou', 'A sindicatura esta "
+        "evoluindo', 'Por mais sindicos preparados'). Bom com formato Manifesto/"
+        "tendencia/dado que choca/visao estrategica.",
+    }
+    obj_map = obj_map_by if is_by else obj_map_sindico
     objetivo_bloco = (f"\n{obj_map[objetivo]}\n" if objetivo in obj_map else "")
-    casa = chr(0x1F3E1)
-    is_by = _BRAND == "bysindicompany"
     persona = (
         "Voce e redator do @bysindicompany — marca da Sindicompany pra SINDICOS "
         "PROFISSIONAIS, aspirantes a sindicatura e sindicos em crescimento. NAO "

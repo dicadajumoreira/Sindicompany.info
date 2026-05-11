@@ -255,9 +255,45 @@ const OBJETIVO_INSTRUCOES: Record<string, string> = {
     `- Sucesso: "não sabia disso", "meu condomínio faz errado", compartilhamentos, salvamentos, marcações de vizinhos.`,
 };
 
+// PASSO 0 — objetivo do carrossel (@bysindicompany). Mesma ideia do
+// @sindicompanybr, mas o publico e o sindico PROFISSIONAL — muda
+// linguagem, dor, gatilhos, formatos, CTA e percepcao de valor. O
+// conteudo nao pode parecer perfil de condominio: parece mercado,
+// posicionamento, bastidor da sindicatura, crescimento, autoridade.
+const OBJETIVO_INSTRUCOES_BY: Record<string, string> = {
+  comentarios:
+    `OBJETIVO: GERAR COMENTÁRIOS (DEBATE ENTRE SÍNDICOS).\n` +
+    `- Provoca identificação e divisão entre síndicos profissionais. Sucesso = síndicos debatendo, marcando outros síndicos, comentários longos, identificação profissional.\n` +
+    `- O síndico precisa sentir vontade de defender sua visão de gestão. Linguagem mais madura, mais direta, mais "mercado" — sensação de "finalmente alguém falou isso".\n` +
+    `- CTA binário ou altamente posicionável: "SÍNDICO OPERACIONAL ou SÍNDICO ESTRATÉGICO", "COBRARIA ou RELEVARIA", "DEMITIRIA ou TREINARIA", "WHATSAPP AJUDA ou ATRAPALHA", "GESTÃO FIRME ou GESTÃO LEVE". Nunca CTA genérico.\n` +
+    `- Temas que funcionam: síndico que faz tudo sozinho, excesso de WhatsApp, condômino invasivo, conselho tóxico, síndico que não delega, guerra de ego entre síndicos, concorrência desleal, preço baixo no mercado, síndrome do síndico 24h, romantização da sobrecarga. NUNCA tema de "dica de condomínio" pro morador.`,
+  salvamentos:
+    `OBJETIVO: GERAR SALVAMENTOS (CRESCIMENTO PROFISSIONAL).\n` +
+    `- O post precisa AJUDAR O SÍNDICO A CRESCER PROFISSIONALMENTE. Sensação: "isso melhora minha gestão". Parece ferramenta, framework, referência, aprendizado aplicável, visão estratégica. Sucesso = salvamentos, compartilhamentos entre síndicos, reposts, encaminhamento em grupos de gestão.\n` +
+    `- Útil pra: operação, posicionamento, liderança, comunicação, vendas, gestão, organização, expansão. Muito escaneável, muito prático — o síndico aplica, adapta, salva pra rever.\n` +
+    `- Temas: como cobrar sem perder autoridade, como conduzir assembleias difíceis, erros que fazem síndicos perder condomínios, como parar de apagar incêndio, como construir marca pessoal, como precificar sindicatura, sinais de gestão desorganizada, como criar processos, como lidar com conselho hostil, o que síndicos de alto nível fazem diferente.\n` +
+    `- CTA: "Salva isso.", "Todo síndico precisa guardar esse post.", "Você vai usar isso em alguma assembleia.", "Manda pra outro síndico." Nunca CTA de debate.`,
+  clientes:
+    `OBJETIVO: ATRAIR SÍNDICOS PARA O BY SINDICOMPANY.\n` +
+    `- O síndico precisa pensar "eu não quero crescer sozinho". Atrai quem quer escala, estrutura, marca, backoffice, crescer no mercado, parar de só sobreviver. Sucesso = DMs, inscrições, leads qualificados, pedidos de reunião.\n` +
+    `- NUNCA vender como franquia. NUNCA parecer recrutamento comum. O By precisa parecer ELITE DE MERCADO, estrutura profissional, crescimento, posicionamento, fortalecimento de marca pessoal.\n` +
+    `- Mostrar: bastidores reais, estrutura, equipe, suporte, marketing, engenharia, jurídico, processos, networking, crescimento profissional, fortalecimento do nome do síndico. Contraste síndico-sozinho × síndico-com-estrutura.\n` +
+    `- Dor: síndico cansado de fazer tudo sozinho, operar sem equipe, ser refém do WhatsApp, não conseguir crescer, perder tempo operacional, não construir autoridade.\n` +
+    `- Linguagem aspiracional, estratégica, mercado premium — "é esse nível que eu quero atingir".\n` +
+    `- CTA seletivo, nunca anúncio: "Talvez o próximo passo da sua sindicatura seja esse.", "Nem todo síndico está pronto para crescer assim.", "Se você quer crescer de verdade, fala com a gente.", "O mercado mudou. E alguns síndicos cresceram junto."`,
+  autoridade:
+    `OBJETIVO: POSICIONAR AUTORIDADE NO MERCADO.\n` +
+    `- Eleva a percepção do By Sindicompany como REFERÊNCIA em sindicatura profissional. Não é vender agora — é fazer o síndico pensar "eles estão alguns passos à frente do mercado". Sucesso = compartilhamentos entre síndicos, percepção de autoridade, convites, networking, fortalecimento da marca.\n` +
+    `- Linguagem sofisticada, estratégica, MENOS emocional, MENOS humor — visão de mercado, liderança, experiência, movimento de transformação da sindicatura.\n` +
+    `- Temas: futuro da sindicatura, profissionalização do mercado, erros estruturais do setor, gestão orientada por dados, construção de marca, crescimento sustentável, síndico como empresário, liderança, posicionamento, mercado premium, comportamento do novo morador.\n` +
+    `- CTA institucional e elegante: "O mercado mudou.", "A sindicatura está evoluindo.", "Os síndicos que entenderem isso primeiro sairão na frente.", "Por mais síndicos preparados."\n` +
+    `- Formatos fortes aqui: Manifesto, tendência de mercado, dado que choca, visão estratégica, carta aberta, reflexão profissional.`,
+};
+
 /** Gera 3 versões de copy pra carrossel — angulos editoriais distintos.
  *  O `brand` muda a estrategia (publico, objetivo, linguagem, assinatura).
- *  O `objetivo` (so @sindicompanybr) define tom/gancho/CTA/formato/sucesso. */
+ *  O `objetivo` define tom/gancho/CTA/formato/sucesso (mapas distintos
+ *  por marca: morador vs sindico profissional). */
 export async function gerarTresCopies(input: {
   brand?: string;
   objetivo?: string;
@@ -269,9 +305,10 @@ export async function gerarTresCopies(input: {
 }): Promise<{ ok: true; copies: CarrosselCopy[] } | { ok: false; error: string }> {
   const brand = input.brand === "bysindicompany" ? "bysindicompany" : "sindicompanybr";
   const isBy = brand === "bysindicompany";
+  const objMap = isBy ? OBJETIVO_INSTRUCOES_BY : OBJETIVO_INSTRUCOES;
   const objetivoBloco =
-    !isBy && input.objetivo && OBJETIVO_INSTRUCOES[input.objetivo]
-      ? `\n${OBJETIVO_INSTRUCOES[input.objetivo]}\n`
+    input.objetivo && objMap[input.objetivo]
+      ? `\n${objMap[input.objetivo]}\n`
       : "";
   const formato_label = input.formato.replaceAll("_", " ");
   const instrucoesFormato =
