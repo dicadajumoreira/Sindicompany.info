@@ -19,6 +19,7 @@ import {
   getByPatternUploadIntent,
 } from "../revista/nova/upload-actions";
 import { ByAssetSlot } from "../by-assets-slot";
+import { CopiarAssetsButton } from "./copiar-assets-button";
 import { DashboardShell } from "../shell";
 
 export default async function ByAssetsPage() {
@@ -70,13 +71,14 @@ export default async function ByAssetsPage() {
           <h1 className="text-3xl font-bold text-onix-900 mb-2">
             Assets BySindicompany
           </h1>
-          <p className="text-sm text-g60 max-w-2xl">
+          <p className="text-sm text-g60 max-w-2xl mb-4">
             Assets exclusivos dos carrosséis da marca{" "}
             <strong className="text-onix-900">@bysindicompany</strong>. A engine
             usa estes buckets (e não os do @sindicompanybr) quando o carrossel
             for criado com a marca BySindicompany. JPG, PNG, WebP e SVG. Máx
             10MB cada.
           </p>
+          <CopiarAssetsButton />
         </header>
 
         <section>

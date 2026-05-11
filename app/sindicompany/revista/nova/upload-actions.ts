@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { slugifyCondo } from "@/lib/sindicompany/condominios";
 import {
+  copyAssetsToByBrand,
   createByIconCarrosselUploadIntent,
   createByIconUploadIntent,
   createByLogoUploadIntent,
@@ -273,4 +274,22 @@ export async function getByLogoUploadIntent(slot: number, ext: string) {
   return _slotIntent(
     ext, slot, LOGO_MAX_SLOTS, "Logo (By)", createByLogoUploadIntent,
   );
+}
+
+/** Copia Patterns, Icons, Fundo Carrossel e Logotipos do @sindicompanybr
+ *  pros buckets do @bysindicompany. Idempotente — pode rodar de novo. */
+export async function copiarAssetsParaBy(): Promise<
+  { ok: true; resumo: string } | { ok: false; error: string }
+> {
+  try {
+    await requireAuth();
+  } catch {
+    return { ok: false, error: "Sessao expirada. Faca login de novo." };
+  }
+  const r = await copyAssetsToByBrand();
+  if (!r.ok) return r;
+  const partes = Object.entries(r.copied).map(
+    ([k, n]) => `${k.replace("__", "")}: ${n}`,
+  );
+  return { ok: true, resumo: partes.join(" · ") };
 }

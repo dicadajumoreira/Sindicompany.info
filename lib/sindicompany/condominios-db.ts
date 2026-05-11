@@ -306,6 +306,55 @@ export function listByLogoUrls() {
   return _listSlotUrls("__by-logos", "logo", LOGO_MAX_SLOTS);
 }
 
+/** Copia todos os arquivos dos buckets de assets do @sindicompanybr
+ *  (__patterns, __icons, __icon-carrossel, __logos) pros equivalentes
+ *  do @bysindicompany (__by-*). Sobrescreve o que ja existir no destino.
+ *  Devolve resumo por prefixo. Operacao idempotente. */
+export async function copyAssetsToByBrand(): Promise<
+  { ok: true; copied: Record<string, number> } | { ok: false; error: string }
+> {
+  const supabase = createAdminClient();
+  const pairs: [string, string][] = [
+    ["__patterns", "__by-patterns"],
+    ["__icons", "__by-icons"],
+    ["__icon-carrossel", "__by-icon-carrossel"],
+    ["__logos", "__by-logos"],
+  ];
+  const copied: Record<string, number> = {};
+  try {
+    for (const [src, dst] of pairs) {
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .list(src, { limit: 200 });
+      if (error) throw error;
+      let n = 0;
+      for (const obj of data ?? []) {
+        // pula "pastas" e arquivos sem nome
+        if (!obj.name || obj.name.endsWith("/")) continue;
+        const { error: cpErr } = await supabase.storage
+          .from(BUCKET)
+          .copy(`${src}/${obj.name}`, `${dst}/${obj.name}`);
+        // copy nao tem upsert; se ja existir, remove e copia de novo
+        if (cpErr) {
+          await supabase.storage.from(BUCKET).remove([`${dst}/${obj.name}`]);
+          const { error: cpErr2 } = await supabase.storage
+            .from(BUCKET)
+            .copy(`${src}/${obj.name}`, `${dst}/${obj.name}`);
+          if (cpErr2) throw cpErr2;
+        }
+        n++;
+      }
+      copied[src] = n;
+    }
+    return { ok: true, copied };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Falha desconhecida.",
+    };
+  }
+}
+
 /** Sobe o arquivo de prestação de contas (imagem ou PDF) atrelado a
  *  uma revista específica. Mantido para fluxos que ainda usam upload
  *  via Server Action (testes locais e arquivos pequenos). O fluxo
