@@ -44,7 +44,10 @@ export default async function RevistaBoasVindasPage({
   const gestorNome = temGestor ? meta!.gestor_nome! : "";
   const gestorCargo = temGestor ? gestorTitulo(meta!.gestor_genero) : "";
   const gestorFoto = temGestor && meta?.gestor_foto_path ? getCondoFotoPublicUrl(meta.gestor_foto_path) : null;
-  const ocultarSindico = temGestor && !!meta?.ocultar_contato_sindico;
+  // Visibilidade do contato do(a) sindico(a): flags granulares
+  // (default true). Nome e cargo aparecem sempre.
+  const mostrarWhatsSindico = meta ? meta.mostrar_whatsapp_sindico !== false : true;
+  const mostrarEmailSindico = meta ? meta.mostrar_email_sindico !== false : true;
   const equipe = (meta?.equipe_atendimento ?? []).filter((m) => m.nome || m.cargo);
   const comunidadeUrl = meta?.comunidade_url ?? "";
   const qrUrl = meta?.comunidade_qrcode_path ? getCondoFotoPublicUrl(meta.comunidade_qrcode_path) : null;
@@ -165,11 +168,16 @@ export default async function RevistaBoasVindasPage({
                     <div style={{ fontSize: "9pt", letterSpacing: ".14em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginTop: "1mm" }}>{sindicoTitulo}</div>
                   </div>
                 </div>
-                {/* Telefone e e-mail so quando NAO esta oculto */}
-                {!ocultarSindico && (meta?.sindico_whatsapp || meta?.sindico_email) && (
+                {/* WhatsApp e e-mail conforme as flags de visibilidade */}
+                {((mostrarWhatsSindico && meta?.sindico_whatsapp) ||
+                  (mostrarEmailSindico && meta?.sindico_email)) && (
                   <div style={{ marginTop: "4mm", fontSize: "10pt", color: "#3a3d4a" }}>
-                    {meta?.sindico_whatsapp && <div>WhatsApp: {meta.sindico_whatsapp}</div>}
-                    {meta?.sindico_email && <div>E-mail: {meta.sindico_email}</div>}
+                    {mostrarWhatsSindico && meta?.sindico_whatsapp && (
+                      <div>WhatsApp: {meta.sindico_whatsapp}</div>
+                    )}
+                    {mostrarEmailSindico && meta?.sindico_email && (
+                      <div>E-mail: {meta.sindico_email}</div>
+                    )}
                   </div>
                 )}
               </div>

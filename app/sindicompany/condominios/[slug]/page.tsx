@@ -543,17 +543,30 @@ export default async function EditarCondoPage({
             );
           })}
 
-          <Field label="Contato do síndico na revista (quando há gestor)">
-            <label className="flex items-center gap-2 text-sm mt-1">
-              <input
-                type="checkbox"
-                name="ocultar_contato_sindico"
-                value="on"
-                defaultChecked={!!meta?.ocultar_contato_sindico}
-              />
-              Ocultar telefone e e-mail do(a) síndico(a) quando o condomínio
-              tem gestor (mostra só os dados do gestor)
-            </label>
+          <Field
+            label="Contato do(a) síndico(a) na revista"
+            hint="Escolha o que aparece junto do nome e cargo do(a) síndico(a). O nome e o cargo aparecem sempre."
+          >
+            <div className="flex flex-col gap-1.5 mt-1">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="mostrar_whatsapp_sindico"
+                  value="on"
+                  defaultChecked={meta ? meta.mostrar_whatsapp_sindico !== false : true}
+                />
+                Mostrar WhatsApp do(a) síndico(a)
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="mostrar_email_sindico"
+                  value="on"
+                  defaultChecked={meta ? meta.mostrar_email_sindico !== false : true}
+                />
+                Mostrar e-mail do(a) síndico(a)
+              </label>
+            </div>
           </Field>
         </section>
 

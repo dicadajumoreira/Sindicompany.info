@@ -162,7 +162,10 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   const gestor_whatsapp = getStr(formData, "gestor_whatsapp");
   const comunidade_url = getStr(formData, "comunidade_url");
   const comunidadeQrExistente = getStr(formData, "comunidade_qr_existente");
-  const ocultar_contato_sindico = getStr(formData, "ocultar_contato_sindico") === "on";
+  const mostrar_whatsapp_sindico = getStr(formData, "mostrar_whatsapp_sindico") === "on";
+  const mostrar_email_sindico = getStr(formData, "mostrar_email_sindico") === "on";
+  // legado: oculta se nenhum dos dois estiver visivel
+  const ocultar_contato_sindico = !mostrar_whatsapp_sindico && !mostrar_email_sindico;
   const boasvindasCapaExistente = getStr(formData, "boasvindas_capa_existente");
 
   const novaFotoSindico = await maybeUploadFoto(formData, "sindico_foto", slug, "sindico");
@@ -214,6 +217,8 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
     comunidade_qrcode_path: novoQrComunidade ?? comunidadeQrExistente ?? null,
     equipe_atendimento: equipe_atendimento.length ? equipe_atendimento : null,
     ocultar_contato_sindico,
+    mostrar_whatsapp_sindico,
+    mostrar_email_sindico,
     boasvindas_capa_path: novaCapaBoasVindas ?? boasvindasCapaExistente ?? null,
   };
 

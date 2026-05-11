@@ -37,8 +37,12 @@ export interface CondoMeta {
   comunidade_qrcode_path: string | null;
   /** Equipe de atendimento — ate 5 pessoas com foto + cargo. */
   equipe_atendimento: EquipeMembro[] | null;
-  /** Quando tem gestor, esconder telefone/email do sindico na revista. */
+  /** (legado) — substituido por mostrar_whatsapp_sindico/mostrar_email_sindico. */
   ocultar_contato_sindico: boolean;
+  /** Mostrar o WhatsApp do(a) sindico(a) na revista. */
+  mostrar_whatsapp_sindico: boolean;
+  /** Mostrar o e-mail do(a) sindico(a) na revista. */
+  mostrar_email_sindico: boolean;
   /** Foto de capa da Revista de Boas-Vindas. */
   boasvindas_capa_path: string | null;
   updated_at: string;
@@ -69,6 +73,8 @@ export interface CondoMetaInput {
   comunidade_qrcode_path?: string | null;
   equipe_atendimento?: EquipeMembro[] | null;
   ocultar_contato_sindico?: boolean;
+  mostrar_whatsapp_sindico?: boolean;
+  mostrar_email_sindico?: boolean;
   boasvindas_capa_path?: string | null;
 }
 
@@ -122,6 +128,8 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
     comunidade_qrcode_path: input.comunidade_qrcode_path ?? null,
     equipe_atendimento: input.equipe_atendimento ?? null,
     ocultar_contato_sindico: !!input.ocultar_contato_sindico,
+    mostrar_whatsapp_sindico: input.mostrar_whatsapp_sindico ?? true,
+    mostrar_email_sindico: input.mostrar_email_sindico ?? true,
     boasvindas_capa_path: input.boasvindas_capa_path ?? null,
   };
 
