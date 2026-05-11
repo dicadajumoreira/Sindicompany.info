@@ -55,15 +55,14 @@ export default async function CarrosseisPage() {
         <header className="flex items-start justify-between mb-10">
           <div>
             <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2">
-              Carrosséis · Instagram @sindicompanybr
+              Carrosséis · Instagram
             </div>
             <h1 className="text-4xl font-bold text-onix-900 leading-tight">
               Carrosséis
             </h1>
             <p className="text-sm text-g60 mt-2 max-w-md">
-              Gere posts em formato carrossel 4K (3072×3839, 4:5) pra Instagram
-              da Sindicompany, com identidade visual da marca aplicada
-              automaticamente.
+              Gere posts em formato carrossel 4K (3072×3839, 4:5) pra Instagram,
+              com identidade visual da marca aplicada automaticamente.
             </p>
           </div>
           <Link

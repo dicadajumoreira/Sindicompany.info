@@ -23,9 +23,10 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     label: "Carrosséis",
+    href: "/sindicompany/carrossel",
     emoji: "🎠",
     children: [
-      { label: "@sindicompanybr", href: "/sindicompany/carrossel" },
+      { label: "@sindicompanybr", href: "/sindicompany/carrossel/novo?brand=sindicompanybr" },
       { label: "@bysindicompany", href: "/sindicompany/carrossel/novo?brand=bysindicompany" },
     ],
   },
