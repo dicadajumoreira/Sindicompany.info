@@ -76,50 +76,49 @@ export async function listCondoMetas(): Promise<CondoMeta[]> {
 
 export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta> {
   const supabase = createAdminClient();
-  const base = {
+  const temGestor = !!(input.gestor_nome && input.gestor_nome.trim());
+  // Payload completo. Se alguma coluna ainda nao existir no banco
+  // (migrations 20260513/20260528/20260529/20260530 nao rodadas), o
+  // upsert volta PGRST204 mencionando a coluna — a gente remove ela
+  // do payload e tenta de novo, ate dar certo. So 'nome' eh garantido.
+  const payload: Record<string, unknown> = {
     nome: input.nome,
     sindico_nome: input.sindico_nome ?? null,
     sindico_genero: input.sindico_genero ?? null,
     sindico_foto_path: input.sindico_foto_path ?? null,
-    logo_url: input.logo_url ?? null,
-    logo_condominio_url: input.logo_condominio_url ?? null,
-    gestor_nome: input.gestor_nome ?? null,
-    gestor_foto_path: input.gestor_foto_path ?? null,
-    tem_gestor: !!(input.gestor_nome && input.gestor_nome.trim()),
-  };
-  const novas = {
-    gestor_genero: input.gestor_genero ?? null,
-    is_by_sindico: !!input.is_by_sindico,
-  };
-  const contatos = {
     sindico_email: input.sindico_email ?? null,
     sindico_whatsapp: input.sindico_whatsapp ?? null,
+    logo_url: input.logo_url ?? null,
+    logo_condominio_url: input.logo_condominio_url ?? null,
+    tem_gestor: temGestor,
+    gestor_nome: input.gestor_nome ?? null,
+    gestor_genero: temGestor ? (input.gestor_genero ?? null) : null,
+    gestor_foto_path: input.gestor_foto_path ?? null,
     gestor_email: input.gestor_email ?? null,
     gestor_whatsapp: input.gestor_whatsapp ?? null,
+    is_by_sindico: !!input.is_by_sindico,
   };
-  // Colunas novas (migrations 20260528-20260530). Se ainda nao foram
-  // rodadas, o upsert falha com PGRST204 — caímos pra um payload mais
-  // enxuto progressivamente ate dar certo.
-  const attempts: Record<string, unknown>[] = [
-    { ...base, ...novas, ...contatos },
-    { ...base, ...novas },
-    { ...base, gestor_genero: novas.gestor_genero },
-    base,
-  ];
-  let data: unknown = null;
+
   let lastErr: { message?: string } | null = null;
-  for (const payload of attempts) {
-    const r = await supabase.from(TABLE).upsert(payload, { onConflict: "nome" }).select().single();
-    if (!r.error) {
-      data = r.data;
-      lastErr = null;
-      break;
-    }
+  for (let tries = 0; tries < 8; tries++) {
+    const r = await supabase
+      .from(TABLE)
+      .upsert(payload, { onConflict: "nome" })
+      .select()
+      .single();
+    if (!r.error) return r.data as CondoMeta;
     lastErr = r.error;
-    if (!/gestor_genero|is_by_sindico|sindico_email|sindico_whatsapp|gestor_email|gestor_whatsapp|PGRST204/.test(r.error.message ?? "")) break;
+    // Tenta extrair o nome da coluna ausente da mensagem do PGRST204.
+    const msg = r.error.message ?? "";
+    const m = msg.match(/'([a-z_]+)' column/i);
+    if (m && m[1] in payload && m[1] !== "nome") {
+      delete payload[m[1]];
+      continue;
+    }
+    break;
   }
   if (lastErr) throw lastErr;
-  return data as CondoMeta;
+  throw new Error("upsertCondoMeta falhou");
 }
 
 /** Sobe foto do gestor (atrelada a uma revista específica) e retorna URL pública. */

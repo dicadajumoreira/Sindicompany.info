@@ -195,11 +195,33 @@ export default async function EditarCondoPage({
           </h2>
           <p className="text-xs text-g60 -mt-3">
             Pessoa de contato da Sindicompany pra esse condomínio. Aparece na
-            carta do gestor e na contracapa da revista. Deixe o nome em branco
-            se o condomínio não tem gestor de atendimento.
+            carta do gestor da revista.
           </p>
 
-          <Field label="Nome" hint="Nome de quem atende esse condomínio.">
+          <Field label="Este condomínio tem Gestor de Atendimento?">
+            <div className="flex gap-4 mt-1">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="tem_gestor"
+                  value="sim"
+                  defaultChecked={!!meta?.gestor_nome}
+                />
+                Sim, tem gestor
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="tem_gestor"
+                  value="nao"
+                  defaultChecked={!meta?.gestor_nome}
+                />
+                Não tem gestor
+              </label>
+            </div>
+          </Field>
+
+          <Field label="Nome" hint="Nome de quem atende esse condomínio (só se tiver gestor).">
             <input
               type="hidden"
               name="gestor_foto_existente"
@@ -210,7 +232,7 @@ export default async function EditarCondoPage({
               name="gestor_nome"
               defaultValue={meta?.gestor_nome ?? ""}
               maxLength={120}
-              placeholder="Ex: Carlos Andrade (deixe em branco se não tem)"
+              placeholder="Ex: Carlos Andrade"
               className={inputCls}
             />
           </Field>

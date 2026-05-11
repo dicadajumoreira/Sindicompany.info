@@ -138,8 +138,14 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   const logoSindicoExistente = getStr(formData, "logo_sindico_existente");
   const logoCondominioExistente = getStr(formData, "logo_condominio_existente");
 
-  // Gestor de Atendimento — opcional. Nome em branco = condo sem gestor.
-  const gestor_nome = getStr(formData, "gestor_nome");
+  // Gestor de Atendimento — opcional. O radio 'tem_gestor' diz se o
+  // condo tem gestor; se 'nao', todos os campos do gestor sao zerados.
+  const temGestor = getStr(formData, "tem_gestor") !== "nao";
+  const gestor_nome_raw = getStr(formData, "gestor_nome");
+  if (temGestor && !gestor_nome_raw) {
+    backWithError(slug, "Marcou que tem gestor — informe o nome do gestor.");
+  }
+  const gestor_nome = temGestor ? gestor_nome_raw : "";
   const gestorGeneroRaw = getStr(formData, "gestor_genero");
   const gestor_genero: Genero | undefined =
     gestorGeneroRaw === "masculino" || gestorGeneroRaw === "feminino"
@@ -153,7 +159,9 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   const gestor_whatsapp = getStr(formData, "gestor_whatsapp");
 
   const novaFotoSindico = await maybeUploadFoto(formData, "sindico_foto", slug, "sindico");
-  const novaFotoGestor = await maybeUploadFoto(formData, "gestor_foto", slug, "gestor");
+  const novaFotoGestor = temGestor
+    ? await maybeUploadFoto(formData, "gestor_foto", slug, "gestor")
+    : null;
   const novoLogoSindico = await maybeUploadLogo(formData, "logo_sindico_file", slug, "sindico");
   const novoLogoCondominio = await maybeUploadLogo(formData, "logo_condominio_file", slug, "condominio");
 
