@@ -115,6 +115,27 @@ export default async function EditarCondoPage({
             />
           </Field>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="E-mail">
+              <input
+                type="email"
+                name="sindico_email"
+                defaultValue={meta?.sindico_email ?? ""}
+                placeholder="sindico@email.com"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="WhatsApp">
+              <input
+                type="text"
+                name="sindico_whatsapp"
+                defaultValue={meta?.sindico_whatsapp ?? ""}
+                placeholder="(11) 99999-9999"
+                className={inputCls}
+              />
+            </Field>
+          </div>
+
           <Field label="Gênero">
             <div className="flex gap-4 mt-1">
               <label className="flex items-center gap-2 text-sm">
@@ -193,6 +214,27 @@ export default async function EditarCondoPage({
               className={inputCls}
             />
           </Field>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="E-mail">
+              <input
+                type="email"
+                name="gestor_email"
+                defaultValue={meta?.gestor_email ?? ""}
+                placeholder="gestor@email.com"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="WhatsApp">
+              <input
+                type="text"
+                name="gestor_whatsapp"
+                defaultValue={meta?.gestor_whatsapp ?? ""}
+                placeholder="(11) 99999-9999"
+                className={inputCls}
+              />
+            </Field>
+          </div>
 
           <Field label="Gênero" hint="Define o título: Gestor / Gestora de Atendimento.">
             <div className="flex gap-4 mt-1">

@@ -147,6 +147,10 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
       : "masculino";
   const gestorFotoExistente = getStr(formData, "gestor_foto_existente");
   const is_by_sindico = getStr(formData, "is_by_sindico") === "on";
+  const sindico_email = getStr(formData, "sindico_email");
+  const sindico_whatsapp = getStr(formData, "sindico_whatsapp");
+  const gestor_email = getStr(formData, "gestor_email");
+  const gestor_whatsapp = getStr(formData, "gestor_whatsapp");
 
   const novaFotoSindico = await maybeUploadFoto(formData, "sindico_foto", slug, "sindico");
   const novaFotoGestor = await maybeUploadFoto(formData, "gestor_foto", slug, "gestor");
@@ -158,6 +162,8 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
     sindico_nome,
     sindico_genero,
     sindico_foto_path: novaFotoSindico ?? sindicoFotoExistente ?? null,
+    sindico_email: sindico_email || null,
+    sindico_whatsapp: sindico_whatsapp || null,
     logo_url: novoLogoSindico ?? logoSindicoExistente ?? null,
     logo_condominio_url:
       novoLogoCondominio ?? logoCondominioExistente ?? null,
@@ -166,6 +172,8 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
     gestor_foto_path: gestor_nome
       ? (novaFotoGestor ?? gestorFotoExistente ?? null)
       : null,
+    gestor_email: gestor_nome ? gestor_email || null : null,
+    gestor_whatsapp: gestor_nome ? gestor_whatsapp || null : null,
     is_by_sindico,
   };
 

@@ -15,6 +15,8 @@ export interface CondoMeta {
   sindico_nome: string | null;
   sindico_genero: Genero | null;
   sindico_foto_path: string | null;
+  sindico_email: string | null;
+  sindico_whatsapp: string | null;
   /** Logo do(a) sindico(a) — default usado na capa/contracapa da revista. */
   logo_url: string | null;
   /** Logotipo oficial do condominio — opcional, nao substitui o do sindico. */
@@ -25,6 +27,8 @@ export interface CondoMeta {
   gestor_nome: string | null;
   gestor_genero: Genero | null;
   gestor_foto_path: string | null;
+  gestor_email: string | null;
+  gestor_whatsapp: string | null;
   /** Sindico faz parte do By Sindicompany — revista usa logo do By. */
   is_by_sindico: boolean;
   updated_at: string;
@@ -35,11 +39,15 @@ export interface CondoMetaInput {
   sindico_nome?: string;
   sindico_genero?: Genero;
   sindico_foto_path?: string | null;
+  sindico_email?: string | null;
+  sindico_whatsapp?: string | null;
   logo_url?: string | null;
   logo_condominio_url?: string | null;
   gestor_nome?: string | null;
   gestor_genero?: Genero | null;
   gestor_foto_path?: string | null;
+  gestor_email?: string | null;
+  gestor_whatsapp?: string | null;
   is_by_sindico?: boolean;
 }
 
@@ -79,12 +87,23 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
     gestor_foto_path: input.gestor_foto_path ?? null,
     tem_gestor: !!(input.gestor_nome && input.gestor_nome.trim()),
   };
-  // Colunas novas (migrations 20260528 / 20260529). Se ainda nao foram
+  const novas = {
+    gestor_genero: input.gestor_genero ?? null,
+    is_by_sindico: !!input.is_by_sindico,
+  };
+  const contatos = {
+    sindico_email: input.sindico_email ?? null,
+    sindico_whatsapp: input.sindico_whatsapp ?? null,
+    gestor_email: input.gestor_email ?? null,
+    gestor_whatsapp: input.gestor_whatsapp ?? null,
+  };
+  // Colunas novas (migrations 20260528-20260530). Se ainda nao foram
   // rodadas, o upsert falha com PGRST204 — caímos pra um payload mais
   // enxuto progressivamente ate dar certo.
   const attempts: Record<string, unknown>[] = [
-    { ...base, gestor_genero: input.gestor_genero ?? null, is_by_sindico: !!input.is_by_sindico },
-    { ...base, gestor_genero: input.gestor_genero ?? null },
+    { ...base, ...novas, ...contatos },
+    { ...base, ...novas },
+    { ...base, gestor_genero: novas.gestor_genero },
     base,
   ];
   let data: unknown = null;
@@ -97,7 +116,7 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
       break;
     }
     lastErr = r.error;
-    if (!/gestor_genero|is_by_sindico|PGRST204/.test(r.error.message ?? "")) break;
+    if (!/gestor_genero|is_by_sindico|sindico_email|sindico_whatsapp|gestor_email|gestor_whatsapp|PGRST204/.test(r.error.message ?? "")) break;
   }
   if (lastErr) throw lastErr;
   return data as CondoMeta;
