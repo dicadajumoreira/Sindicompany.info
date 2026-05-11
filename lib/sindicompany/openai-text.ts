@@ -112,7 +112,7 @@ export async function gerarTresCopies(input: {
     `- Quantidade de slides: ${input.n_slides}\n` +
     (input.briefing ? `- Contexto extra: ${input.briefing}\n` : "") +
     `\nREGRAS POR SLIDE:\n` +
-    `- SLIDE 1 (capa): título-gancho curto que dá curiosidade em 1.5s. Body opcional, máx 8 palavras.\n` +
+    `- SLIDE 1 (capa): título-gancho curto que JÁ INTRODUZ o tema do carrossel (não fique só na curiosidade — o leitor precisa entender em 1.5s do que se trata). O tema "${input.tema}" deve aparecer literal ou em paráfrase clara no título. Body opcional, máx 8 palavras.\n` +
     `- SLIDES INTERNOS: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras).\n` +
     `- ÚLTIMO SLIDE: pergunta SIM/NÃO simples ou call-to-action.\n` +
     `\nREGRAS DE PORTUGUÊS (humanização):\n` +

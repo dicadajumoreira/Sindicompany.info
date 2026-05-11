@@ -477,8 +477,10 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         + (f"- Contexto extra: {briefing}\n" if briefing else "")
         + f"\n"
         f"REGRAS:\n"
-        f"- SLIDE 1 (capa): título-gancho curto que dá curiosidade em 1.5s. "
-        f"Body opcional, máx 8 palavras.\n"
+        f"- SLIDE 1 (capa): título-gancho curto que JÁ INTRODUZ o tema "
+        f"do carrossel. O leitor precisa entender em 1.5s do que se trata. "
+        f"O tema '{tema}' deve aparecer literal ou em paráfrase clara no "
+        f"título. Body opcional, máx 8 palavras.\n"
         f"- SLIDES INTERNOS: cada um com tipo, título (3-7 palavras) e body "
         f"(1-3 frases curtas, máx 35 palavras). Crie tensão entre slides.\n"
         f"- ÚLTIMO SLIDE: pergunta SIM/NÃO simples ou call-to-action pra "
