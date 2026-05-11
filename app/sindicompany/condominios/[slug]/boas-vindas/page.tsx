@@ -91,12 +91,19 @@ export default async function RevistaBoasVindasPage({
           .bv-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; }
           .bv-page:last-child { page-break-after: auto; }
           body { background: #fff !important; }
+          .bv-page, .bv-safe { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
         .bv-page {
           width: 210mm; height: 297mm; margin: 16px auto; background: #fff;
           box-shadow: 0 4px 24px rgba(0,0,0,.12); position: relative; overflow: hidden;
           font-family: 'Epilogue', sans-serif; color: #1A1C29;
           box-sizing: border-box;
+        }
+        /* Area "segura": margem de 8mm em relacao a borda fisica da
+           folha A4, pra nenhum conteudo (nem os fundos full-bleed) cair
+           fora da area imprimivel do PDF. */
+        .bv-safe {
+          position: absolute; inset: 8mm; overflow: hidden;
         }
       `}</style>
 
@@ -113,45 +120,48 @@ export default async function RevistaBoasVindasPage({
       <div className="bg-onix-50 py-6">
         {/* ---------- PÁGINA 1 — CAPA ---------- */}
         <div className="bv-page">
-          {capaUrl ? (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={capaUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(26,28,41,.35) 0%,rgba(26,28,41,.55) 55%,rgba(26,28,41,.92) 100%)" }} />
-            </>
-          ) : (
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg,#84C7D3 0%,#1A1C29 100%)" }} />
-          )}
-          {/* Logo do sindico: topo, canto esquerdo, ate ~metade da pagina (105mm de 210mm) */}
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoUrl}
-              alt="Logo do síndico"
-              style={{ position: "absolute", top: "16mm", left: "16mm", maxWidth: "105mm", maxHeight: "70mm", objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,.25))" }}
-            />
-          ) : (
-            <div style={{ position: "absolute", top: "18mm", left: "16mm", fontSize: "11pt", letterSpacing: ".3em", textTransform: "uppercase", color: "rgba(255,255,255,.85)" }}>
-              {ehEmpresa ? sindicoNome : `${sindicoTitulo} ${sindicoNome}`}
+          <div className="bv-safe">
+            {capaUrl ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={capaUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(26,28,41,.35) 0%,rgba(26,28,41,.55) 55%,rgba(26,28,41,.92) 100%)" }} />
+              </>
+            ) : (
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg,#84C7D3 0%,#1A1C29 100%)" }} />
+            )}
+            {/* Logo do sindico: topo, canto esquerdo, ate ~metade da pagina (105mm de 210mm) */}
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt="Logo do síndico"
+                style={{ position: "absolute", top: "10mm", left: "10mm", maxWidth: "98mm", maxHeight: "62mm", objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,.25))" }}
+              />
+            ) : (
+              <div style={{ position: "absolute", top: "12mm", left: "10mm", fontSize: "11pt", letterSpacing: ".3em", textTransform: "uppercase", color: "rgba(255,255,255,.85)" }}>
+                {ehEmpresa ? sindicoNome : `${sindicoTitulo} ${sindicoNome}`}
+              </div>
+            )}
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "82mm 18mm 32mm", textAlign: "center", color: "#fff" }}>
+              <h1 style={{ fontSize: "28pt", fontWeight: 900, lineHeight: 1.15, margin: 0 }}>
+                Seja bem-vindo, Condomínio {nome}.
+              </h1>
+              <p style={{ fontSize: "15pt", fontWeight: 600, marginTop: "9mm", color: "#DABDA9" }}>
+                Agora vocês fazem parte da nossa família.
+              </p>
             </div>
-          )}
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "90mm 24mm 40mm", textAlign: "center", color: "#fff" }}>
-            <h1 style={{ fontSize: "30pt", fontWeight: 900, lineHeight: 1.15, margin: 0 }}>
-              Seja bem-vindo, Condomínio {nome}.
-            </h1>
-            <p style={{ fontSize: "16pt", fontWeight: 600, marginTop: "10mm", color: "#DABDA9" }}>
-              Agora vocês fazem parte da nossa família.
-            </p>
-          </div>
-          <div style={{ position: "absolute", bottom: "14mm", left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,.7)", fontSize: "9pt", letterSpacing: ".1em" }}>
-            Revista de Boas-Vindas
+            <div style={{ position: "absolute", bottom: "9mm", left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,.7)", fontSize: "9pt", letterSpacing: ".1em" }}>
+              Revista de Boas-Vindas
+            </div>
           </div>
         </div>
 
         {/* ---------- PÁGINA 2 — CARTA + EQUIPE ---------- */}
         <div className="bv-page">
+          <div className="bv-safe">
           {patternBg(0, 0.06)}
-          <div style={{ position: "relative", padding: "22mm 24mm" }}>
+          <div style={{ position: "relative", padding: "14mm 16mm" }}>
             <div style={{ fontSize: "9pt", letterSpacing: ".26em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "4mm" }}>
               Carta de agradecimento
             </div>
@@ -259,7 +269,7 @@ export default async function RevistaBoasVindasPage({
                 </div>
               ) : null;
               return (
-                <div style={{ display: "flex", gap: "8mm", marginTop: "10mm", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: "6mm", marginTop: "7mm", flexWrap: "wrap" }}>
                   {gestorDestaque ? [gestorCard, sindicoCard] : [sindicoCard, gestorCard]}
                 </div>
               );
@@ -267,23 +277,23 @@ export default async function RevistaBoasVindasPage({
 
             {/* Equipe de atendimento */}
             {equipe.length > 0 && (
-              <div style={{ marginTop: "12mm" }}>
-                <div style={{ fontSize: "9pt", letterSpacing: ".22em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "5mm" }}>
+              <div style={{ marginTop: "9mm" }}>
+                <div style={{ fontSize: "9pt", letterSpacing: ".22em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "4mm" }}>
                   Equipe de atendimento do condomínio
                 </div>
-                <div style={{ display: "flex", gap: "6mm", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: "5mm", flexWrap: "wrap" }}>
                   {equipe.map((m, i) => {
                     const f = m.foto_path ? getCondoFotoPublicUrl(m.foto_path) : null;
                     return (
-                      <div key={i} style={{ width: "32mm", textAlign: "center" }}>
+                      <div key={i} style={{ width: "30mm", textAlign: "center" }}>
                         {f ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={f} alt={m.nome} style={{ width: "26mm", height: "26mm", borderRadius: "50%", objectFit: "cover", margin: "0 auto 2mm" }} />
+                          <img src={f} alt={m.nome} style={{ width: "22mm", height: "22mm", borderRadius: "50%", objectFit: "cover", margin: "0 auto 2mm" }} />
                         ) : (
-                          <div style={{ width: "26mm", height: "26mm", borderRadius: "50%", background: "#E5E7EB", margin: "0 auto 2mm" }} />
+                          <div style={{ width: "22mm", height: "22mm", borderRadius: "50%", background: "#E5E7EB", margin: "0 auto 2mm" }} />
                         )}
-                        <div style={{ fontSize: "9.5pt", fontWeight: 700, lineHeight: 1.2 }}>{m.nome}</div>
-                        <div style={{ fontSize: "8pt", color: "#6b7280", lineHeight: 1.2 }}>{m.cargo}</div>
+                        <div style={{ fontSize: "9pt", fontWeight: 700, lineHeight: 1.2 }}>{m.nome}</div>
+                        <div style={{ fontSize: "7.5pt", color: "#6b7280", lineHeight: 1.2 }}>{m.cargo}</div>
                       </div>
                     );
                   })}
@@ -291,13 +301,15 @@ export default async function RevistaBoasVindasPage({
               </div>
             )}
           </div>
+          </div>
         </div>
 
         {/* ---------- PÁGINA 3 — COMUNIDADE ---------- */}
         <div className="bv-page">
+          <div className="bv-safe">
           <div style={{ position: "absolute", inset: 0, background: "#F4F4F5" }} />
           {patternBg(1, 0.06)}
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "30mm 24mm", textAlign: "center" }}>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20mm 16mm", textAlign: "center" }}>
             <div style={{ fontSize: "9pt", letterSpacing: ".28em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "5mm" }}>
               Comunidade do condomínio
             </div>
@@ -328,25 +340,27 @@ export default async function RevistaBoasVindasPage({
               </div>
             )}
           </div>
-          <div style={{ position: "absolute", bottom: "14mm", left: 0, right: 0, textAlign: "center", color: "#9ca3af", fontSize: "9pt" }}>
+          <div style={{ position: "absolute", bottom: "9mm", left: 0, right: 0, textAlign: "center", color: "#9ca3af", fontSize: "9pt" }}>
             Sindicompany · gestão condominial
+          </div>
           </div>
         </div>
 
         {/* ---------- PÁGINA 4 — CONTRA-CAPA ---------- */}
         <div className="bv-page">
+          <div className="bv-safe">
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(200deg,#1A1C29 0%,#1A1C29 45%,#84C7D3 100%)" }} />
           {patternBg(2, 0.12)}
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", padding: "30mm 24mm 22mm", textAlign: "center", color: "#fff" }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10mm" }}>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", padding: "20mm 18mm 16mm", textAlign: "center", color: "#fff" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "9mm" }}>
               {logoContracapa ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoContracapa} alt="Logo" style={{ maxWidth: "110mm", maxHeight: "55mm", objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,.25))" }} />
+                <img src={logoContracapa} alt="Logo" style={{ maxWidth: "104mm", maxHeight: "48mm", objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,.25))" }} />
               ) : (
                 <div style={{ fontSize: "20pt", fontWeight: 900, letterSpacing: ".04em" }}>Condomínio {nome}</div>
               )}
               <div>
-                <h2 style={{ fontSize: "26pt", fontWeight: 900, lineHeight: 1.15, margin: 0 }}>
+                <h2 style={{ fontSize: "24pt", fontWeight: 900, lineHeight: 1.15, margin: 0 }}>
                   Conte com a gente, Condomínio {nome}.
                 </h2>
                 <p style={{ fontSize: "13pt", fontWeight: 600, marginTop: "6mm", color: "#DABDA9" }}>
@@ -387,6 +401,7 @@ export default async function RevistaBoasVindasPage({
             <div style={{ color: "rgba(255,255,255,.7)", fontSize: "9pt", letterSpacing: ".1em" }}>
               Sindicompany · gestão condominial profissional
             </div>
+          </div>
           </div>
         </div>
       </div>
