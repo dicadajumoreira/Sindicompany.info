@@ -853,7 +853,7 @@ def _slide_html(
   }}
   .capa-titulo {{
     font-weight: 900;
-    font-size: 285px;
+    font-size: 257px;
     line-height: 0.95;
     letter-spacing: -0.025em;
     color: {p["white"]};
