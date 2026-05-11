@@ -188,7 +188,8 @@ export default async function RevistaBoasVindasPage({
                 <p style={{ margin: "0 0 4mm" }}>
                   <strong>Faça parte da comunidade de WhatsApp do condomínio.</strong>{" "}
                   É lá que circulam avisos, novidades e o dia a dia do prédio.
-                  O link e o QR code estão na próxima página.
+                  Entre por aqui: <span style={{ color: "#1A1C29", fontWeight: 700, wordBreak: "break-all" }}>{comunidadeUrl}</span>{" "}
+                  (o QR code também está na próxima página).
                 </p>
               )}
               <p style={{ margin: "4mm 0 0", fontWeight: 700 }}>
@@ -200,54 +201,69 @@ export default async function RevistaBoasVindasPage({
               </p>
             </div>
 
-            {/* Dados do síndico / gestor em destaque */}
-            <div style={{ display: "flex", gap: "8mm", marginTop: "10mm", flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: "70mm", background: "#F4F4F5", borderRadius: "4mm", padding: "6mm" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "4mm" }}>
-                  {sindicoFoto && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={sindicoFoto} alt={sindicoNome} style={{ width: "16mm", height: "16mm", borderRadius: "50%", objectFit: "cover" }} />
-                  )}
-                  <div>
-                    {/* Nome em cima, cargo embaixo */}
-                    <div style={{ fontSize: "13pt", fontWeight: 800, lineHeight: 1.2 }}>{sindicoNome || "—"}</div>
-                    <div style={{ fontSize: "9pt", letterSpacing: ".14em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginTop: "1mm" }}>{sindicoTitulo}</div>
-                  </div>
-                </div>
-                {/* WhatsApp e e-mail conforme as flags de visibilidade */}
-                {((mostrarWhatsSindico && meta?.sindico_whatsapp) ||
-                  (mostrarEmailSindico && meta?.sindico_email)) && (
-                  <div style={{ marginTop: "4mm", fontSize: "10pt", color: "#3a3d4a" }}>
-                    {mostrarWhatsSindico && meta?.sindico_whatsapp && (
-                      <div>WhatsApp: {meta.sindico_whatsapp}</div>
-                    )}
-                    {mostrarEmailSindico && meta?.sindico_email && (
-                      <div>E-mail: {meta.sindico_email}</div>
-                    )}
-                  </div>
-                )}
-              </div>
-              {temGestor && (
-                <div style={{ flex: 1, minWidth: "70mm", background: "#F4F4F5", borderRadius: "4mm", padding: "6mm" }}>
+            {/* Dados do síndico / gestor em destaque.
+                Se a sindicatura e uma EMPRESA e existe gestor, a foto do
+                gestor (o rosto do atendimento no dia a dia) aparece em
+                destaque, antes do bloco da administradora. */}
+            {(() => {
+              const gestorDestaque = ehEmpresa && temGestor;
+              const sindicoCard = (
+                <div key="sindico" style={{ flex: gestorDestaque ? "1 1 60mm" : "1 1 70mm", minWidth: "60mm", background: "#F4F4F5", borderRadius: "4mm", padding: "6mm" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "4mm" }}>
-                    {gestorFoto && (
+                    {sindicoFoto && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={gestorFoto} alt={gestorNome} style={{ width: "16mm", height: "16mm", borderRadius: "50%", objectFit: "cover" }} />
+                      <img src={sindicoFoto} alt={sindicoNome} style={{ width: "16mm", height: "16mm", borderRadius: "50%", objectFit: "cover" }} />
                     )}
                     <div>
-                      <div style={{ fontSize: "13pt", fontWeight: 800, lineHeight: 1.2 }}>{gestorNome}</div>
-                      <div style={{ fontSize: "9pt", letterSpacing: ".14em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginTop: "1mm" }}>{gestorCargo}</div>
+                      {/* Nome em cima, cargo embaixo */}
+                      <div style={{ fontSize: "13pt", fontWeight: 800, lineHeight: 1.2 }}>{sindicoNome || "—"}</div>
+                      <div style={{ fontSize: "9pt", letterSpacing: ".14em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginTop: "1mm" }}>{sindicoTitulo}</div>
                     </div>
                   </div>
-                  {(meta?.gestor_whatsapp || meta?.gestor_email) && (
+                  {((mostrarWhatsSindico && meta?.sindico_whatsapp) ||
+                    (mostrarEmailSindico && meta?.sindico_email)) && (
                     <div style={{ marginTop: "4mm", fontSize: "10pt", color: "#3a3d4a" }}>
-                      {meta?.gestor_whatsapp && <div>WhatsApp: {meta.gestor_whatsapp}</div>}
-                      {meta?.gestor_email && <div>E-mail: {meta.gestor_email}</div>}
+                      {mostrarWhatsSindico && meta?.sindico_whatsapp && (
+                        <div>WhatsApp: {meta.sindico_whatsapp}</div>
+                      )}
+                      {mostrarEmailSindico && meta?.sindico_email && (
+                        <div>E-mail: {meta.sindico_email}</div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+              );
+              const gestorCard = temGestor ? (
+                <div key="gestor" style={{ flex: gestorDestaque ? "1 1 100mm" : "1 1 70mm", minWidth: "60mm", background: gestorDestaque ? "#1A1C29" : "#F4F4F5", color: gestorDestaque ? "#fff" : undefined, borderRadius: "4mm", padding: "6mm" }}>
+                  {gestorDestaque && (
+                    <div style={{ fontSize: "8.5pt", letterSpacing: ".22em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "4mm" }}>
+                      Seu contato no dia a dia
+                    </div>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: "5mm" }}>
+                    {gestorFoto && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={gestorFoto} alt={gestorNome} style={{ width: gestorDestaque ? "30mm" : "16mm", height: gestorDestaque ? "30mm" : "16mm", borderRadius: "50%", objectFit: "cover", border: gestorDestaque ? "2px solid #84C7D3" : undefined, flexShrink: 0 }} />
+                    )}
+                    <div>
+                      <div style={{ fontSize: gestorDestaque ? "16pt" : "13pt", fontWeight: 800, lineHeight: 1.2 }}>{gestorNome}</div>
+                      <div style={{ fontSize: "9pt", letterSpacing: ".14em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginTop: "1mm" }}>{gestorCargo}</div>
+                      {(meta?.gestor_whatsapp || meta?.gestor_email) && (
+                        <div style={{ marginTop: "3mm", fontSize: "10pt", color: gestorDestaque ? "rgba(255,255,255,.9)" : "#3a3d4a" }}>
+                          {meta?.gestor_whatsapp && <div>WhatsApp: {meta.gestor_whatsapp}</div>}
+                          {meta?.gestor_email && <div>E-mail: {meta.gestor_email}</div>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : null;
+              return (
+                <div style={{ display: "flex", gap: "8mm", marginTop: "10mm", flexWrap: "wrap" }}>
+                  {gestorDestaque ? [gestorCard, sindicoCard] : [sindicoCard, gestorCard]}
+                </div>
+              );
+            })()}
 
             {/* Equipe de atendimento */}
             {equipe.length > 0 && (
@@ -302,8 +318,13 @@ export default async function RevistaBoasVindasPage({
               </div>
             )}
             {comunidadeUrl && (
-              <div style={{ marginTop: "10mm", fontSize: "11pt", wordBreak: "break-all", maxWidth: "150mm" }}>
-                <strong>Link:</strong> {comunidadeUrl}
+              <div style={{ marginTop: "10mm", maxWidth: "150mm", textAlign: "center" }}>
+                <div style={{ fontSize: "8.5pt", letterSpacing: ".2em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "2mm" }}>
+                  Link da comunidade
+                </div>
+                <a href={comunidadeUrl} style={{ display: "inline-block", background: "#1A1C29", color: "#fff", fontWeight: 700, fontSize: "10.5pt", padding: "3mm 6mm", borderRadius: "999px", wordBreak: "break-all", textDecoration: "none" }}>
+                  {comunidadeUrl}
+                </a>
               </div>
             )}
           </div>
