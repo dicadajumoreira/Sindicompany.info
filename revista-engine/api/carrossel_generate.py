@@ -111,11 +111,80 @@ def _patterns_shuffled() -> list[str]:
 
 def _pattern_for_slide(slide_idx: int) -> str:
     """Devolve uma data URL ciclando entre patterns aleatorizados pelo
-    indice do slide, ou string vazia se nenhum pattern existir."""
+    indice do slide, ou string vazia se nenhum pattern existir.
+
+    Whitelist por slide: certos slides so podem usar patterns
+    especificos (curadoria da marca). Pra esses, sorteia um do
+    whitelist. Pra os demais, usa o shuffle global."""
+    allowed = _SLIDE_PATTERN_WHITELIST.get(slide_idx)
+    if allowed:
+        # Embaralha os slots permitidos e devolve o primeiro que
+        # tiver arquivo no Storage.
+        shuffled_allowed = list(allowed)
+        random.shuffle(shuffled_allowed)
+        for slot in shuffled_allowed:
+            url = _pattern_slot_data_url(slot)
+            if url:
+                return url
+        return ""
     pats = _patterns_shuffled()
     if not pats:
         return ""
     return pats[(slide_idx - 1) % len(pats)]
+
+
+# Curadoria de patterns por slide. Slot 1..20 mapeia pra
+# __patterns/pattern-N.X. Slides nao listados aqui usam o shuffle
+# global de TODOS os patterns disponiveis.
+_SLIDE_PATTERN_WHITELIST: dict[int, list[int]] = {
+    2: [1, 3, 8, 10, 11, 14, 16, 17],
+    3: [1, 3, 8, 10, 11, 16, 17],
+    4: [1, 3, 4, 6, 8, 10, 11, 13, 16, 17, 18, 19],
+    5: [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+    6: [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 19],
+}
+
+
+_PATTERN_SLOT_CACHE: dict[int, str] = {}
+
+
+def _pattern_slot_data_url(slot: int) -> str:
+    """Baixa um pattern especifico em __patterns/pattern-{slot}.X.
+    Cache por slot. String vazia se nao houver arquivo no slot."""
+    if slot in _PATTERN_SLOT_CACHE:
+        return _PATTERN_SLOT_CACHE[slot]
+    base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    if not base:
+        _PATTERN_SLOT_CACHE[slot] = ""
+        return ""
+    for ext in ("png", "jpg", "jpeg", "webp"):
+        url = (
+            f"{base}/storage/v1/object/public/"
+            f"condominios-fotos/__patterns/pattern-{slot}.{ext}"
+        )
+        try:
+            req = urllib.request.Request(
+                url, headers={"User-Agent": "carrossel-engine/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status != 200:
+                    continue
+                content = resp.read()
+                ctype = (
+                    resp.headers.get("Content-Type", "image/png")
+                    .split(";")[0]
+                    .strip()
+                )
+            b64 = base64.b64encode(content).decode("ascii")
+            url_str = f"data:{ctype};base64,{b64}"
+            _PATTERN_SLOT_CACHE[slot] = url_str
+            return url_str
+        except urllib.error.HTTPError:
+            continue
+        except Exception:  # noqa: BLE001
+            break
+    _PATTERN_SLOT_CACHE[slot] = ""
+    return ""
 
 
 _ICON_CACHE: str | None = None
