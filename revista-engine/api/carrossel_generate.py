@@ -549,6 +549,24 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
 # =============================================================================
 
 
+FORMATO_LABELS = {
+    "historia_real": "História Real",
+    "lista": "Lista",
+    "mito_verdade": "Mito vs Verdade",
+    "antes_depois": "Antes / Depois",
+    "dado_choca": "Dado que Choca",
+    "tutorial": "Tutorial Rápido",
+    "opiniao": "Opinião Forte",
+}
+
+
+def _formato_label(formato: str) -> str:
+    """Devolve o rotulo amigavel do formato (ja em titulo). Se for um
+    valor desconhecido, faz best-effort trocando _ por espaco."""
+    f = (formato or "").strip().lower()
+    return FORMATO_LABELS.get(f, f.replace("_", " ").title() or "Carrossel")
+
+
 def _slide_html(
     *,
     slide_idx: int,
@@ -556,6 +574,7 @@ def _slide_html(
     tipo: str,
     titulo: str,
     body: str,
+    formato: str = "",
     foto_capa_url: str = "",
     foto_slide_url: str = "",
     is_capa: bool = False,
@@ -640,18 +659,21 @@ def _slide_html(
        capa body     50 display -> 142 css
        capa @        28 display ->  80 css */
   .badge {{
+    /* Tarja de FORMATO em destaque: caixa de contorno fino,
+       fundo transparente, texto branco em caixa-alta com tracking
+       largo (estilo editorial dos exemplos da marca). */
     display: inline-block;
-    background: {p["mint"]};
-    color: {p["onix"]};
+    border: 4px solid rgba(255,255,255,0.65);
+    background: transparent;
+    color: {p["white"]};
     font-family: 'Epilogue', sans-serif;
-    font-weight: 800;
-    font-size: 80px;
-    letter-spacing: 0.18em;
+    font-weight: 700;
+    font-size: 64px;
+    letter-spacing: 0.30em;
     text-transform: uppercase;
-    padding: 22px 40px;
+    padding: 28px 56px;
     border-radius: 10px;
-    margin-bottom: 60px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    margin-bottom: 50px;
   }}
   .accent-line {{
     /* Barra fina mint sob o badge — assinatura editorial. */
@@ -707,7 +729,7 @@ def _slide_html(
   <div class="vignette"></div>
   <div class="overlay"></div>
   <div class="content">
-    <span class="badge">Sindicompany</span>
+    <span class="badge">{_h(_formato_label(formato))}</span>
     <div class="accent-line"></div>
     <h1 class="capa-titulo">{_h(titulo)}</h1>
     {body_html}
@@ -1093,6 +1115,7 @@ def gerar_carrossel(carrossel_id: str) -> int:
                 tipo=str(s.get("tipo") or "texto"),
                 titulo=str(s.get("titulo") or ""),
                 body=str(s.get("body") or ""),
+                formato=str(carrossel.get("formato") or ""),
                 foto_capa_url=foto_capa,
                 foto_slide_url=foto_slide,
                 is_capa=(i == 1),
