@@ -139,7 +139,7 @@ class CommunityInvite(Section):
     height: {qr_box}px;
     background: var(--white);
     border-radius: 16px;
-    border: 1px solid var(--gray-20);
+    border: 3px solid var(--mint);
     display: flex;
     align-items: center;
     justify-content: center;

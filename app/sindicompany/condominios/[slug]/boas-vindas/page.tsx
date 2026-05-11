@@ -335,7 +335,7 @@ export default async function RevistaBoasVindasPage({
             </p>
             {qrUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={qrUrl} alt="QR code da comunidade" style={{ width: "58mm", height: "58mm", objectFit: "contain", background: "#fff", padding: "4mm", borderRadius: "4mm" }} />
+              <img src={qrUrl} alt="QR code da comunidade" style={{ width: "58mm", height: "58mm", objectFit: "contain", background: "#fff", padding: "4mm", borderRadius: "4mm", border: "2px solid #84C7D3" }} />
             ) : (
               <div style={{ width: "58mm", height: "58mm", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", borderRadius: "4mm", color: "#9ca3af", fontSize: "10pt" }}>
                 (QR code não cadastrado)
