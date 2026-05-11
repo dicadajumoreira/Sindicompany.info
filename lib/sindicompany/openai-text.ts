@@ -3,7 +3,7 @@
  * de carrossel Instagram. Sem dependência externa — fetch direto.
  */
 
-import type { CarrosselCopy } from "./carrosseis";
+import type { CarrosselCopy, CarrosselSlide } from "./carrosseis";
 
 const OPENAI_API = "https://api.openai.com/v1/chat/completions";
 
@@ -320,36 +320,34 @@ export async function gerarTresCopies(input: {
     : "Por mais lares. 🏡";
 
   const blocoEstrategia = isBy
-    ? `ESTRATÉGIA @bysindicompany — leia antes de escrever:\n` +
-      `- PÚBLICO: síndico profissional, quem quer entrar na sindicatura, síndico em crescimento, parceiro estratégico. NÃO é o morador comum.\n` +
-      `- OBJETIVO: atrair síndicos, gerar desejo de pertencimento a uma rede forte, fortalecer a marca pessoal do síndico, mostrar que existe estrutura e suporte por trás, elevar o nível da sindicatura profissional.\n` +
-      `- O QUE A MARCA VENDE: estrutura, pertencimento, crescimento, posicionamento, autoridade, desenvolvimento profissional, escala, networking, suporte.\n` +
-      `- ÂNGULOS POSSÍVEIS: bastidores da sindicatura profissional, dores do síndico, solidão da gestão, crescimento profissional, liderança, posicionamento no mercado, conflitos em condomínios visto pelo lado do gestor, inteligência emocional, gestão empresarial do condomínio, construção de autoridade, erros de síndico iniciante, evolução da sindicatura, visão de negócio.\n` +
-      `- TOM: aspiracional, provocativo, estratégico, empresarial. Fale como mentor que já chegou. NUNCA guru motivacional vazio.\n` +
-      `- CTA: deve mover o síndico em direção a crescer/se posicionar/pertencer (ex: "Comenta SÍNDICO se você se identifica", "De 0 a 5, o quanto você se sente sozinho na gestão?", "Você está crescendo ou só sobrevivendo? Comenta aqui").\n`
-    : `ESTRATÉGIA @sindicompanybr — leia antes de escrever:\n` +
-      `- PÚBLICO: o MORADOR comum do condomínio. NÃO é o síndico.\n` +
+    ? `ESTRATÉGIA @bysindicompany:\n` +
+      `- PÚBLICO: síndico profissional / aspirante / em crescimento / parceiro estratégico. NUNCA o morador.\n` +
+      `- OBJETIVO DA MARCA: atrair síndicos, gerar pertencimento, fortalecer a marca pessoal do síndico, mostrar estrutura/suporte, elevar o nível da sindicatura.\n` +
+      `- TOM: aspiracional, provocativo, estratégico, empresarial. Mentor que já chegou. NUNCA guru motivacional vazio.\n`
+    : `ESTRATÉGIA @sindicompanybr:\n` +
+      `- PÚBLICO: o MORADOR comum do condomínio. NUNCA o síndico.\n` +
       `- OBJETIVO: educar, desmistificar, virar referência que se salva e se compartilha.\n` +
-      `- TOM: pessoa inteligente corrigindo um amigo. Direto, sem rodeio.\n` +
-      `- CTA: binário/escala sobre a vivência do morador (ex: "Comenta SIM ou NÃO", "De 0 a 5, quantos você já viu aqui?").\n`;
+      `- TOM: pessoa inteligente corrigindo um amigo. Direto, sem rodeio.\n`;
 
   const blocoContexto = isBy
-    ? `- Contexto: bastidores e realidade da SINDICATURA PROFISSIONAL — gestão, liderança, mercado, carreira, estrutura. Pelo menos UM slide menciona "síndico" / "sindicatura" / "gestão" literal. Quando falar de condomínio, é sempre pelo ângulo de quem GERE, não de quem mora.\n`
+    ? `- Contexto: bastidores e realidade da SINDICATURA PROFISSIONAL — gestão, liderança, mercado, carreira, estrutura. Quando falar de condomínio, é pelo ângulo de quem GERE, não de quem mora. Pelo menos UM slide menciona "síndico"/"sindicatura"/"gestão" literal.\n`
     : `- Contexto condominial sempre: assembleia, taxa, síndico, morador, área comum, regulamento, convivência, fachada, manutenção. Pelo menos UM slide menciona "condomínio" ou "condominial" literal.\n`;
 
-  const blocoVariacao = isBy
-    ? `VARIAÇÃO ENTRE AS 3 VERSÕES (mesmo formato e voz, recortes diferentes):\n` +
-      `- Versão A: dor / solidão / desafio do síndico (o que ninguém fala)\n` +
-      `- Versão B: crescimento / posicionamento / autoridade (como subir de nível)\n` +
-      `- Versão C: rede / estrutura / pertencimento (não estar sozinho, ter suporte)\n`
-    : `VARIAÇÃO ENTRE AS 3 VERSÕES (mesmo formato e voz, abordagens diferentes):\n` +
-      `- Versão A: foco no morador comum (apartamento, garagem, elevador, convivência doméstica)\n` +
-      `- Versão B: foco em governança/financeiro (assembleia, taxa, prestação de contas, fundo de reserva)\n` +
-      `- Versão C: foco no síndico/gestão visto pelo morador (o que ele espera do síndico)\n`;
+  const angulos = isBy
+    ? [
+        "Recorte: dor / solidão / desafio do síndico (o que ninguém fala).",
+        "Recorte: crescimento / posicionamento / autoridade (como subir de nível).",
+        "Recorte: rede / estrutura / pertencimento (não estar sozinho, ter suporte).",
+      ]
+    : [
+        "Recorte: morador comum (apartamento, garagem, elevador, convivência doméstica).",
+        "Recorte: governança/financeiro (assembleia, taxa, prestação de contas, fundo de reserva).",
+        "Recorte: o que o morador espera do síndico/gestão.",
+      ];
 
-  const prompt =
-    `Crie 3 VERSÕES de copy pra um carrossel do ${isBy ? "@bysindicompany" : "@sindicompanybr"}.\n\n` +
-    `${blocoEstrategia}\n` +
+  const buildPrompt = (angulo: string): string =>
+    `Crie UMA versão de copy pra um carrossel do ${isBy ? "@bysindicompany" : "@sindicompanybr"}.\n\n` +
+    `${blocoEstrategia}` +
     objetivoBloco +
     `\nBRIEFING:\n` +
     `- Título interno: ${input.titulo}\n` +
@@ -357,47 +355,60 @@ export async function gerarTresCopies(input: {
     `- Formato: ${formato_label}\n` +
     `- Quantidade de slides: ${input.n_slides}\n` +
     (input.briefing ? `- Contexto extra: ${input.briefing}\n` : "") +
+    `- ${angulo}\n` +
     `\n${instrucoesFormato}\n\n` +
     (objetivoBloco
-      ? `IMPORTANTE: o OBJETIVO acima é a intenção PRINCIPAL — quando o objetivo e o formato apontarem direções diferentes, o objetivo manda (CTA, tom, estrutura).\n\n`
+      ? `IMPORTANTE: o OBJETIVO acima é a intenção PRINCIPAL — quando objetivo e formato divergirem, o objetivo manda (CTA, tom, estrutura).\n\n`
       : "") +
-    `VOZ (vale pra TODOS os formatos):\n` +
-    `Estrutura narrativa baseada no post de maior alcance: CENA concreta (começa no meio) → SUPOSIÇÃO do leitor (termina com "né?"/"certo?") → CONTRADIÇÃO em ≤3 palavras → EXPLICAÇÃO uma ideia por frase → FECHAMENTO paradoxal/quotável → CTA. A ASSINATURA "${assinatura}" aparece SÓ na legenda, nunca nos slides. Use a estrutura de slides do FORMATO acima; a voz acima é o tom de cada slide.\n\n` +
-    `REGRAS GERAIS:\n` +
+    `VOZ: CENA concreta (começa no meio) → SUPOSIÇÃO do leitor (termina com "né?"/"certo?") → CONTRADIÇÃO em ≤3 palavras → EXPLICAÇÃO uma ideia por frase → FECHAMENTO paradoxal/quotável → CTA. A ASSINATURA "${assinatura}" aparece SÓ na legenda, nunca nos slides. Use a estrutura de slides do FORMATO.\n\n` +
+    `REGRAS:\n` +
     `- Capa: o tema "${input.tema}" aparece literal ou em paráfrase clara. Capa inteira (titulo + body) tem no máximo 20 palavras.\n` +
-    `- Cada slide interno: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras).\n` +
+    `- Cada slide interno: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras). Seja conciso — não encha linguiça.\n` +
     `- Em posts educativos (mito, dado, tutorial, lista jurídica): pelo menos UMA âncora — artigo (ex: "Código Civil, art. 1.336"), decisão judicial (ex: "STJ, REsp 1.699.022/SP, 2019") OU dado com fonte nomeada e datada.\n` +
-    blocoContexto + `\n` +
-    `LEGENDA Instagram (pra cada versão): replica a narrativa em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com "${assinatura}" e EXATAMENTE 3 hashtags na linha seguinte.\n\n` +
-    blocoVariacao + `\n` +
-    `REGRAS DE PORTUGUÊS (humanização):\n` +
-    `- Acentos corretos em TODA palavra: você, síndico, condomínio, gestão, está, são, é, à.\n` +
-    `- Fale "você", voz ativa, sujeito explícito. Frase curta: um sujeito, um predicado.\n` +
-    `- NUNCA: gerúndio (evitando, garantindo, proporcionando), travessão (—), aspas curvas (" "), emoji decorativo no corpo do slide, frases de introdução tipo "é importante ressaltar".\n` +
-    `- LISTA NEGRA: papel fundamental, momento crucial, cenário em constante evolução, destacando a importância, o futuro é promissor, juntos somos mais fortes, destaca-se, vibrante, no coração de, em meio a, reflete a, simboliza a, evidencia a, um verdadeiro testemunho, desafios e oportunidades, rica diversidade, não apenas X mas também Y, mergulhando em, celebrando a, fomentando o, pavimentando o caminho, estudos mostram, especialistas afirmam${isBy ? ", o sucesso é uma jornada, acredite no seu potencial, saia da zona de conforto, o céu é o limite, mindset vencedor" : ""}.\n` +
-    `- Use exemplos concretos (artigos de lei, REsp, números, ações reais) em vez de abstrações.\n\n` +
+    blocoContexto +
+    `- LEGENDA Instagram: 4-8 linhas, hook na primeira, termina OBRIGATORIAMENTE com "${assinatura}" e EXATAMENTE 3 hashtags na linha seguinte.\n` +
+    `- Acentos corretos em TODA palavra (você, síndico, condomínio, gestão). NUNCA: gerúndio, travessão (—), aspas curvas, emoji decorativo no slide, frases de introdução ("é importante ressaltar").\n` +
+    `- LISTA NEGRA: papel fundamental, momento crucial, cenário em constante evolução, destacando a importância, o futuro é promissor, juntos somos mais fortes, destaca-se, vibrante, no coração de, em meio a, reflete a, simboliza a, evidencia a, desafios e oportunidades, rica diversidade, não apenas X mas também Y, mergulhando em, celebrando a, fomentando o, estudos mostram, especialistas afirmam${isBy ? ", o sucesso é uma jornada, acredite no seu potencial, saia da zona de conforto, mindset vencedor" : ""}.\n\n` +
     `Devolva JSON estrito (sem markdown):\n` +
-    `{ "options": [\n` +
-    `  { "slides": [{"tipo":"capa","titulo":"...","body":"..."}, ... total ${input.n_slides} slides], "legenda":"..." },\n` +
-    `  { "slides": [...], "legenda":"..." },\n` +
-    `  { "slides": [...], "legenda":"..." }\n` +
-    `] }`;
+    `{ "slides": [{"tipo":"capa","titulo":"...","body":"..."}, ... total ${input.n_slides} slides], "legenda":"..." }`;
 
-  const r = await chat(prompt, brand);
-  if (!r.ok) return { ok: false, error: r.error };
-
-  let parsed: { options?: CarrosselCopy[] };
+  // 3 chamadas em PARALELO, uma por angulo — cada uma e pequena (~6 slides
+  // + legenda), entao termina rapido e cabe folgado no cap de 26s do
+  // Netlify. Antes era uma chamada unica gerando as 3 versoes, que
+  // estourava o tempo limite com o prompt grande.
+  let results: ({ ok: true; content: string } | { ok: false; error: string })[];
   try {
-    parsed = JSON.parse(r.content);
-  } catch {
-    return { ok: false, error: "Resposta da IA não é JSON válido." };
+    results = await Promise.all(angulos.map((a) => chat(buildPrompt(a), brand)));
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Falha de rede ao gerar copy.",
+    };
   }
-  const opts = (parsed.options ?? []).slice(0, 3);
-  if (opts.length === 0) {
-    return { ok: false, error: "IA não retornou nenhuma opção de copy." };
+
+  const copiesRaw: CarrosselCopy[] = [];
+  let lastErr = "";
+  for (const r of results) {
+    if (!r.ok) {
+      lastErr = r.error;
+      continue;
+    }
+    try {
+      const parsed = JSON.parse(r.content) as Partial<CarrosselCopy>;
+      if (Array.isArray(parsed.slides) && parsed.slides.length > 0) {
+        copiesRaw.push({
+          slides: parsed.slides as CarrosselSlide[],
+          legenda: typeof parsed.legenda === "string" ? parsed.legenda : "",
+        });
+      }
+    } catch {
+      lastErr = "Resposta da IA não é JSON válido.";
+    }
   }
-  // Normaliza: garante que cada copy tem n_slides exato
-  const normalized: CarrosselCopy[] = opts.map((o) => {
+  if (copiesRaw.length === 0) {
+    return { ok: false, error: lastErr || "IA não retornou nenhuma opção de copy." };
+  }
+  const normalized: CarrosselCopy[] = copiesRaw.map((o) => {
     const slides = (o.slides ?? []).slice(0, input.n_slides);
     while (slides.length < input.n_slides) {
       slides.push({ tipo: "texto", titulo: "", body: "" });
