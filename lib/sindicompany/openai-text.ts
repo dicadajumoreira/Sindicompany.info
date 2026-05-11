@@ -7,6 +7,94 @@ import type { CarrosselCopy } from "./carrosseis";
 
 const OPENAI_API = "https://api.openai.com/v1/chat/completions";
 
+/** Instruções detalhadas por formato de carrossel. Só o bloco do
+ *  formato escolhido é injetado no prompt — mantém o prompt enxuto. */
+const FORMATO_INSTRUCOES: Record<string, string> = {
+  historia_real:
+    `FORMATO: HISTÓRIA REAL (o que mais engaja e salva).\n` +
+    `- Dê NOME ao personagem (Renata, Lucas, Carlos), nunca "um morador".\n` +
+    `- Detalhes concretos: "6 kg", "4 horas", "23%", "Ap. 8B" — tornam crível.\n` +
+    `- A história tem virada: setup → conflito → descoberta → resolução.\n` +
+    `- Personagens/situações podem ser compostos. NUNCA invente condomínios ou endereços reais.\n` +
+    `ESTRUTURA DE SLIDES:\n` +
+    `  1 (capa): hook — o momento de tensão máxima, sem resolver. + tarja FORMATO.\n` +
+    `  2: quem é o personagem e qual o problema.\n` +
+    `  3: o erro que quase aconteceu (ou aconteceu).\n` +
+    `  4: a virada — o que descobriu/aprendeu/fez.\n` +
+    `  5: o resultado concreto (com número).\n` +
+    `  último: CTA "Você já passou por isso? Comenta SIM ou NÃO".`,
+  lista:
+    `FORMATO: LISTA (educativo, pontos equivalentes).\n` +
+    `- MÁXIMO 5 itens. Cada item cabe em UMA linha — se não couber, está longo demais.\n` +
+    `- Ordene do MENOS óbvio pro MAIS surpreendente: o item 5 precisa chocar.\n` +
+    `- Os números são parte do design (Black 900, mint, grande) — o body do slide só explica curto.\n` +
+    `- Sem bullet points no texto. A lista vive nos slides numerados.\n` +
+    `ESTRUTURA DE SLIDES:\n` +
+    `  1 (capa): "X coisas que [ação provocativa]". + tarja FORMATO.\n` +
+    `  2 a N-1: um item por slide — número no título + explicação curta no body.\n` +
+    `  último: CTA "Qual você não sabia? Comenta o número aqui".`,
+  mito_verdade:
+    `FORMATO: MITO VS VERDADE (crenças erradas difundidas).\n` +
+    `- Sempre em PARES: Mito num slide, Verdade no slide seguinte.\n` +
+    `- O mito precisa SOAR RAZOÁVEL — senão não tem impacto desmistificar.\n` +
+    `- A verdade precisa ser ESPECÍFICA: "a lei diz exatamente o oposto", não "não é bem assim". Cite artigo/REsp quando der.\n` +
+    `- MÁXIMO 3 pares por carrossel.\n` +
+    `ESTRUTURA DE SLIDES:\n` +
+    `  1 (capa): "Você acredita em algum desses mitos sobre condomínio?". + tarja FORMATO.\n` +
+    `  2,3: Mito 1 → Verdade 1.  4,5: Mito 2 → Verdade 2.  (e assim por diante até 3 pares)\n` +
+    `  No tipo de cada slide: use "mito" pros slides de mito e "verdade" pros de verdade.\n` +
+    `  último: CTA "Qual mito você acreditava? Comenta aqui".`,
+  antes_depois:
+    `FORMATO: ANTES / DEPOIS (resultado tangível de gestão profissional).\n` +
+    `- O "depois" precisa ter NÚMERO concreto: "caiu de 23% pra 4% em 6 meses", não "melhorou muito".\n` +
+    `- O "antes" precisa ser RECONHECÍVEL: o leitor pensa "isso parece o meu prédio".\n` +
+    `- NUNCA fabricar resultados. Se não tem dado plausível, use outro ângulo dentro do formato.\n` +
+    `ESTRUTURA DE SLIDES:\n` +
+    `  1 (capa): o dado do "depois" em destaque — o resultado final primeiro. + tarja FORMATO.\n` +
+    `  2: o "antes" — como estava o condomínio.\n` +
+    `  3: o problema raiz — por que estava assim.\n` +
+    `  4: o que mudou — decisão/ação que virou o jogo.\n` +
+    `  5: o "depois" detalhado com todos os números.\n` +
+    `  último: CTA "Seu condomínio está no antes ou no depois?".`,
+  dado_choca:
+    `FORMATO: DADO QUE CHOCA (estatística surpreendente com fonte).\n` +
+    `- Use só dados que você conhece com FONTE IDENTIFICÁVEL (SíndicoNet, IBGE, SECOVI, STJ, leis federais, reportagens datadas). NUNCA invente números. NUNCA "estudos mostram" ou "especialistas afirmam".\n` +
+    `- Reescreva o dado com suas palavras (fato é livre, texto da fonte não).\n` +
+    `- Cite a fonte no slide E na legenda: "Fonte: SíndicoNet, 2025" (formato mínimo). Se não souber um dado real e atual, prefira uma referência legal sólida (ex: Lei 4.591/64, Código Civil art. 1.336) reescrita como dado.\n` +
+    `ESTRUTURA DE SLIDES:\n` +
+    `  1 (capa): SÓ o número em destaque, sem contexto ainda — número Black 900, mint/sand, ocupa o slide. + tarja FORMATO.\n` +
+    `  2: o que esse número significa na vida real do morador.\n` +
+    `  3: quem está dentro do dado — a pessoa por trás da estatística.\n` +
+    `  4: o contraponto — o que muda quando se sabe o dado.\n` +
+    `  5: o que fazer com essa informação.\n` +
+    `  último: CTA "Você está nesse número? Comenta SIM ou NÃO".`,
+  tutorial:
+    `FORMATO: TUTORIAL RÁPIDO (ação prática que dá pra fazer hoje).\n` +
+    `- MÁXIMO 5 passos. Cada passo COMEÇA com verbo de ação: "Solicite", "Anote", "Envie", "Guarde", "Exija".\n` +
+    `- Sem jargão jurídico sem tradução imediata. Citou lei? Explique em uma frase o que significa.\n` +
+    `- Precisa ser acionável HOJE. Se depende de advogado/processo, não é tutorial.\n` +
+    `- O ÚLTIMO slide tem um modelo de texto/script que o morador copia direto.\n` +
+    `ESTRUTURA DE SLIDES:\n` +
+    `  1 (capa): o problema que o tutorial resolve, em forma de pergunta. + tarja FORMATO.\n` +
+    `  2: por que a maioria não faz — a barreira que o tutorial derruba.\n` +
+    `  3 a N-1: um passo por slide, numerado, verbo de ação no início.\n` +
+    `  último: o modelo/script copiável + CTA "Salva esse post. Você vai precisar.".`,
+  opiniao:
+    `FORMATO: OPINIÃO FORTE (posição clara da MARCA sobre tema polêmico).\n` +
+    `- A opinião é da Sindicompany, não de personagem fictício.\n` +
+    `- Precisa de ARGUMENTO: 2-3 razões concretas que sustentam a posição.\n` +
+    `- ANTECIPE o contra-argumento num slide ("eu sei que você discorda, mas...") + responda.\n` +
+    `- NUNCA atacar pessoas — a opinião é sobre prática/sistema, nunca sobre síndicos/moradores/gestoras específicas.\n` +
+    `- CTA obrigatoriamente de DEBATE: dois lados claros.\n` +
+    `ESTRUTURA DE SLIDES:\n` +
+    `  1 (capa): a afirmação provocativa sem contexto — MÁXIMO 6 palavras. + tarja FORMATO.\n` +
+    `  2: o problema que motivou a opinião — dado ou situação real.\n` +
+    `  3: argumento 1 — a razão principal.\n` +
+    `  4: o contra-argumento que o leitor vai pensar — e a resposta a ele.\n` +
+    `  5: argumento 2 e consequência prática.\n` +
+    `  último: CTA "Concorda ou discorda? Comenta CONCORDO ou DISCORDO.".`,
+};
+
 interface ChatOk {
   ok: true;
   content: string;
@@ -102,6 +190,9 @@ export async function gerarTresCopies(input: {
   briefing?: string;
 }): Promise<{ ok: true; copies: CarrosselCopy[] } | { ok: false; error: string }> {
   const formato_label = input.formato.replaceAll("_", " ");
+  const instrucoesFormato =
+    FORMATO_INSTRUCOES[input.formato] ??
+    `FORMATO: ${formato_label} (estrutura livre, mantendo a voz e os 7 passos).`;
   const prompt =
     `Crie 3 VERSÕES de copy pra um carrossel do @sindicompanybr.\n\n` +
     `BRIEFING:\n` +
@@ -110,32 +201,24 @@ export async function gerarTresCopies(input: {
     `- Formato: ${formato_label}\n` +
     `- Quantidade de slides: ${input.n_slides}\n` +
     (input.briefing ? `- Contexto extra: ${input.briefing}\n` : "") +
-    `\nESTRUTURA OBRIGATÓRIA (em todas as 3 versões):\n` +
-    `Distribuir nos slides + repetir na LEGENDA, na ordem:\n` +
-    `  1. CENA — situação concreta vivida pelo morador/síndico no condomínio. Sem introdução, sem "você já passou por isso?". Começa no meio.\n` +
-    `  2. SUPOSIÇÃO DO LEITOR — escreva em voz alta o que ele pensa ali. Termine com "né?" ou "certo?".\n` +
-    `  3. CONTRADIÇÃO — máx 3 palavras. Ex: "Não necessariamente.", "Depende.", "Errado.", "Não é bem assim."\n` +
-    `  4. EXPLICAÇÃO — uma ideia por frase. Sem subordinação. Sem gerúndio. Em posts educativos, INCLUIR pelo menos UMA âncora: número de artigo (ex: "Código Civil, art. 1.335"), decisão judicial com número (ex: "STJ, REsp 1.699.022/SP, 2019") OU dado com fonte nomeada (ex: "ABSCond, 2025").\n` +
-    `  5. FECHAMENTO — frase paradoxal/quotável que inverte expectativa. Curta. Memorável.\n` +
-    `  6. CTA — pergunta binária ou de escala. Ex: "Comenta SIM ou NÃO.", "De 0 a 5, quantos você já viu aqui?", "Mito ou Verdade no seu condomínio?"\n` +
-    `  7. ASSINATURA — sempre exatamente: "Por mais lares. 🏡"\n\n` +
-    `MAPEAMENTO PRA SLIDES (n=${input.n_slides}):\n` +
-    `- SLIDE 1 (capa): a CENA + começo da SUPOSIÇÃO. Tema "${input.tema}" deve aparecer literal ou em paráfrase clara, ancorado no contexto condominial. Capa inteira (titulo + body) tem no máximo 20 palavras.\n` +
-    `- SLIDE 2: termina a SUPOSIÇÃO + a CONTRADIÇÃO (máx 3 palavras como destaque).\n` +
-    `- SLIDES 3 até pen-último: EXPLICAÇÃO uma ideia por slide. Inclua a ÂNCORA jurídica/dado/decisão judicial em pelo menos um deles.\n` +
-    `- ÚLTIMO SLIDE: FECHAMENTO (frase quotável) + CTA binário/escala. Sem assinatura aqui — assinatura só na legenda.\n` +
-    `- Cada slide interno: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras).\n\n` +
-    `LEGENDA Instagram (pra cada versão): replica os 7 passos em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com "Por mais lares. 🏡" e EXATAMENTE 3 hashtags na linha seguinte ao "Por mais lares".\n\n` +
-    `CONTEXTO CONDOMINIAL — todas as 3 versões falam do dia a dia do condomínio: assembleia, taxa, síndico, morador, área comum, regulamento, convivência, fachada, manutenção. Pelo menos UM slide menciona "condomínio" ou "condominial" literal.\n\n` +
-    `VARIAÇÃO ENTRE AS 3 VERSÕES (mesmo voice, cenas diferentes):\n` +
-    `- Versão A: cena cotidiana doméstica (apartamento, garagem, elevador)\n` +
-    `- Versão B: cena de governança/financeira (assembleia, taxa, prestação de contas)\n` +
-    `- Versão C: cena de conflito interpessoal (vizinho, regimento, mediação)\n\n` +
+    `\n${instrucoesFormato}\n\n` +
+    `VOZ (vale pra TODOS os formatos):\n` +
+    `Estrutura narrativa baseada no post de maior alcance: CENA concreta (começa no meio) → SUPOSIÇÃO do leitor (termina com "né?"/"certo?") → CONTRADIÇÃO em ≤3 palavras → EXPLICAÇÃO uma ideia por frase → FECHAMENTO paradoxal/quotável → CTA binário/escala. A ASSINATURA "Por mais lares. 🏡" aparece SÓ na legenda, nunca nos slides. Use a estrutura de slides do FORMATO acima; a voz acima é o tom de cada slide.\n\n` +
+    `REGRAS GERAIS:\n` +
+    `- Capa: o tema "${input.tema}" aparece literal ou em paráfrase clara, ancorado no contexto condominial. Capa inteira (titulo + body) tem no máximo 20 palavras.\n` +
+    `- Cada slide interno: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras).\n` +
+    `- Em posts educativos (mito, dado, tutorial, lista jurídica): pelo menos UMA âncora — artigo (ex: "Código Civil, art. 1.336"), decisão judicial (ex: "STJ, REsp 1.699.022/SP, 2019") OU dado com fonte nomeada e datada.\n` +
+    `- Contexto condominial sempre: assembleia, taxa, síndico, morador, área comum, regulamento, convivência, fachada, manutenção. Pelo menos UM slide menciona "condomínio" ou "condominial" literal.\n\n` +
+    `LEGENDA Instagram (pra cada versão): replica a narrativa em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com "Por mais lares. 🏡" e EXATAMENTE 3 hashtags na linha seguinte.\n\n` +
+    `VARIAÇÃO ENTRE AS 3 VERSÕES (mesmo formato e voz, abordagens diferentes):\n` +
+    `- Versão A: foco no morador comum (apartamento, garagem, elevador, convivência doméstica)\n` +
+    `- Versão B: foco em governança/financeiro (assembleia, taxa, prestação de contas, fundo de reserva)\n` +
+    `- Versão C: foco no síndico/gestão (rotina, decisões, responsabilidade, mediação)\n\n` +
     `REGRAS DE PORTUGUÊS (humanização):\n` +
     `- Acentos corretos em TODA palavra: você, síndico, condomínio, gestão, está, são, é, à.\n` +
-    `- Fale "você", voz ativa, sujeito explícito.\n` +
+    `- Fale "você", voz ativa, sujeito explícito. Frase curta: um sujeito, um predicado.\n` +
     `- NUNCA: gerúndio (evitando, garantindo, proporcionando), travessão (—), aspas curvas (" "), emoji decorativo no corpo do slide, frases de introdução tipo "é importante ressaltar", CTA comercial ("Fale com a Sindicompany").\n` +
-    `- LISTA NEGRA: papel fundamental, momento crucial, cenário em constante evolução, destacando a importância, o futuro é promissor, juntos somos mais fortes, destaca-se, vibrante, no coração de, em meio a, reflete a, simboliza a, evidencia a, um verdadeiro testemunho, desafios e oportunidades, rica diversidade, não apenas X mas também Y, mergulhando em, celebrando a, fomentando o, pavimentando o caminho.\n` +
+    `- LISTA NEGRA: papel fundamental, momento crucial, cenário em constante evolução, destacando a importância, o futuro é promissor, juntos somos mais fortes, destaca-se, vibrante, no coração de, em meio a, reflete a, simboliza a, evidencia a, um verdadeiro testemunho, desafios e oportunidades, rica diversidade, não apenas X mas também Y, mergulhando em, celebrando a, fomentando o, pavimentando o caminho, estudos mostram, especialistas afirmam.\n` +
     `- Use exemplos concretos (artigos de lei, REsp, números, ações reais) em vez de abstrações.\n\n` +
     `Devolva JSON estrito (sem markdown):\n` +
     `{ "options": [\n` +

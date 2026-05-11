@@ -449,6 +449,74 @@ def _upload_slides_zip(
 # Copy generation (GPT)
 # =============================================================================
 
+# Instrucoes detalhadas por formato — so o bloco do formato escolhido
+# eh injetado no prompt.
+FORMATO_INSTRUCOES = {
+    "historia_real": (
+        "FORMATO: HISTORIA REAL (o que mais engaja e salva).\n"
+        "- De NOME ao personagem (Renata, Lucas, Carlos), nunca 'um morador'.\n"
+        "- Detalhes concretos: '6 kg', '4 horas', '23%', 'Ap. 8B'.\n"
+        "- A historia tem virada: setup -> conflito -> descoberta -> resolucao.\n"
+        "- Personagens/situacoes podem ser compostos. NUNCA invente condominios/enderecos reais.\n"
+        "ESTRUTURA: 1(capa) hook no momento de tensao maxima, sem resolver. "
+        "2 quem e o personagem e o problema. 3 o erro que quase aconteceu. "
+        "4 a virada. 5 o resultado concreto com numero. "
+        "ultimo CTA 'Voce ja passou por isso? Comenta SIM ou NAO'."
+    ),
+    "lista": (
+        "FORMATO: LISTA (educativo, pontos equivalentes).\n"
+        "- MAXIMO 5 itens, cada um cabe em UMA linha.\n"
+        "- Ordene do MENOS obvio pro MAIS surpreendente: o item final precisa chocar.\n"
+        "- Numeros sao parte do design (Black 900, mint, grande). Sem bullet points no texto.\n"
+        "ESTRUTURA: 1(capa) 'X coisas que [acao provocativa]'. "
+        "2 a N-1 um item por slide (numero no titulo + explicacao curta no body). "
+        "ultimo CTA 'Qual voce nao sabia? Comenta o numero aqui'."
+    ),
+    "mito_verdade": (
+        "FORMATO: MITO VS VERDADE (crencas erradas difundidas).\n"
+        "- Sempre em PARES: Mito num slide, Verdade no seguinte.\n"
+        "- O mito precisa SOAR RAZOAVEL. A verdade precisa ser ESPECIFICA (cite artigo/REsp).\n"
+        "- MAXIMO 3 pares.\n"
+        "ESTRUTURA: 1(capa) 'Voce acredita em algum desses mitos sobre condominio?'. "
+        "2,3 Mito1->Verdade1. 4,5 Mito2->Verdade2. tipo dos slides: 'mito' / 'verdade'. "
+        "ultimo CTA 'Qual mito voce acreditava? Comenta aqui'."
+    ),
+    "antes_depois": (
+        "FORMATO: ANTES / DEPOIS (resultado tangivel de gestao profissional).\n"
+        "- O 'depois' precisa ter NUMERO concreto ('caiu de 23% pra 4% em 6 meses').\n"
+        "- O 'antes' precisa ser RECONHECIVEL. NUNCA fabricar resultados.\n"
+        "ESTRUTURA: 1(capa) o dado do 'depois' em destaque (resultado final primeiro). "
+        "2 o 'antes'. 3 o problema raiz. 4 o que mudou. 5 o 'depois' detalhado com numeros. "
+        "ultimo CTA 'Seu condominio esta no antes ou no depois?'."
+    ),
+    "dado_choca": (
+        "FORMATO: DADO QUE CHOCA (estatistica surpreendente com fonte).\n"
+        "- So dados que voce conhece com FONTE IDENTIFICAVEL (SindicoNet, IBGE, SECOVI, STJ, leis federais, reportagens datadas). NUNCA invente. NUNCA 'estudos mostram'/'especialistas afirmam'.\n"
+        "- Reescreva o dado com suas palavras. Cite a fonte no slide E na legenda ('Fonte: SindicoNet, 2025'). Sem dado real seguro? Use uma referencia legal solida reescrita como dado.\n"
+        "ESTRUTURA: 1(capa) SO o numero em destaque (Black 900, mint/sand, ocupa o slide), sem contexto. "
+        "2 o que esse numero significa na vida do morador. 3 quem esta dentro do dado. "
+        "4 o contraponto. 5 o que fazer com a info. ultimo CTA 'Voce esta nesse numero? SIM ou NAO'."
+    ),
+    "tutorial": (
+        "FORMATO: TUTORIAL RAPIDO (acao pratica que da pra fazer hoje).\n"
+        "- MAXIMO 5 passos, cada um COMECA com verbo de acao (Solicite, Anote, Envie, Guarde, Exija).\n"
+        "- Sem jargao juridico sem traducao imediata. Precisa ser acionavel HOJE.\n"
+        "- O ULTIMO slide tem um modelo de texto/script que o morador copia direto.\n"
+        "ESTRUTURA: 1(capa) o problema que o tutorial resolve, em pergunta. "
+        "2 por que a maioria nao faz (a barreira). 3 a N-1 um passo por slide, numerado, verbo de acao. "
+        "ultimo o modelo/script copiavel + CTA 'Salva esse post. Voce vai precisar'."
+    ),
+    "opiniao": (
+        "FORMATO: OPINIAO FORTE (posicao clara da MARCA sobre tema polemico).\n"
+        "- A opiniao e da Sindicompany, nao de personagem ficticio. Precisa de 2-3 razoes concretas.\n"
+        "- ANTECIPE o contra-argumento num slide ('sei que voce discorda, mas...') + responda.\n"
+        "- NUNCA atacar pessoas. CTA obrigatoriamente de DEBATE.\n"
+        "ESTRUTURA: 1(capa) a afirmacao provocativa sem contexto, MAX 6 palavras. "
+        "2 o problema que motivou (dado/situacao). 3 argumento 1. 4 o contra-argumento + resposta. "
+        "5 argumento 2 e consequencia pratica. ultimo CTA 'Concorda ou discorda? Comenta CONCORDO ou DISCORDO'."
+    ),
+}
+
 
 def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
     """Gera os textos dos slides + legenda Instagram via GPT.
@@ -464,6 +532,11 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
     briefing = (carrossel.get("briefing") or "").strip()
 
     formato_label = formato.replace("_", " ")
+    instrucoes_formato = FORMATO_INSTRUCOES.get(
+        formato,
+        f"FORMATO: {formato_label} (estrutura livre, mantendo a voz e os 7 passos).",
+    )
+    casa = chr(0x1F3E1)
 
     prompt = (
         f"Voce e redator do @sindicompanybr (Sindicompany — sindicos "
@@ -475,27 +548,24 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         f"- Formato: {formato_label}\n"
         f"- Quantidade de slides: {n_slides}\n"
         + (f"- Contexto extra: {briefing}\n" if briefing else "")
-        + f"\nESTRUTURA OBRIGATORIA — distribuir nos slides + repetir na LEGENDA, na ordem:\n"
-        f"  1. CENA — situacao concreta no condominio. Comeca no meio, sem 'voce ja passou por isso?'\n"
-        f"  2. SUPOSICAO DO LEITOR — o que ele pensa ali, terminando com 'ne?' ou 'certo?'\n"
-        f"  3. CONTRADICAO — max 3 palavras: 'Nao necessariamente.', 'Depende.', 'Errado.', 'Nao e bem assim.'\n"
-        f"  4. EXPLICACAO — uma ideia por frase. Sem subordinacao, sem gerundio. Em posts educativos, INCLUIR pelo menos UMA ancora: artigo de lei (ex: 'Codigo Civil, art. 1.335'), decisao judicial (ex: 'STJ, REsp 1.699.022/SP, 2019') OU dado com fonte (ex: 'ABSCond, 2025').\n"
-        f"  5. FECHAMENTO — frase paradoxal/quotavel que inverte expectativa. Curta. Memoravel.\n"
-        f"  6. CTA — pergunta binaria/escala. Ex: 'Comenta SIM ou NAO.', 'De 0 a 5, quantos voce ja viu?', 'Mito ou Verdade no seu condominio?'\n"
-        f"  7. ASSINATURA (so na legenda) — sempre exatamente: 'Por mais lares. {chr(0x1F3E1)}'\n\n"
-        f"MAPEAMENTO PRA SLIDES:\n"
-        f"- SLIDE 1 (capa): a CENA + comeco da SUPOSICAO. Tema '{tema}' aparece literal ou em parafrase clara, ancorado no contexto condominial. Capa inteira (titulo + body) tem no max 20 palavras.\n"
-        f"- SLIDE 2: termina a SUPOSICAO + a CONTRADICAO em destaque (max 3 palavras).\n"
-        f"- SLIDES 3 ate o pen-ultimo: EXPLICACAO uma ideia por slide. ANCORA juridica/dado em pelo menos um deles.\n"
-        f"- ULTIMO SLIDE: FECHAMENTO + CTA binario/escala. SEM assinatura aqui — assinatura so na legenda.\n"
-        f"- Cada slide interno: tipo + titulo (3-7 palavras) + body (1-3 frases curtas, max 35 palavras).\n\n"
-        f"LEGENDA Instagram: replica os 7 passos em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com 'Por mais lares. {chr(0x1F3E1)}' e EXATAMENTE 3 hashtags na linha seguinte.\n\n"
-        f"CONTEXTO CONDOMINIAL — condominio + vivencia de condominio (assembleia, taxa, sindico, morador, area comum, regulamento, convivencia, fachada, manutencao). Pelo menos UM slide menciona 'condominio' ou 'condominial' literal.\n\n"
+        + f"\n{instrucoes_formato}\n\n"
+        f"VOZ (vale pra TODOS os formatos):\n"
+        f"Estrutura narrativa do post de maior alcance: CENA concreta (comeca no meio) -> "
+        f"SUPOSICAO do leitor (termina com 'ne?'/'certo?') -> CONTRADICAO em <=3 palavras -> "
+        f"EXPLICACAO uma ideia por frase -> FECHAMENTO paradoxal/quotavel -> CTA binario/escala. "
+        f"A ASSINATURA 'Por mais lares. {casa}' aparece SO na legenda, nunca nos slides. "
+        f"Use a estrutura de slides do FORMATO acima; a voz aqui e o tom de cada slide.\n\n"
+        f"REGRAS GERAIS:\n"
+        f"- Capa: o tema '{tema}' aparece literal ou em parafrase clara, ancorado no contexto condominial. Capa inteira (titulo + body) tem no max 20 palavras.\n"
+        f"- Cada slide interno: tipo + titulo (3-7 palavras) + body (1-3 frases curtas, max 35 palavras).\n"
+        f"- Em posts educativos (mito, dado, tutorial, lista juridica): pelo menos UMA ancora — artigo (ex: 'Codigo Civil, art. 1.336'), decisao judicial (ex: 'STJ, REsp 1.699.022/SP, 2019') OU dado com fonte nomeada e datada.\n"
+        f"- Contexto condominial sempre (assembleia, taxa, sindico, morador, area comum, regulamento, convivencia, fachada, manutencao). Pelo menos UM slide menciona 'condominio' ou 'condominial' literal.\n\n"
+        f"LEGENDA Instagram: replica a narrativa em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com 'Por mais lares. {casa}' e EXATAMENTE 3 hashtags na linha seguinte.\n\n"
         f"REGRAS DE PORTUGUES E VOZ:\n"
         f"- Acentos corretos em toda palavra: voce, sindico, condominio, gestao, esta, sao.\n"
         f"- Fale 'voce', voz ativa, sujeito explicito. Frase curta: um sujeito, um predicado, acabou.\n"
         f"- PROIBIDO: gerundio (evitando, garantindo, proporcionando), travessao (—), aspas curvas (“”), emoji decorativo no slide, frases de introducao ('e importante ressaltar', 'vale destacar', 'nesse contexto'), CTA comercial em post educativo ('Fale com a Sindicompany').\n"
-        f"- LISTA NEGRA: papel fundamental, momento crucial, cenario em constante evolucao, destacando a importancia, o futuro e promissor, juntos somos mais fortes, destaca-se, vibrante, no coracao de, em meio a, reflete a, simboliza a, evidencia a, um verdadeiro testemunho, desafios e oportunidades, rica diversidade, nao apenas X mas tambem Y, mergulhando em, celebrando a, fomentando o, pavimentando o caminho.\n"
+        f"- LISTA NEGRA: papel fundamental, momento crucial, cenario em constante evolucao, destacando a importancia, o futuro e promissor, juntos somos mais fortes, destaca-se, vibrante, no coracao de, em meio a, reflete a, simboliza a, evidencia a, um verdadeiro testemunho, desafios e oportunidades, rica diversidade, nao apenas X mas tambem Y, mergulhando em, celebrando a, fomentando o, pavimentando o caminho, estudos mostram, especialistas afirmam.\n"
         f"- Use exemplos concretos (artigos de lei, REsp, numeros, acoes reais).\n\n"
         f"Devolva JSON estrito (sem markdown):\n"
         f'{{ "slides": [{{"tipo":"capa","titulo":"...","body":"..."}}, '
