@@ -315,6 +315,7 @@ export default async function RevistaBoasVindasPage({
         {/* ---------- PÁGINA 4 — CONTRA-CAPA ---------- */}
         <div className="bv-page">
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(200deg,#1A1C29 0%,#1A1C29 45%,#84C7D3 100%)" }} />
+          {patternBg(2, 0.12)}
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", padding: "30mm 24mm 22mm", textAlign: "center", color: "#fff" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10mm" }}>
               {logoContracapa ? (
