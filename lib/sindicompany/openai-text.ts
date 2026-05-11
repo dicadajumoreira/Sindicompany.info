@@ -104,7 +104,65 @@ interface ChatErr {
   error: string;
 }
 
-async function chat(prompt: string): Promise<ChatOk | ChatErr> {
+// ---------------------------------------------------------------------------
+// Persona por marca. As duas marcas pertencem ao mesmo ecossistema mas tem
+// objetivo, publico e linguagem COMPLETAMENTE diferentes:
+//   @sindicompanybr -> fala COM o morador comum. Educa, desmistifica.
+//   @bysindicompany -> fala COM o sindico profissional / aspirante. Aspiracional,
+//                      provocativa, estrategica, empresarial. Vende estrutura,
+//                      pertencimento, crescimento, posicionamento, autoridade.
+// ---------------------------------------------------------------------------
+const SYSTEM_SINDICOMPANYBR =
+  "Você é redator do Instagram @sindicompanybr (Sindicompany — síndicos " +
+  "profissionais, SP e RJ). VOCÊ FALA COM O MORADOR COMUM do condomínio — " +
+  "não com o síndico. Escreve como pessoa inteligente corrigindo um amigo, " +
+  "NUNCA como empresa instruindo cliente. Voz: começa dentro da cabeça do " +
+  "leitor, frases curtas (um sujeito, um predicado, acabou), tom direto. " +
+  "Português brasileiro com TODOS os acentos corretos (você, síndico, " +
+  "condomínio, gestão, está, são). " +
+  "PROIBIDO: gerúndio (evitando, garantindo, proporcionando), linguagem " +
+  "corporativa (soluções integradas, atendimento acolhedor, gestão " +
+  "eficiente, excelência), frases de introdução (é importante ressaltar, " +
+  "levando em consideração, nesse contexto, vale destacar), CTA comercial " +
+  "em corpo de post educativo (Fale com a Sindicompany, Entre em contato), " +
+  "travessão (—), aspas curvas (“ ”), emoji decorativo, negrito mecânico. " +
+  "Use apenas aspas retas (\"). Sempre termine cada post (legenda) com " +
+  "'Por mais lares. 🏡'.";
+
+const SYSTEM_BYSINDICOMPANY =
+  "Você é redator do Instagram @bysindicompany — a marca da Sindicompany " +
+  "voltada para SÍNDICOS PROFISSIONAIS, pessoas que querem entrar na " +
+  "sindicatura e síndicos em crescimento. VOCÊ NÃO FALA COM O MORADOR — " +
+  "fala com quem GERE (ou quer gerir) condomínios profissionalmente, e com " +
+  "parceiros estratégicos do mercado. Tom: ASPIRACIONAL, PROVOCATIVO, " +
+  "ESTRATÉGICO, EMPRESARIAL. Você vende ESTRUTURA, PERTENCIMENTO, " +
+  "CRESCIMENTO, POSICIONAMENTO, AUTORIDADE, DESENVOLVIMENTO PROFISSIONAL, " +
+  "ESCALA, NETWORKING e SUPORTE. Cada post precisa: atrair síndicos, gerar " +
+  "desejo de pertencimento, fortalecer a marca pessoal do síndico, mostrar " +
+  "que existe estrutura e suporte por trás, transmitir sensação de rede " +
+  "forte e crescimento, elevar o nível da sindicatura profissional. " +
+  "Escreve como MENTOR que já chegou onde o leitor quer chegar — não como " +
+  "empresa vendendo serviço, não como guru motivacional vazio. Português " +
+  "brasileiro com TODOS os acentos corretos. " +
+  "PROIBIDO: gerúndio (evitando, garantindo, proporcionando), linguagem " +
+  "corporativa vazia (soluções integradas, sinergia, excelência, " +
+  "transformação digital), clichê motivacional (o sucesso é uma jornada, " +
+  "acredite no seu potencial, saia da zona de conforto, o céu é o limite), " +
+  "frases de introdução (é importante ressaltar, vale destacar, nesse " +
+  "contexto), travessão (—), aspas curvas (“ ”), emoji decorativo, negrito " +
+  "mecânico. Use apenas aspas retas (\"). Sempre termine cada post " +
+  "(legenda) com 'By Sindicompany. Sindicatura no próximo nível.'";
+
+function _systemPrompt(brand: string): string {
+  return brand === "bysindicompany"
+    ? SYSTEM_BYSINDICOMPANY
+    : SYSTEM_SINDICOMPANYBR;
+}
+
+async function chat(
+  prompt: string,
+  brand = "sindicompanybr",
+): Promise<ChatOk | ChatErr> {
   const apiKey = (process.env.OPENAI_API_KEY ?? "").trim().replace(/^Bearer\s+/i, "");
   if (!apiKey || !apiKey.startsWith("sk-")) {
     return { ok: false, error: "OPENAI_API_KEY ausente ou inválida." };
@@ -126,26 +184,7 @@ async function chat(prompt: string): Promise<ChatOk | ChatErr> {
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
         messages: [
-          {
-            role: "system",
-            content:
-              "Você é redator do Instagram @sindicompanybr (Sindicompany — " +
-              "síndicos profissionais, SP e RJ). Escreve como pessoa " +
-              "inteligente corrigindo um amigo, NUNCA como empresa instruindo " +
-              "cliente. Voz: começa dentro da cabeça do leitor, frases curtas " +
-              "(um sujeito, um predicado, acabou), tom direto, sem rodeios. " +
-              "Português brasileiro com TODOS os acentos corretos (você, " +
-              "síndico, condomínio, gestão, está, são). " +
-              "PROIBIDO: gerúndio (evitando, garantindo, proporcionando), " +
-              "linguagem corporativa (soluções integradas, atendimento " +
-              "acolhedor, gestão eficiente, excelência), frases de introdução " +
-              "(é importante ressaltar, levando em consideração, nesse " +
-              "contexto, vale destacar), CTA comercial em corpo de post " +
-              "educativo (Fale com a Sindicompany, Entre em contato), " +
-              "travessão (—), aspas curvas (“ ”), emoji decorativo, negrito " +
-              "mecânico. Use apenas aspas retas (\"). Sempre termine cada " +
-              "post (legenda) com 'Por mais lares. 🏡'.",
-          },
+          { role: "system", content: _systemPrompt(brand) },
           { role: "user", content: prompt },
         ],
         temperature: 0.85,
@@ -181,20 +220,58 @@ async function chat(prompt: string): Promise<ChatOk | ChatErr> {
   return { ok: true, content };
 }
 
-/** Gera 3 versões de copy pra carrossel — angulos editoriais distintos. */
+/** Gera 3 versões de copy pra carrossel — angulos editoriais distintos.
+ *  O `brand` muda a estrategia (publico, objetivo, linguagem, assinatura). */
 export async function gerarTresCopies(input: {
+  brand?: string;
   titulo: string;
   tema: string;
   formato: string;
   n_slides: number;
   briefing?: string;
 }): Promise<{ ok: true; copies: CarrosselCopy[] } | { ok: false; error: string }> {
+  const brand = input.brand === "bysindicompany" ? "bysindicompany" : "sindicompanybr";
+  const isBy = brand === "bysindicompany";
   const formato_label = input.formato.replaceAll("_", " ");
   const instrucoesFormato =
     FORMATO_INSTRUCOES[input.formato] ??
     `FORMATO: ${formato_label} (estrutura livre, mantendo a voz e os 7 passos).`;
+
+  const assinatura = isBy
+    ? "By Sindicompany. Sindicatura no próximo nível."
+    : "Por mais lares. 🏡";
+
+  const blocoEstrategia = isBy
+    ? `ESTRATÉGIA @bysindicompany — leia antes de escrever:\n` +
+      `- PÚBLICO: síndico profissional, quem quer entrar na sindicatura, síndico em crescimento, parceiro estratégico. NÃO é o morador comum.\n` +
+      `- OBJETIVO: atrair síndicos, gerar desejo de pertencimento a uma rede forte, fortalecer a marca pessoal do síndico, mostrar que existe estrutura e suporte por trás, elevar o nível da sindicatura profissional.\n` +
+      `- O QUE A MARCA VENDE: estrutura, pertencimento, crescimento, posicionamento, autoridade, desenvolvimento profissional, escala, networking, suporte.\n` +
+      `- ÂNGULOS POSSÍVEIS: bastidores da sindicatura profissional, dores do síndico, solidão da gestão, crescimento profissional, liderança, posicionamento no mercado, conflitos em condomínios visto pelo lado do gestor, inteligência emocional, gestão empresarial do condomínio, construção de autoridade, erros de síndico iniciante, evolução da sindicatura, visão de negócio.\n` +
+      `- TOM: aspiracional, provocativo, estratégico, empresarial. Fale como mentor que já chegou. NUNCA guru motivacional vazio.\n` +
+      `- CTA: deve mover o síndico em direção a crescer/se posicionar/pertencer (ex: "Comenta SÍNDICO se você se identifica", "De 0 a 5, o quanto você se sente sozinho na gestão?", "Você está crescendo ou só sobrevivendo? Comenta aqui").\n`
+    : `ESTRATÉGIA @sindicompanybr — leia antes de escrever:\n` +
+      `- PÚBLICO: o MORADOR comum do condomínio. NÃO é o síndico.\n` +
+      `- OBJETIVO: educar, desmistificar, virar referência que se salva e se compartilha.\n` +
+      `- TOM: pessoa inteligente corrigindo um amigo. Direto, sem rodeio.\n` +
+      `- CTA: binário/escala sobre a vivência do morador (ex: "Comenta SIM ou NÃO", "De 0 a 5, quantos você já viu aqui?").\n`;
+
+  const blocoContexto = isBy
+    ? `- Contexto: bastidores e realidade da SINDICATURA PROFISSIONAL — gestão, liderança, mercado, carreira, estrutura. Pelo menos UM slide menciona "síndico" / "sindicatura" / "gestão" literal. Quando falar de condomínio, é sempre pelo ângulo de quem GERE, não de quem mora.\n`
+    : `- Contexto condominial sempre: assembleia, taxa, síndico, morador, área comum, regulamento, convivência, fachada, manutenção. Pelo menos UM slide menciona "condomínio" ou "condominial" literal.\n`;
+
+  const blocoVariacao = isBy
+    ? `VARIAÇÃO ENTRE AS 3 VERSÕES (mesmo formato e voz, recortes diferentes):\n` +
+      `- Versão A: dor / solidão / desafio do síndico (o que ninguém fala)\n` +
+      `- Versão B: crescimento / posicionamento / autoridade (como subir de nível)\n` +
+      `- Versão C: rede / estrutura / pertencimento (não estar sozinho, ter suporte)\n`
+    : `VARIAÇÃO ENTRE AS 3 VERSÕES (mesmo formato e voz, abordagens diferentes):\n` +
+      `- Versão A: foco no morador comum (apartamento, garagem, elevador, convivência doméstica)\n` +
+      `- Versão B: foco em governança/financeiro (assembleia, taxa, prestação de contas, fundo de reserva)\n` +
+      `- Versão C: foco no síndico/gestão visto pelo morador (o que ele espera do síndico)\n`;
+
   const prompt =
-    `Crie 3 VERSÕES de copy pra um carrossel do @sindicompanybr.\n\n` +
+    `Crie 3 VERSÕES de copy pra um carrossel do ${isBy ? "@bysindicompany" : "@sindicompanybr"}.\n\n` +
+    `${blocoEstrategia}\n` +
     `BRIEFING:\n` +
     `- Título interno: ${input.titulo}\n` +
     `- Tema: ${input.tema}\n` +
@@ -203,22 +280,19 @@ export async function gerarTresCopies(input: {
     (input.briefing ? `- Contexto extra: ${input.briefing}\n` : "") +
     `\n${instrucoesFormato}\n\n` +
     `VOZ (vale pra TODOS os formatos):\n` +
-    `Estrutura narrativa baseada no post de maior alcance: CENA concreta (começa no meio) → SUPOSIÇÃO do leitor (termina com "né?"/"certo?") → CONTRADIÇÃO em ≤3 palavras → EXPLICAÇÃO uma ideia por frase → FECHAMENTO paradoxal/quotável → CTA binário/escala. A ASSINATURA "Por mais lares. 🏡" aparece SÓ na legenda, nunca nos slides. Use a estrutura de slides do FORMATO acima; a voz acima é o tom de cada slide.\n\n` +
+    `Estrutura narrativa baseada no post de maior alcance: CENA concreta (começa no meio) → SUPOSIÇÃO do leitor (termina com "né?"/"certo?") → CONTRADIÇÃO em ≤3 palavras → EXPLICAÇÃO uma ideia por frase → FECHAMENTO paradoxal/quotável → CTA. A ASSINATURA "${assinatura}" aparece SÓ na legenda, nunca nos slides. Use a estrutura de slides do FORMATO acima; a voz acima é o tom de cada slide.\n\n` +
     `REGRAS GERAIS:\n` +
-    `- Capa: o tema "${input.tema}" aparece literal ou em paráfrase clara, ancorado no contexto condominial. Capa inteira (titulo + body) tem no máximo 20 palavras.\n` +
+    `- Capa: o tema "${input.tema}" aparece literal ou em paráfrase clara. Capa inteira (titulo + body) tem no máximo 20 palavras.\n` +
     `- Cada slide interno: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras).\n` +
     `- Em posts educativos (mito, dado, tutorial, lista jurídica): pelo menos UMA âncora — artigo (ex: "Código Civil, art. 1.336"), decisão judicial (ex: "STJ, REsp 1.699.022/SP, 2019") OU dado com fonte nomeada e datada.\n` +
-    `- Contexto condominial sempre: assembleia, taxa, síndico, morador, área comum, regulamento, convivência, fachada, manutenção. Pelo menos UM slide menciona "condomínio" ou "condominial" literal.\n\n` +
-    `LEGENDA Instagram (pra cada versão): replica a narrativa em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com "Por mais lares. 🏡" e EXATAMENTE 3 hashtags na linha seguinte.\n\n` +
-    `VARIAÇÃO ENTRE AS 3 VERSÕES (mesmo formato e voz, abordagens diferentes):\n` +
-    `- Versão A: foco no morador comum (apartamento, garagem, elevador, convivência doméstica)\n` +
-    `- Versão B: foco em governança/financeiro (assembleia, taxa, prestação de contas, fundo de reserva)\n` +
-    `- Versão C: foco no síndico/gestão (rotina, decisões, responsabilidade, mediação)\n\n` +
+    blocoContexto + `\n` +
+    `LEGENDA Instagram (pra cada versão): replica a narrativa em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com "${assinatura}" e EXATAMENTE 3 hashtags na linha seguinte.\n\n` +
+    blocoVariacao + `\n` +
     `REGRAS DE PORTUGUÊS (humanização):\n` +
     `- Acentos corretos em TODA palavra: você, síndico, condomínio, gestão, está, são, é, à.\n` +
     `- Fale "você", voz ativa, sujeito explícito. Frase curta: um sujeito, um predicado.\n` +
-    `- NUNCA: gerúndio (evitando, garantindo, proporcionando), travessão (—), aspas curvas (" "), emoji decorativo no corpo do slide, frases de introdução tipo "é importante ressaltar", CTA comercial ("Fale com a Sindicompany").\n` +
-    `- LISTA NEGRA: papel fundamental, momento crucial, cenário em constante evolução, destacando a importância, o futuro é promissor, juntos somos mais fortes, destaca-se, vibrante, no coração de, em meio a, reflete a, simboliza a, evidencia a, um verdadeiro testemunho, desafios e oportunidades, rica diversidade, não apenas X mas também Y, mergulhando em, celebrando a, fomentando o, pavimentando o caminho, estudos mostram, especialistas afirmam.\n` +
+    `- NUNCA: gerúndio (evitando, garantindo, proporcionando), travessão (—), aspas curvas (" "), emoji decorativo no corpo do slide, frases de introdução tipo "é importante ressaltar".\n` +
+    `- LISTA NEGRA: papel fundamental, momento crucial, cenário em constante evolução, destacando a importância, o futuro é promissor, juntos somos mais fortes, destaca-se, vibrante, no coração de, em meio a, reflete a, simboliza a, evidencia a, um verdadeiro testemunho, desafios e oportunidades, rica diversidade, não apenas X mas também Y, mergulhando em, celebrando a, fomentando o, pavimentando o caminho, estudos mostram, especialistas afirmam${isBy ? ", o sucesso é uma jornada, acredite no seu potencial, saia da zona de conforto, o céu é o limite, mindset vencedor" : ""}.\n` +
     `- Use exemplos concretos (artigos de lei, REsp, números, ações reais) em vez de abstrações.\n\n` +
     `Devolva JSON estrito (sem markdown):\n` +
     `{ "options": [\n` +
@@ -227,7 +301,7 @@ export async function gerarTresCopies(input: {
     `  { "slides": [...], "legenda":"..." }\n` +
     `] }`;
 
-  const r = await chat(prompt);
+  const r = await chat(prompt, brand);
   if (!r.ok) return { ok: false, error: r.error };
 
   let parsed: { options?: CarrosselCopy[] };

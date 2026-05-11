@@ -184,6 +184,7 @@ export async function regenerarCopiesAction(carrosselId: string): Promise<void> 
     redirect("/sindicompany/carrossel");
   }
   const copies = await gerarTresCopies({
+    brand: carrossel.brand ?? "sindicompanybr",
     titulo: carrossel.titulo,
     tema: carrossel.tema ?? "",
     formato: carrossel.formato ?? "",

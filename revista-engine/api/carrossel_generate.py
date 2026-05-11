@@ -553,11 +553,42 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         f"FORMATO: {formato_label} (estrutura livre, mantendo a voz e os 7 passos).",
     )
     casa = chr(0x1F3E1)
+    is_by = _BRAND == "bysindicompany"
+    persona = (
+        "Voce e redator do @bysindicompany — marca da Sindicompany pra SINDICOS "
+        "PROFISSIONAIS, aspirantes a sindicatura e sindicos em crescimento. NAO "
+        "fala com o morador. Tom aspiracional, provocativo, estrategico, "
+        "empresarial. Vende estrutura, pertencimento, crescimento, posicionamento, "
+        "autoridade, escala, networking, suporte. Fale como mentor que ja chegou."
+        if is_by
+        else "Voce e redator do @sindicompanybr (Sindicompany — sindicos "
+        "profissionais SP/RJ). VOCE FALA COM O MORADOR COMUM, nao com o sindico. "
+        "Escreve como pessoa inteligente corrigindo um amigo, NUNCA como empresa "
+        "instruindo cliente."
+    )
+    assinatura = (
+        "By Sindicompany. Sindicatura no proximo nivel."
+        if is_by
+        else f"Por mais lares. {casa}"
+    )
+    contexto = (
+        "- Contexto: bastidores e realidade da SINDICATURA PROFISSIONAL — gestao, "
+        "lideranca, mercado, carreira, estrutura. Quando falar de condominio, e "
+        "sempre pelo angulo de quem GERE, nao de quem mora.\n"
+        if is_by
+        else "- Contexto condominial sempre (assembleia, taxa, sindico, morador, "
+        "area comum, regulamento, convivencia, fachada, manutencao). Pelo menos UM "
+        "slide menciona 'condominio' ou 'condominial' literal.\n"
+    )
+    extra_negra = (
+        ", o sucesso e uma jornada, acredite no seu potencial, saia da zona de "
+        "conforto, o ceu e o limite, mindset vencedor"
+        if is_by
+        else ""
+    )
 
     prompt = (
-        f"Voce e redator do @sindicompanybr (Sindicompany — sindicos "
-        f"profissionais SP/RJ). Escreve como pessoa inteligente corrigindo "
-        f"um amigo, NUNCA como empresa instruindo cliente.\n\n"
+        f"{persona}\n\n"
         f"BRIEFING:\n"
         f"- Título interno: {titulo}\n"
         f"- Tema: {tema}\n"
@@ -569,19 +600,19 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         f"Estrutura narrativa do post de maior alcance: CENA concreta (comeca no meio) -> "
         f"SUPOSICAO do leitor (termina com 'ne?'/'certo?') -> CONTRADICAO em <=3 palavras -> "
         f"EXPLICACAO uma ideia por frase -> FECHAMENTO paradoxal/quotavel -> CTA binario/escala. "
-        f"A ASSINATURA 'Por mais lares. {casa}' aparece SO na legenda, nunca nos slides. "
+        f"A ASSINATURA '{assinatura}' aparece SO na legenda, nunca nos slides. "
         f"Use a estrutura de slides do FORMATO acima; a voz aqui e o tom de cada slide.\n\n"
         f"REGRAS GERAIS:\n"
-        f"- Capa: o tema '{tema}' aparece literal ou em parafrase clara, ancorado no contexto condominial. Capa inteira (titulo + body) tem no max 20 palavras.\n"
+        f"- Capa: o tema '{tema}' aparece literal ou em parafrase clara. Capa inteira (titulo + body) tem no max 20 palavras.\n"
         f"- Cada slide interno: tipo + titulo (3-7 palavras) + body (1-3 frases curtas, max 35 palavras).\n"
         f"- Em posts educativos (mito, dado, tutorial, lista juridica): pelo menos UMA ancora — artigo (ex: 'Codigo Civil, art. 1.336'), decisao judicial (ex: 'STJ, REsp 1.699.022/SP, 2019') OU dado com fonte nomeada e datada.\n"
-        f"- Contexto condominial sempre (assembleia, taxa, sindico, morador, area comum, regulamento, convivencia, fachada, manutencao). Pelo menos UM slide menciona 'condominio' ou 'condominial' literal.\n\n"
-        f"LEGENDA Instagram: replica a narrativa em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com 'Por mais lares. {casa}' e EXATAMENTE 3 hashtags na linha seguinte.\n\n"
+        f"{contexto}\n"
+        f"LEGENDA Instagram: replica a narrativa em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com '{assinatura}' e EXATAMENTE 3 hashtags na linha seguinte.\n\n"
         f"REGRAS DE PORTUGUES E VOZ:\n"
         f"- Acentos corretos em toda palavra: voce, sindico, condominio, gestao, esta, sao.\n"
         f"- Fale 'voce', voz ativa, sujeito explicito. Frase curta: um sujeito, um predicado, acabou.\n"
         f"- PROIBIDO: gerundio (evitando, garantindo, proporcionando), travessao (—), aspas curvas (“”), emoji decorativo no slide, frases de introducao ('e importante ressaltar', 'vale destacar', 'nesse contexto'), CTA comercial em post educativo ('Fale com a Sindicompany').\n"
-        f"- LISTA NEGRA: papel fundamental, momento crucial, cenario em constante evolucao, destacando a importancia, o futuro e promissor, juntos somos mais fortes, destaca-se, vibrante, no coracao de, em meio a, reflete a, simboliza a, evidencia a, um verdadeiro testemunho, desafios e oportunidades, rica diversidade, nao apenas X mas tambem Y, mergulhando em, celebrando a, fomentando o, pavimentando o caminho, estudos mostram, especialistas afirmam.\n"
+        f"- LISTA NEGRA: papel fundamental, momento crucial, cenario em constante evolucao, destacando a importancia, o futuro e promissor, juntos somos mais fortes, destaca-se, vibrante, no coracao de, em meio a, reflete a, simboliza a, evidencia a, um verdadeiro testemunho, desafios e oportunidades, rica diversidade, nao apenas X mas tambem Y, mergulhando em, celebrando a, fomentando o, pavimentando o caminho, estudos mostram, especialistas afirmam{extra_negra}.\n"
         f"- Use exemplos concretos (artigos de lei, REsp, numeros, acoes reais).\n\n"
         f"Devolva JSON estrito (sem markdown):\n"
         f'{{ "slides": [{{"tipo":"capa","titulo":"...","body":"..."}}, '
