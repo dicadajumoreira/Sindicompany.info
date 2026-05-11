@@ -99,11 +99,10 @@ export default async function RevistaBoasVindasPage({
           font-family: 'Epilogue', sans-serif; color: #1A1C29;
           box-sizing: border-box;
         }
-        /* Area "segura": margem de 8mm em relacao a borda fisica da
-           folha A4, pra nenhum conteudo (nem os fundos full-bleed) cair
-           fora da area imprimivel do PDF. */
+        /* Camada interna que ocupa a folha inteira (sem borda branca) e
+           recorta qualquer conteudo que passe do tamanho da pagina A4. */
         .bv-safe {
-          position: absolute; inset: 8mm; overflow: hidden;
+          position: absolute; inset: 0; overflow: hidden;
         }
       `}</style>
 
