@@ -86,11 +86,15 @@ export default async function RevistaBoasVindasPage({
       <style>{`
         @page { size: A4; margin: 0; }
         @media print {
-          html, body { width: 210mm; }
+          html, body { width: 210mm; margin: 0 !important; padding: 0 !important; background: #fff !important; }
+          .sindicompany-shell { min-height: 0 !important; }
           .no-print { display: none !important; }
-          .bv-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; }
-          .bv-page:last-child { page-break-after: auto; }
-          body { background: #fff !important; }
+          .bv-pages { padding: 0 !important; margin: 0 !important; background: #fff !important; }
+          .bv-page {
+            box-shadow: none !important; margin: 0 !important; display: block;
+            page-break-after: always; break-after: page; break-inside: avoid;
+          }
+          .bv-page:last-child { page-break-after: auto; break-after: auto; }
           .bv-page, .bv-safe { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
         .bv-page {
@@ -116,7 +120,7 @@ export default async function RevistaBoasVindasPage({
         <PrintButton />
       </div>
 
-      <div className="bg-onix-50 py-6">
+      <div className="bv-pages bg-onix-50 py-6">
         {/* ---------- PÁGINA 1 — CAPA ---------- */}
         <div className="bv-page">
           <div className="bv-safe">
