@@ -274,32 +274,6 @@ export default async function RevistaBoasVindasPage({
                 </div>
               );
             })()}
-
-            {/* Equipe de atendimento */}
-            {equipe.length > 0 && (
-              <div style={{ marginTop: "9mm" }}>
-                <div style={{ fontSize: "9pt", letterSpacing: ".22em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "4mm" }}>
-                  Equipe de atendimento do condomínio
-                </div>
-                <div style={{ display: "flex", gap: "5mm", flexWrap: "wrap" }}>
-                  {equipe.map((m, i) => {
-                    const f = m.foto_path ? getCondoFotoPublicUrl(m.foto_path) : null;
-                    return (
-                      <div key={i} style={{ width: "30mm", textAlign: "center" }}>
-                        {f ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={f} alt={m.nome} style={{ width: "22mm", height: "22mm", borderRadius: "50%", objectFit: "cover", margin: "0 auto 2mm" }} />
-                        ) : (
-                          <div style={{ width: "22mm", height: "22mm", borderRadius: "50%", background: "#E5E7EB", margin: "0 auto 2mm" }} />
-                        )}
-                        <div style={{ fontSize: "9pt", fontWeight: 700, lineHeight: 1.2 }}>{m.nome}</div>
-                        <div style={{ fontSize: "7.5pt", color: "#6b7280", lineHeight: 1.2 }}>{m.cargo}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
           </div>
         </div>
@@ -309,34 +283,60 @@ export default async function RevistaBoasVindasPage({
           <div className="bv-safe">
           <div style={{ position: "absolute", inset: 0, background: "#F4F4F5" }} />
           {patternBg(1, 0.06)}
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20mm 16mm", textAlign: "center" }}>
-            <div style={{ fontSize: "9pt", letterSpacing: ".28em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "5mm" }}>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "16mm 14mm", textAlign: "center" }}>
+            <div style={{ fontSize: "9pt", letterSpacing: ".28em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "4mm" }}>
               Comunidade do condomínio
             </div>
-            <h2 style={{ fontSize: "24pt", fontWeight: 900, margin: "0 0 6mm", lineHeight: 1.15 }}>
+            <h2 style={{ fontSize: "22pt", fontWeight: 900, margin: "0 0 5mm", lineHeight: 1.15 }}>
               Entre na comunidade de WhatsApp do {nome}.
             </h2>
-            <p style={{ fontSize: "12pt", color: "#3a3d4a", maxWidth: "130mm", margin: "0 0 12mm" }}>
+            <p style={{ fontSize: "11.5pt", color: "#3a3d4a", maxWidth: "130mm", margin: "0 0 7mm" }}>
               É o canal oficial do condomínio: avisos da gestão, novidades,
               manutenções e o dia a dia do prédio. Aponte a câmera pro QR code
               ou acesse pelo link abaixo.
             </p>
             {qrUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={qrUrl} alt="QR code da comunidade" style={{ width: "70mm", height: "70mm", objectFit: "contain", background: "#fff", padding: "5mm", borderRadius: "4mm", boxShadow: "0 4px 16px rgba(0,0,0,.1)" }} />
+              <img src={qrUrl} alt="QR code da comunidade" style={{ width: "58mm", height: "58mm", objectFit: "contain", background: "#fff", padding: "4mm", borderRadius: "4mm", boxShadow: "0 4px 16px rgba(0,0,0,.1)" }} />
             ) : (
-              <div style={{ width: "70mm", height: "70mm", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", borderRadius: "4mm", color: "#9ca3af", fontSize: "10pt" }}>
+              <div style={{ width: "58mm", height: "58mm", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", borderRadius: "4mm", color: "#9ca3af", fontSize: "10pt" }}>
                 (QR code não cadastrado)
               </div>
             )}
             {comunidadeUrl && (
-              <div style={{ marginTop: "10mm", maxWidth: "150mm", textAlign: "center" }}>
+              <div style={{ marginTop: "6mm", maxWidth: "150mm", textAlign: "center" }}>
                 <div style={{ fontSize: "8.5pt", letterSpacing: ".2em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "2mm" }}>
                   Link da comunidade
                 </div>
-                <a href={comunidadeUrl} style={{ display: "inline-block", background: "#1A1C29", color: "#fff", fontWeight: 700, fontSize: "10.5pt", padding: "3mm 6mm", borderRadius: "999px", wordBreak: "break-all", textDecoration: "none" }}>
+                <a href={comunidadeUrl} style={{ display: "inline-block", background: "#1A1C29", color: "#fff", fontWeight: 700, fontSize: "10pt", padding: "2.5mm 6mm", borderRadius: "999px", wordBreak: "break-all", textDecoration: "none" }}>
                   {comunidadeUrl}
                 </a>
+              </div>
+            )}
+
+            {/* Equipe de atendimento do condominio (movida pra ca, junto da comunidade) */}
+            {equipe.length > 0 && (
+              <div style={{ marginTop: "10mm", width: "100%" }}>
+                <div style={{ fontSize: "8.5pt", letterSpacing: ".22em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "4mm" }}>
+                  Equipe de atendimento do condomínio
+                </div>
+                <div style={{ display: "flex", gap: "5mm", flexWrap: "wrap", justifyContent: "center" }}>
+                  {equipe.map((m, i) => {
+                    const f = m.foto_path ? getCondoFotoPublicUrl(m.foto_path) : null;
+                    return (
+                      <div key={i} style={{ width: "28mm", textAlign: "center" }}>
+                        {f ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={f} alt={m.nome} style={{ width: "20mm", height: "20mm", borderRadius: "50%", objectFit: "cover", margin: "0 auto 2mm" }} />
+                        ) : (
+                          <div style={{ width: "20mm", height: "20mm", borderRadius: "50%", background: "#E5E7EB", margin: "0 auto 2mm" }} />
+                        )}
+                        <div style={{ fontSize: "8.5pt", fontWeight: 700, lineHeight: 1.2 }}>{m.nome}</div>
+                        <div style={{ fontSize: "7pt", color: "#6b7280", lineHeight: 1.2 }}>{m.cargo}</div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
