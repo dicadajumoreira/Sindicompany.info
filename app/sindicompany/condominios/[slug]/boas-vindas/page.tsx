@@ -43,7 +43,7 @@ export default async function RevistaBoasVindasPage({
   // aos moradores como uma equipe (1a pessoa do plural).
   const ehEmpresa = meta?.sindico_genero === "empresa";
   const sindicoTitulo = ehEmpresa
-    ? "Administradora"
+    ? "Sindicatura Profissional"
     : meta?.sindico_genero === "feminino"
       ? "Síndica"
       : "Síndico";
@@ -241,7 +241,7 @@ export default async function RevistaBoasVindasPage({
               )}
               <p style={{ margin: "4mm 0 0", fontWeight: 700 }}>
                 {ehEmpresa
-                  ? sindicoNome || "Administradora"
+                  ? sindicoNome || "Sindicatura Profissional"
                   : sindicoNome
                     ? `${sindicoTitulo} ${sindicoNome}`
                     : sindicoTitulo}

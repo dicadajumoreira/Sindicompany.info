@@ -139,7 +139,7 @@ def _cargo_sindico(condo_meta: dict[str, Any] | None) -> str:
         return "Síndico(a)"
     g = condo_meta.get("sindico_genero")
     if g == "empresa":
-        return "Administradora"
+        return "Sindicatura Profissional"
     return "Síndica" if g == "feminino" else "Síndico"
 
 
@@ -151,7 +151,7 @@ def _build_chamadas(revista: dict[str, Any], editorial: dict[str, Any] | None, c
     # 1. Carta do(a) síndico(a) / da administradora
     _g = (condo or {}).get("sindico_genero")
     if _g == "empresa":
-        carta_label = "Carta da Administradora"
+        carta_label = "Carta da Sindicatura Profissional"
     elif _g == "feminino":
         carta_label = "Carta da Síndica"
     else:

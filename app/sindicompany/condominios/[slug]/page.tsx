@@ -166,7 +166,7 @@ export default async function EditarCondoPage({
 
           <Field
             label="Tipo / gênero"
-            hint="Quando for 'Empresa' (administradora), a revista fala com os moradores como uma equipe (nós), não como pessoa. Nesse caso, o 'Nome' acima é o nome da empresa."
+            hint="Quando for 'Empresa' (sindicatura profissional), a revista fala com os moradores como uma equipe (nós), não como pessoa. Nesse caso, o 'Nome' acima é o nome da empresa."
           >
             <div className="flex gap-4 mt-1 flex-wrap">
               <label className="flex items-center gap-2 text-sm">
@@ -195,7 +195,7 @@ export default async function EditarCondoPage({
                   value="empresa"
                   defaultChecked={meta?.sindico_genero === "empresa"}
                 />
-                Empresa / Administradora
+                Empresa / Sindicatura profissional
               </label>
             </div>
           </Field>

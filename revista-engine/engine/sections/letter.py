@@ -33,7 +33,7 @@ def _saudacao(genero: str, n_pessoas: int = 1) -> str:
     """Decide o título da seção em função de gênero/quantidade."""
     g = (genero or "masculino").strip().lower()
     if g == "empresa":
-        return "Carta da Administradora"
+        return "Carta da Sindicatura Profissional"
     if n_pessoas >= 2:
         return "Carta dos Síndicos" if g != "feminino" else "Carta das Síndicas"
     return "Carta da Síndica" if g == "feminino" else "Carta do Síndico"
@@ -87,7 +87,7 @@ class Letter(Section):
         nome = (inputs.get("nome_sindico") or "").strip()
         genero = inputs.get("genero", "masculino").strip().lower()
         if genero == "empresa":
-            _cargo_default = "Administradora"
+            _cargo_default = "Sindicatura Profissional"
         elif genero == "feminino":
             _cargo_default = "Síndica Profissional"
         else:

@@ -437,7 +437,7 @@ def gerar_carta_sindico(
 
     eh_empresa = genero == "empresa"
     if eh_empresa:
-        pronome = "a administradora"
+        pronome = "a sindicatura profissional"
     elif genero == "feminino":
         pronome = "a síndica"
     else:
