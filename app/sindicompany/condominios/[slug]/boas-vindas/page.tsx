@@ -48,6 +48,7 @@ export default async function RevistaBoasVindasPage({
   const equipe = (meta?.equipe_atendimento ?? []).filter((m) => m.nome || m.cargo);
   const comunidadeUrl = meta?.comunidade_url ?? "";
   const qrUrl = meta?.comunidade_qrcode_path ? getCondoFotoPublicUrl(meta.comunidade_qrcode_path) : null;
+  const capaUrl = meta?.boasvindas_capa_path ? getCondoFotoPublicUrl(meta.boasvindas_capa_path) : null;
 
   return (
     <>
@@ -79,7 +80,15 @@ export default async function RevistaBoasVindasPage({
       <div className="bg-onix-50 py-6">
         {/* ---------- PÁGINA 1 — CAPA ---------- */}
         <div className="bv-page">
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg,#84C7D3 0%,#1A1C29 100%)" }} />
+          {capaUrl ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={capaUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(26,28,41,.35) 0%,rgba(26,28,41,.55) 55%,rgba(26,28,41,.92) 100%)" }} />
+            </>
+          ) : (
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg,#84C7D3 0%,#1A1C29 100%)" }} />
+          )}
           {/* Logo do sindico: topo, canto esquerdo, ate ~metade da pagina (105mm de 210mm) */}
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -115,7 +124,7 @@ export default async function RevistaBoasVindasPage({
             <h2 style={{ fontSize: "20pt", fontWeight: 800, margin: "0 0 6mm", lineHeight: 1.1 }}>
               Obrigado pelo voto de confiança.
             </h2>
-            <div style={{ fontSize: "11.5pt", lineHeight: 1.6, color: "#3a3d4a" }}>
+            <div style={{ fontSize: "11.5pt", lineHeight: 1.6, color: "#3a3d4a", textAlign: "justify" }}>
               <p style={{ margin: "0 0 4mm" }}>
                 Caro morador do Condomínio {nome},
               </p>

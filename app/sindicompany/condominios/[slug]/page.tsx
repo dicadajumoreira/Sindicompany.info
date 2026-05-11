@@ -557,6 +557,48 @@ export default async function EditarCondoPage({
           </Field>
         </section>
 
+        {/* ============ REVISTA DE BOAS-VINDAS ============ */}
+        <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
+            Revista de Boas-Vindas
+          </h2>
+          <p className="text-xs text-g60 -mt-3">
+            Foto de capa da Revista de Boas-Vindas (página 1). Opcional — se
+            não tiver, a capa usa um fundo em degradê da marca.
+          </p>
+          <Field
+            label="Foto de capa"
+            hint="JPG, PNG ou WebP. Máx 5MB. Vai como fundo da primeira página."
+          >
+            <input
+              type="hidden"
+              name="boasvindas_capa_existente"
+              value={meta?.boasvindas_capa_path ?? ""}
+            />
+            {meta?.boasvindas_capa_path && (
+              <div className="mb-3 flex items-center gap-3">
+                <Image
+                  src={getCondoFotoPublicUrl(meta.boasvindas_capa_path)}
+                  alt="Capa da Revista de Boas-Vindas"
+                  width={120}
+                  height={160}
+                  unoptimized
+                  className="rounded object-cover w-28 h-36 border border-onix-100"
+                />
+                <span className="text-xs text-g60">
+                  Capa atual. Suba uma nova abaixo para substituir.
+                </span>
+              </div>
+            )}
+            <input
+              type="file"
+              name="boasvindas_capa"
+              accept="image/jpeg,image/png,image/webp"
+              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+            />
+          </Field>
+        </section>
+
         <div className="flex gap-3 pt-2">
           <button
             type="submit"

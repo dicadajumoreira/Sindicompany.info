@@ -39,6 +39,8 @@ export interface CondoMeta {
   equipe_atendimento: EquipeMembro[] | null;
   /** Quando tem gestor, esconder telefone/email do sindico na revista. */
   ocultar_contato_sindico: boolean;
+  /** Foto de capa da Revista de Boas-Vindas. */
+  boasvindas_capa_path: string | null;
   updated_at: string;
 }
 
@@ -67,6 +69,7 @@ export interface CondoMetaInput {
   comunidade_qrcode_path?: string | null;
   equipe_atendimento?: EquipeMembro[] | null;
   ocultar_contato_sindico?: boolean;
+  boasvindas_capa_path?: string | null;
 }
 
 /** Titulo do gestor conforme o genero. */
@@ -119,6 +122,7 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
     comunidade_qrcode_path: input.comunidade_qrcode_path ?? null,
     equipe_atendimento: input.equipe_atendimento ?? null,
     ocultar_contato_sindico: !!input.ocultar_contato_sindico,
+    boasvindas_capa_path: input.boasvindas_capa_path ?? null,
   };
 
   let lastErr: { message?: string } | null = null;

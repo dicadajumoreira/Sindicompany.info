@@ -163,12 +163,14 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   const comunidade_url = getStr(formData, "comunidade_url");
   const comunidadeQrExistente = getStr(formData, "comunidade_qr_existente");
   const ocultar_contato_sindico = getStr(formData, "ocultar_contato_sindico") === "on";
+  const boasvindasCapaExistente = getStr(formData, "boasvindas_capa_existente");
 
   const novaFotoSindico = await maybeUploadFoto(formData, "sindico_foto", slug, "sindico");
   const novaFotoGestor = temGestor
     ? await maybeUploadFoto(formData, "gestor_foto", slug, "gestor")
     : null;
   const novoQrComunidade = await maybeUploadFoto(formData, "comunidade_qr", slug, "comunidade-qr");
+  const novaCapaBoasVindas = await maybeUploadFoto(formData, "boasvindas_capa", slug, "boasvindas-capa");
 
   // Equipe de atendimento: ate 5 membros (nome, cargo, foto). Slots
   // sem nome E sem cargo sao descartados. Foto: novo upload sobrescreve,
@@ -212,6 +214,7 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
     comunidade_qrcode_path: novoQrComunidade ?? comunidadeQrExistente ?? null,
     equipe_atendimento: equipe_atendimento.length ? equipe_atendimento : null,
     ocultar_contato_sindico,
+    boasvindas_capa_path: novaCapaBoasVindas ?? boasvindasCapaExistente ?? null,
   };
 
   try {
