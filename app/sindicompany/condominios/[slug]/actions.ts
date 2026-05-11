@@ -162,12 +162,31 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   const gestor_whatsapp = getStr(formData, "gestor_whatsapp");
   const comunidade_url = getStr(formData, "comunidade_url");
   const comunidadeQrExistente = getStr(formData, "comunidade_qr_existente");
+  const ocultar_contato_sindico = getStr(formData, "ocultar_contato_sindico") === "on";
 
   const novaFotoSindico = await maybeUploadFoto(formData, "sindico_foto", slug, "sindico");
   const novaFotoGestor = temGestor
     ? await maybeUploadFoto(formData, "gestor_foto", slug, "gestor")
     : null;
   const novoQrComunidade = await maybeUploadFoto(formData, "comunidade_qr", slug, "comunidade-qr");
+
+  // Equipe de atendimento: ate 5 membros (nome, cargo, foto). Slots
+  // sem nome E sem cargo sao descartados. Foto: novo upload sobrescreve,
+  // senao mantem a existente.
+  const equipe_atendimento: { nome: string; cargo: string; foto_path: string | null }[] = [];
+  for (let i = 1; i <= 5; i++) {
+    const nm = getStr(formData, `equipe_nome_${i}`);
+    const cg = getStr(formData, `equipe_cargo_${i}`);
+    if (!nm && !cg) continue;
+    const novaFoto = await maybeUploadFoto(formData, `equipe_foto_${i}`, slug, `equipe-${i}`);
+    const fotoExist = getStr(formData, `equipe_foto_existente_${i}`);
+    equipe_atendimento.push({
+      nome: nm,
+      cargo: cg,
+      foto_path: novaFoto ?? fotoExist ?? null,
+    });
+  }
+
   const novoLogoSindico = await maybeUploadLogo(formData, "logo_sindico_file", slug, "sindico");
   const novoLogoCondominio = await maybeUploadLogo(formData, "logo_condominio_file", slug, "condominio");
 
@@ -191,6 +210,8 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
     is_by_sindico,
     comunidade_url: comunidade_url || null,
     comunidade_qrcode_path: novoQrComunidade ?? comunidadeQrExistente ?? null,
+    equipe_atendimento: equipe_atendimento.length ? equipe_atendimento : null,
+    ocultar_contato_sindico,
   };
 
   try {

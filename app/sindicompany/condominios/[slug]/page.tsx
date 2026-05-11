@@ -81,15 +81,23 @@ export default async function EditarCondoPage({
         ← Voltar para condomínios
       </Link>
 
-      <header className="mb-10">
-        <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2">
-          Condomínio
+      <header className="mb-10 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2">
+            Condomínio
+          </div>
+          <h1 className="text-3xl font-bold text-onix-900">{nome}</h1>
+          <p className="text-sm text-g60 mt-2 max-w-xl">
+            Cadastre síndico(a), gestor, equipe de atendimento, logos, contatos
+            e comunidade. Tudo fica salvo e é reaproveitado nas revistas.
+          </p>
         </div>
-        <h1 className="text-3xl font-bold text-onix-900">{nome}</h1>
-        <p className="text-sm text-g60 mt-2 max-w-xl">
-          Cadastre o(a) síndico(a) e o gestor do condomínio. Essas informações
-          ficam salvas e são reaproveitadas em todas as edições da revista.
-        </p>
+        <Link
+          href={`/sindicompany/condominios/${slugifyCondo(nome)}/boas-vindas`}
+          className="inline-flex items-center px-4 py-2.5 rounded-lg border border-onix-200 text-onix-900 font-medium hover:bg-onix-50 text-sm whitespace-nowrap"
+        >
+          📰 Revista de Boas-Vindas
+        </Link>
       </header>
 
       {(error || dbError) && (
@@ -465,6 +473,87 @@ export default async function EditarCondoPage({
               accept="image/jpeg,image/png,image/webp"
               className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
             />
+          </Field>
+        </section>
+
+        {/* ============ EQUIPE DE ATENDIMENTO ============ */}
+        <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
+            Equipe de Atendimento
+          </h2>
+          <p className="text-xs text-g60 -mt-3">
+            Até 5 pessoas que atendem o condomínio (foto, nome e cargo).
+            Aparecem na Revista de Boas-Vindas. Deixe nome/cargo em branco
+            pra slots não usados.
+          </p>
+          {[0, 1, 2, 3, 4].map((i) => {
+            const m = meta?.equipe_atendimento?.[i];
+            const fotoUrl = m?.foto_path ? getCondoFotoPublicUrl(m.foto_path) : null;
+            return (
+              <div
+                key={i}
+                className="rounded-lg border border-onix-100 p-3 flex items-center gap-3"
+              >
+                <div className="shrink-0">
+                  <input
+                    type="hidden"
+                    name={`equipe_foto_existente_${i + 1}`}
+                    value={m?.foto_path ?? ""}
+                  />
+                  {fotoUrl ? (
+                    <Image
+                      src={fotoUrl}
+                      alt={`Foto ${i + 1}`}
+                      width={56}
+                      height={56}
+                      unoptimized
+                      className="rounded-full object-cover w-14 h-14 border border-onix-100"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-onix-50 border border-onix-100" />
+                  )}
+                </div>
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    name={`equipe_nome_${i + 1}`}
+                    defaultValue={m?.nome ?? ""}
+                    maxLength={120}
+                    placeholder={`Nome (membro ${i + 1})`}
+                    className={inputCls}
+                  />
+                  <input
+                    type="text"
+                    name={`equipe_cargo_${i + 1}`}
+                    defaultValue={m?.cargo ?? ""}
+                    maxLength={120}
+                    placeholder="Cargo (ex: Analista de Atendimento)"
+                    className={inputCls}
+                  />
+                </div>
+                <div className="shrink-0">
+                  <input
+                    type="file"
+                    name={`equipe_foto_${i + 1}`}
+                    accept="image/jpeg,image/png,image/webp"
+                    className="block w-40 text-[11px] text-onix-800 file:mr-1 file:rounded file:border file:border-onix-100 file:bg-onix-50 file:px-2 file:py-1 file:text-[11px] file:font-medium hover:file:bg-onix-100"
+                  />
+                </div>
+              </div>
+            );
+          })}
+
+          <Field label="Contato do síndico na revista (quando há gestor)">
+            <label className="flex items-center gap-2 text-sm mt-1">
+              <input
+                type="checkbox"
+                name="ocultar_contato_sindico"
+                value="on"
+                defaultChecked={!!meta?.ocultar_contato_sindico}
+              />
+              Ocultar telefone e e-mail do(a) síndico(a) quando o condomínio
+              tem gestor (mostra só os dados do gestor)
+            </label>
           </Field>
         </section>
 

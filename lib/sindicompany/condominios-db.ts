@@ -35,7 +35,17 @@ export interface CondoMeta {
   comunidade_url: string | null;
   /** QR code da comunidade — imagem subida no Storage. */
   comunidade_qrcode_path: string | null;
+  /** Equipe de atendimento — ate 5 pessoas com foto + cargo. */
+  equipe_atendimento: EquipeMembro[] | null;
+  /** Quando tem gestor, esconder telefone/email do sindico na revista. */
+  ocultar_contato_sindico: boolean;
   updated_at: string;
+}
+
+export interface EquipeMembro {
+  nome: string;
+  cargo: string;
+  foto_path: string | null;
 }
 
 export interface CondoMetaInput {
@@ -55,6 +65,8 @@ export interface CondoMetaInput {
   is_by_sindico?: boolean;
   comunidade_url?: string | null;
   comunidade_qrcode_path?: string | null;
+  equipe_atendimento?: EquipeMembro[] | null;
+  ocultar_contato_sindico?: boolean;
 }
 
 /** Titulo do gestor conforme o genero. */
@@ -105,6 +117,8 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
     is_by_sindico: !!input.is_by_sindico,
     comunidade_url: input.comunidade_url ?? null,
     comunidade_qrcode_path: input.comunidade_qrcode_path ?? null,
+    equipe_atendimento: input.equipe_atendimento ?? null,
+    ocultar_contato_sindico: !!input.ocultar_contato_sindico,
   };
 
   let lastErr: { message?: string } | null = null;
