@@ -46,6 +46,9 @@ export default async function RevistaBoasVindasPage({
       ? "Síndica"
       : "Síndico";
   const logoUrl = meta?.logo_url ?? null;
+  const logoCondominioUrl = meta?.logo_condominio_url ?? null;
+  // Logo da contra-capa: prefere o do condominio; cai pro do sindico.
+  const logoContracapa = logoCondominioUrl ?? logoUrl;
   const sindicoFoto = meta?.sindico_foto_path ? getCondoFotoPublicUrl(meta.sindico_foto_path) : null;
   const temGestor = !!(meta?.gestor_nome && meta.gestor_nome.trim());
   const gestorNome = temGestor ? meta!.gestor_nome! : "";
@@ -286,6 +289,62 @@ export default async function RevistaBoasVindasPage({
           </div>
           <div style={{ position: "absolute", bottom: "14mm", left: 0, right: 0, textAlign: "center", color: "#9ca3af", fontSize: "9pt" }}>
             Sindicompany · gestão condominial
+          </div>
+        </div>
+
+        {/* ---------- PÁGINA 4 — CONTRA-CAPA ---------- */}
+        <div className="bv-page">
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(200deg,#1A1C29 0%,#1A1C29 45%,#84C7D3 100%)" }} />
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", padding: "30mm 24mm 22mm", textAlign: "center", color: "#fff" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10mm" }}>
+              {logoContracapa ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoContracapa} alt="Logo" style={{ maxWidth: "110mm", maxHeight: "55mm", objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,.25))" }} />
+              ) : (
+                <div style={{ fontSize: "20pt", fontWeight: 900, letterSpacing: ".04em" }}>Condomínio {nome}</div>
+              )}
+              <div>
+                <h2 style={{ fontSize: "26pt", fontWeight: 900, lineHeight: 1.15, margin: 0 }}>
+                  Conte com a gente, Condomínio {nome}.
+                </h2>
+                <p style={{ fontSize: "13pt", fontWeight: 600, marginTop: "6mm", color: "#DABDA9" }}>
+                  Uma gestão feita de perto, todo dia.
+                </p>
+              </div>
+            </div>
+
+            {(sindicoNome || temGestor) && (
+              <div style={{ display: "flex", gap: "10mm", flexWrap: "wrap", justifyContent: "center" }}>
+                {sindicoNome && (
+                  <div style={{ minWidth: "55mm" }}>
+                    <div style={{ fontSize: "12pt", fontWeight: 800 }}>{sindicoNome}</div>
+                    <div style={{ fontSize: "8.5pt", letterSpacing: ".14em", textTransform: "uppercase", color: "rgba(255,255,255,.8)", marginTop: "1mm" }}>{sindicoTitulo}</div>
+                    {mostrarWhatsSindico && meta?.sindico_whatsapp && (
+                      <div style={{ fontSize: "9.5pt", marginTop: "2mm", color: "rgba(255,255,255,.9)" }}>WhatsApp: {meta.sindico_whatsapp}</div>
+                    )}
+                    {mostrarEmailSindico && meta?.sindico_email && (
+                      <div style={{ fontSize: "9.5pt", color: "rgba(255,255,255,.9)" }}>E-mail: {meta.sindico_email}</div>
+                    )}
+                  </div>
+                )}
+                {temGestor && (
+                  <div style={{ minWidth: "55mm" }}>
+                    <div style={{ fontSize: "12pt", fontWeight: 800 }}>{gestorNome}</div>
+                    <div style={{ fontSize: "8.5pt", letterSpacing: ".14em", textTransform: "uppercase", color: "rgba(255,255,255,.8)", marginTop: "1mm" }}>{gestorCargo}</div>
+                    {meta?.gestor_whatsapp && (
+                      <div style={{ fontSize: "9.5pt", marginTop: "2mm", color: "rgba(255,255,255,.9)" }}>WhatsApp: {meta.gestor_whatsapp}</div>
+                    )}
+                    {meta?.gestor_email && (
+                      <div style={{ fontSize: "9.5pt", color: "rgba(255,255,255,.9)" }}>E-mail: {meta.gestor_email}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div style={{ color: "rgba(255,255,255,.7)", fontSize: "9pt", letterSpacing: ".1em" }}>
+              Sindicompany · gestão condominial profissional
+            </div>
           </div>
         </div>
       </div>
