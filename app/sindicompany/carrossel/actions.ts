@@ -105,6 +105,12 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
   const brandRaw = getStr(formData, "brand");
   const brand: "sindicompanybr" | "bysindicompany" =
     brandRaw === "bysindicompany" ? "bysindicompany" : "sindicompanybr";
+  const objetivoRaw = getStr(formData, "objetivo");
+  const objetivo = ["comentarios", "salvamentos", "clientes", "educar"].includes(
+    objetivoRaw,
+  )
+    ? objetivoRaw
+    : "";
   const titulo = getStr(formData, "titulo");
   const temaSelecionado = getStr(formData, "tema");
   const temaOutro = getStr(formData, "tema_outro");
@@ -121,6 +127,9 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
     : 6;
 
   if (!titulo) backTo("/sindicompany/carrossel/novo", "Informe o título do carrossel.", formData);
+  if (brand === "sindicompanybr" && !objetivo) {
+    backTo("/sindicompany/carrossel/novo", "Selecione o objetivo do carrossel.", formData);
+  }
   if (!temaSelecionado) backTo("/sindicompany/carrossel/novo", "Selecione o tema.", formData);
   if (ehTemaLivre && !temaOutro) {
     backTo(
@@ -133,6 +142,7 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
 
   const input: CarrosselInput = {
     brand,
+    objetivo: objetivo || undefined,
     titulo,
     tema,
     formato,
@@ -186,6 +196,7 @@ export async function regenerarCopiesAction(carrosselId: string): Promise<void> 
   }
   const copies = await gerarTresCopies({
     brand: carrossel.brand ?? "sindicompanybr",
+    objetivo: carrossel.objetivo ?? undefined,
     titulo: carrossel.titulo,
     tema: carrossel.tema ?? "",
     formato: carrossel.formato ?? "",

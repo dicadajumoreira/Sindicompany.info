@@ -9,28 +9,56 @@ interface Props {
   temasSindico: string[];
   temasBy: string[];
   defaultBrand: string;
+  defaultObjetivo: string;
   defaultTema: string;
   defaultTemaOutro: string;
 }
 
-/** Combina o seletor de MARCA + o seletor de TEMA. A lista de temas
- *  muda conforme a marca selecionada — @sindicompanybr (morador) e
- *  @bysindicompany (síndico profissional) têm pautas distintas. */
+const OBJETIVOS = [
+  {
+    id: "comentarios",
+    label: "Gerar comentários (debate)",
+    hint: "Divide opiniões. CTA binário (SIM/NÃO). Sucesso = discussão com dois lados.",
+  },
+  {
+    id: "salvamentos",
+    label: "Gerar salvamentos (utilidade)",
+    hint: "Tão útil que o leitor guarda. Cita lei/artigo/número. CTA 'Salva esse post'.",
+  },
+  {
+    id: "clientes",
+    label: "Atrair novos clientes",
+    hint: "Mostra o caos e o resultado. Marca pode aparecer. CTA leve 'Seu condomínio está assim?'.",
+  },
+  {
+    id: "educar",
+    label: "Educar moradores",
+    hint: "Surpresa + identificação. Linguagem acessível, sem juridiquês.",
+  },
+];
+
+/** Combina o seletor de MARCA + OBJETIVO + TEMA. A lista de temas
+ *  muda conforme a marca; o objetivo (Passo 0) só aparece pro
+ *  @sindicompanybr e define tom, gancho, CTA, formato e critério de
+ *  sucesso do carrossel. */
 export function BrandTemaPicker({
   temasSindico,
   temasBy,
   defaultBrand,
+  defaultObjetivo,
   defaultTema,
   defaultTemaOutro,
 }: Props) {
   const [brand, setBrand] = useState(
     defaultBrand === "bysindicompany" ? "bysindicompany" : "sindicompanybr",
   );
+  const [objetivo, setObjetivo] = useState(defaultObjetivo);
   const temas = brand === "bysindicompany" ? temasBy : temasSindico;
   const [tema, setTema] = useState(
     temas.includes(defaultTema) ? defaultTema : "",
   );
   const isOutro = tema === "Outro" || tema === "Outros";
+  const isSindico = brand === "sindicompanybr";
 
   function onBrandChange(b: string) {
     setBrand(b);
@@ -72,6 +100,42 @@ export function BrandTemaPicker({
           ))}
         </div>
       </div>
+
+      {isSindico && (
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-onix-900">
+            Objetivo do carrossel
+          </label>
+          <p className="text-xs text-g60">
+            Define o que o post precisa provocar — muda o tom, o gancho, o
+            formato ideal, o CTA e o critério de sucesso. Escolha UM.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {OBJETIVOS.map((o) => (
+              <label
+                key={o.id}
+                className="flex items-start gap-2 rounded-md border border-onix-100 bg-white px-3 py-2 cursor-pointer hover:bg-onix-50"
+              >
+                <input
+                  type="radio"
+                  name="objetivo"
+                  value={o.id}
+                  checked={objetivo === o.id}
+                  onChange={() => setObjetivo(o.id)}
+                  required={isSindico}
+                  className="mt-1"
+                />
+                <div>
+                  <div className="text-sm font-medium text-onix-900">
+                    {o.label}
+                  </div>
+                  <div className="text-xs text-g60">{o.hint}</div>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <label className="block text-sm font-medium text-onix-900">Tema</label>

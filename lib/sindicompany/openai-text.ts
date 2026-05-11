@@ -220,10 +220,47 @@ async function chat(
   return { ok: true, content };
 }
 
+// PASSO 0 — objetivo do carrossel (@sindicompanybr). Define o que o
+// post precisa provocar: muda tom, gancho, formato ideal, CTA, slides
+// e criterio de sucesso. Um carrossel = UMA intencao principal.
+const OBJETIVO_INSTRUCOES: Record<string, string> = {
+  comentarios:
+    `OBJETIVO: GERAR COMENTÁRIOS (DEBATE).\n` +
+    `- O carrossel PRECISA dividir opiniões com dois lados reconhecíveis. Sucesso = discussão nos comentários, não alcance.\n` +
+    `- CTA SEMPRE binário, duas respostas opostas fáceis de comentar: "SIM ou NÃO", "CONCORDO ou DISCORDO", "MORADOR CERTO ou SÍNDICO CERTO", "MULTARIA ou RELEVARIA", "BARULHO NORMAL ou FALTA DE BOM SENSO". NUNCA "o que você acha?", "comenta aqui", "me conta sua opinião" — CTA aberto reduz comentários.\n` +
+    `- O tema precisa ter DOIS lados defensáveis. Sem conflito legítimo não há debate.\n` +
+    `- Estrutura: gancho forte → crescimento de tensão → situação reconhecível → dois lados claros no final. O ÚLTIMO SLIDE nomeia explicitamente os dois lados — o leitor precisa saber exatamente o que comentar.\n` +
+    `- Não cite lei como muleta; o foco é o conflito humano, não a aula jurídica.`,
+  salvamentos:
+    `OBJETIVO: GERAR SALVAMENTOS (UTILIDADE).\n` +
+    `- O post precisa ser tão útil que o leitor queira guardar pra consultar depois. Sensação: "vou precisar disso um dia". Sucesso = salvamentos, compartilhamentos, envio em grupos de condomínio. Comentários NÃO são prioridade.\n` +
+    `- Linguagem objetiva, confiável, MENOS emocional — percepção de "referência".\n` +
+    `- SEMPRE que possível ancore: lei, artigo, norma, jurisprudência, regra prática, números. Destaque visual pra artigos, números, regras e exceções (use o título do slide pra isso).\n` +
+    `- CTA foca em SALVAR: "Salva esse post.", "Guarda isso antes de precisar.", "Manda no grupo do condomínio.", "Você vai precisar disso um dia." NUNCA CTA de debate.\n` +
+    `- Estrutura: títulos extremamente claros, leitura rápida, uma ideia por slide, informação escaneável.`,
+  clientes:
+    `OBJETIVO: ATRAIR NOVOS CLIENTES.\n` +
+    `- Síndicos/conselheiros/moradores insatisfeitos precisam perceber que vivem um problema de GESTÃO. Sucesso = DMs, leads, pedidos de orçamento, cliques no link da bio.\n` +
+    `- NUNCA venda diretamente. Mostre o caos, a dor, o "antes" e o resultado final. O leitor pensa: "meu condomínio está exatamente assim".\n` +
+    `- Problemas que funcionam: inadimplência alta, obras paradas, conflitos internos, falta de transparência, má comunicação, fundo zerado, manutenção negligenciada, assembleia desorganizada, síndico ausente, excesso de reclamações.\n` +
+    `- Resultado SEMPRE com números reais: economia, redução de inadimplência, prazo de obra, valorização, organização. Específico converte mais que promessa genérica.\n` +
+    `- A marca PODE aparecer mais, o logo pode ter protagonismo, e a tagline "Por mais lares." pode entrar no fechamento.\n` +
+    `- CTA leve, nunca anúncio direto: "Seu condomínio está assim?", "A gente resolve.", "Fala com a gente.", "Link na bio.".`,
+  educar:
+    `OBJETIVO: EDUCAR MORADORES.\n` +
+    `- Ensinar algo que o morador não sabe mas deveria saber. Gatilho: SURPRESA + IDENTIFICAÇÃO. A surpresa importa mais que a aula.\n` +
+    `- Linguagem MUITO acessível. Sem juridiquês, sem tom professoral. EVITAR "conforme previsto", "nos termos legais", "cumpre esclarecer". PREFERIR "a maioria não sabe, mas...", "isso quase ninguém te explica", "tem condomínio errando isso".\n` +
+    `- Estrutura: primeiro mostra o problema que o morador já conhece; depois explica o que ele não sabia. Uma ideia por slide, progressão lógica, conclusão clara antes do CTA.\n` +
+    `- CTA depende do tema: muito útil → "Salva esse post"; divide opiniões → CTA binário de debate.\n` +
+    `- Sucesso: "não sabia disso", "meu condomínio faz errado", compartilhamentos, salvamentos, marcações de vizinhos.`,
+};
+
 /** Gera 3 versões de copy pra carrossel — angulos editoriais distintos.
- *  O `brand` muda a estrategia (publico, objetivo, linguagem, assinatura). */
+ *  O `brand` muda a estrategia (publico, objetivo, linguagem, assinatura).
+ *  O `objetivo` (so @sindicompanybr) define tom/gancho/CTA/formato/sucesso. */
 export async function gerarTresCopies(input: {
   brand?: string;
+  objetivo?: string;
   titulo: string;
   tema: string;
   formato: string;
@@ -232,6 +269,10 @@ export async function gerarTresCopies(input: {
 }): Promise<{ ok: true; copies: CarrosselCopy[] } | { ok: false; error: string }> {
   const brand = input.brand === "bysindicompany" ? "bysindicompany" : "sindicompanybr";
   const isBy = brand === "bysindicompany";
+  const objetivoBloco =
+    !isBy && input.objetivo && OBJETIVO_INSTRUCOES[input.objetivo]
+      ? `\n${OBJETIVO_INSTRUCOES[input.objetivo]}\n`
+      : "";
   const formato_label = input.formato.replaceAll("_", " ");
   const instrucoesFormato =
     FORMATO_INSTRUCOES[input.formato] ??
@@ -272,13 +313,17 @@ export async function gerarTresCopies(input: {
   const prompt =
     `Crie 3 VERSÕES de copy pra um carrossel do ${isBy ? "@bysindicompany" : "@sindicompanybr"}.\n\n` +
     `${blocoEstrategia}\n` +
-    `BRIEFING:\n` +
+    objetivoBloco +
+    `\nBRIEFING:\n` +
     `- Título interno: ${input.titulo}\n` +
     `- Tema: ${input.tema}\n` +
     `- Formato: ${formato_label}\n` +
     `- Quantidade de slides: ${input.n_slides}\n` +
     (input.briefing ? `- Contexto extra: ${input.briefing}\n` : "") +
     `\n${instrucoesFormato}\n\n` +
+    (objetivoBloco
+      ? `IMPORTANTE: o OBJETIVO acima é a intenção PRINCIPAL — quando o objetivo e o formato apontarem direções diferentes, o objetivo manda (CTA, tom, estrutura).\n\n`
+      : "") +
     `VOZ (vale pra TODOS os formatos):\n` +
     `Estrutura narrativa baseada no post de maior alcance: CENA concreta (começa no meio) → SUPOSIÇÃO do leitor (termina com "né?"/"certo?") → CONTRADIÇÃO em ≤3 palavras → EXPLICAÇÃO uma ideia por frase → FECHAMENTO paradoxal/quotável → CTA. A ASSINATURA "${assinatura}" aparece SÓ na legenda, nunca nos slides. Use a estrutura de slides do FORMATO acima; a voz acima é o tom de cada slide.\n\n` +
     `REGRAS GERAIS:\n` +

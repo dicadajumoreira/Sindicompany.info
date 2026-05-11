@@ -23,6 +23,7 @@ export const CARROSSEL_BRANDS: { id: CarrosselBrand; handle: string; label: stri
 export interface Carrossel {
   id: string;
   brand: CarrosselBrand;
+  objetivo: string | null;
   titulo: string;
   tema: string | null;
   formato: string | null;
@@ -44,6 +45,7 @@ export interface Carrossel {
 
 export interface CarrosselInput {
   brand?: CarrosselBrand;
+  objetivo?: string;
   titulo: string;
   tema?: string;
   formato?: string;

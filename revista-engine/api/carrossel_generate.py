@@ -546,12 +546,29 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
     tema = (carrossel.get("tema") or "").strip()
     formato = (carrossel.get("formato") or "historia_real").strip()
     briefing = (carrossel.get("briefing") or "").strip()
+    objetivo = (carrossel.get("objetivo") or "").strip()
 
     formato_label = formato.replace("_", " ")
     instrucoes_formato = FORMATO_INSTRUCOES.get(
         formato,
         f"FORMATO: {formato_label} (estrutura livre, mantendo a voz e os 7 passos).",
     )
+    obj_map = {
+        "comentarios": "OBJETIVO: GERAR COMENTARIOS. CTA SEMPRE binario (SIM/NAO, "
+        "CONCORDO/DISCORDO, MORADOR CERTO/SINDICO CERTO). Tema com dois lados "
+        "defensaveis. Ultimo slide nomeia os dois lados. Sucesso = debate, nao alcance.",
+        "salvamentos": "OBJETIVO: GERAR SALVAMENTOS. Conteudo util e confiavel, "
+        "linguagem objetiva. Ancore lei/artigo/numero. CTA 'Salva esse post' / "
+        "'Manda no grupo do condominio'. Nunca CTA de debate.",
+        "clientes": "OBJETIVO: ATRAIR CLIENTES. Mostre o caos, a dor, o antes e o "
+        "resultado com numeros reais. Nunca venda direto. A marca pode aparecer e "
+        "a tagline 'Por mais lares.' pode entrar no fechamento. CTA leve "
+        "('Seu condominio esta assim?', 'A gente resolve', 'Link na bio').",
+        "educar": "OBJETIVO: EDUCAR MORADORES. Surpresa + identificacao. Linguagem "
+        "muito acessivel, sem juridiques. Primeiro o problema conhecido, depois o "
+        "que ele nao sabia. CTA depende do tema (salvar OU debate binario).",
+    }
+    objetivo_bloco = (f"\n{obj_map[objetivo]}\n" if objetivo in obj_map else "")
     casa = chr(0x1F3E1)
     is_by = _BRAND == "bysindicompany"
     persona = (
@@ -589,6 +606,7 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
 
     prompt = (
         f"{persona}\n\n"
+        f"{objetivo_bloco}"
         f"BRIEFING:\n"
         f"- Título interno: {titulo}\n"
         f"- Tema: {tema}\n"
@@ -596,7 +614,13 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         f"- Quantidade de slides: {n_slides}\n"
         + (f"- Contexto extra: {briefing}\n" if briefing else "")
         + f"\n{instrucoes_formato}\n\n"
-        f"VOZ (vale pra TODOS os formatos):\n"
+        + (
+            "IMPORTANTE: quando objetivo e formato apontarem direcoes "
+            "diferentes, o OBJETIVO manda (CTA, tom, estrutura).\n\n"
+            if objetivo_bloco
+            else ""
+        )
+        + f"VOZ (vale pra TODOS os formatos):\n"
         f"Estrutura narrativa do post de maior alcance: CENA concreta (comeca no meio) -> "
         f"SUPOSICAO do leitor (termina com 'ne?'/'certo?') -> CONTRADICAO em <=3 palavras -> "
         f"EXPLICACAO uma ideia por frase -> FECHAMENTO paradoxal/quotavel -> CTA binario/escala. "

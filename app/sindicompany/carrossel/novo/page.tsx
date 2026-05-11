@@ -329,6 +329,7 @@ export default async function NovoCarrosselPage({
             temasSindico={TEMAS}
             temasBy={TEMAS_BY}
             defaultBrand={v("brand") || "sindicompanybr"}
+            defaultObjetivo={v("objetivo")}
             defaultTema={v("tema")}
             defaultTemaOutro={v("tema_outro")}
           />
