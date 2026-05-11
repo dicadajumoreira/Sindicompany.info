@@ -8,6 +8,7 @@ import {
   getCondoMeta,
   gestorTitulo,
   listCondoMetas,
+  listPatternUrls,
 } from "@/lib/sindicompany/condominios-db";
 import { PrintButton } from "./print-button";
 
@@ -62,6 +63,23 @@ export default async function RevistaBoasVindasPage({
   const comunidadeUrl = meta?.comunidade_url ?? "";
   const qrUrl = meta?.comunidade_qrcode_path ? getCondoFotoPublicUrl(meta.comunidade_qrcode_path) : null;
   const capaUrl = meta?.boasvindas_capa_path ? getCondoFotoPublicUrl(meta.boasvindas_capa_path) : null;
+  // Patterns dos Assets Sindicompany usados como fundo decorativo das paginas.
+  const patterns = ((await listPatternUrls().catch(() => [])).filter(Boolean) as string[]);
+  const patternFor = (i: number): string | null =>
+    patterns.length ? patterns[i % patterns.length] : null;
+  const patternBg = (i: number, opacity: number) => {
+    const url = patternFor(i);
+    if (!url) return null;
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={url}
+        alt=""
+        aria-hidden="true"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity, pointerEvents: "none" }}
+      />
+    );
+  };
 
   return (
     <>
@@ -132,7 +150,8 @@ export default async function RevistaBoasVindasPage({
 
         {/* ---------- PÁGINA 2 — CARTA + EQUIPE ---------- */}
         <div className="bv-page">
-          <div style={{ padding: "22mm 24mm" }}>
+          {patternBg(0, 0.06)}
+          <div style={{ position: "relative", padding: "22mm 24mm" }}>
             <div style={{ fontSize: "9pt", letterSpacing: ".26em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "4mm" }}>
               Carta de agradecimento
             </div>
@@ -261,6 +280,7 @@ export default async function RevistaBoasVindasPage({
         {/* ---------- PÁGINA 3 — COMUNIDADE ---------- */}
         <div className="bv-page">
           <div style={{ position: "absolute", inset: 0, background: "#F4F4F5" }} />
+          {patternBg(1, 0.06)}
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "30mm 24mm", textAlign: "center" }}>
             <div style={{ fontSize: "9pt", letterSpacing: ".28em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "5mm" }}>
               Comunidade do condomínio
