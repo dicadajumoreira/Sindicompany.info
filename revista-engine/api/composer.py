@@ -93,9 +93,9 @@ from api.text_gen import (
 )
 from engine.theme import load_theme
 from engine.sections import (
-    BackCover, Colophon, Cover, CoverStory, CulturalAgenda, EditorNote,
-    Horoscope, IndustryFacts, Letter, LifestyleArticle, News, OurCondoEvents,
-    OurCondoMaintenance, OurNumbers, Recipe, Tips, Warnings,
+    BackCover, Colophon, CommunityInvite, Cover, CoverStory, CulturalAgenda,
+    EditorNote, Horoscope, IndustryFacts, Letter, LifestyleArticle, News,
+    OurCondoEvents, OurCondoMaintenance, OurNumbers, Recipe, Tips, Warnings,
 )
 from scripts.preview_colophon import DEFAULT_INPUTS as COLOPHON_DEFAULT       # type: ignore
 from scripts.preview_cover import DEFAULT_INPUTS as COVER_DEFAULT             # type: ignore
@@ -539,6 +539,23 @@ def build_inputs_from_db(
         # placeholders ('Colaboradores · Fotos de manutenção · …').
         colophon_inputs["creditos_extras"] = []
 
+    # ---- S14B Convite para a comunidade do condomínio (só se houver
+    # link da comunidade cadastrado no condo).
+    community_invite_inputs: dict[str, Any] | None = None
+    _comunidade_url = (cd.get("comunidade_url") or "").strip()
+    if _comunidade_url:
+        community_invite_inputs = {
+            "condominio": condominio,
+            "comunidade_url": _comunidade_url,
+        }
+        _qr_path = (cd.get("comunidade_qrcode_path") or "").strip()
+        if _qr_path:
+            _url_base = os.environ.get("SUPABASE_URL", "")
+            community_invite_inputs["qrcode_url"] = (
+                f"{_url_base}/storage/v1/object/public/condominios-fotos/{_qr_path}"
+                if _url_base else _qr_path
+            )
+
     # ---- S15 Contracapa
     proximo_mes = (int(revista["mes"]) % 12) + 1
     proximo_ano = int(revista["ano"]) if int(revista["mes"]) < 12 else int(revista["ano"]) + 1
@@ -591,8 +608,10 @@ def build_inputs_from_db(
         ("S12B Vida Condominial",      LifestyleArticle(),     life_inputs),
         ("S13 Signos do Mês",          Horoscope(),            horoscope_inputs),
         ("S14 Expediente",             Colophon(),             colophon_inputs),
-        ("S15 Contracapa",             BackCover(),            back_cover_inputs),
     ])
+    if community_invite_inputs is not None:
+        sequence.append(("S14B Comunidade do Condomínio", CommunityInvite(), community_invite_inputs))
+    sequence.append(("S15 Contracapa", BackCover(), back_cover_inputs))
     # Pass final de revisão pt-BR: clean_text em todas as strings dos
     # inputs (corrige acentos comuns, normaliza pontuação). Pula campos
     # sensíveis (URLs, paths, fotos) pra não quebrar nomes próprios em

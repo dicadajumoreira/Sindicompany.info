@@ -3,6 +3,7 @@
 from .back_cover import BackCover
 from .base import A4, MOBILE, PageDimensions, Section
 from .colophon import Colophon
+from .community_invite import CommunityInvite
 from .cover import Cover
 from .cover_story import CoverStory
 from .cultural_agenda import CulturalAgenda
@@ -26,6 +27,7 @@ __all__ = [
     "MOBILE",
     "BackCover",
     "Colophon",
+    "CommunityInvite",
     "Cover",
     "CoverStory",
     "CulturalAgenda",
