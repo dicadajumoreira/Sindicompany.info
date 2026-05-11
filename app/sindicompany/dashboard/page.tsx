@@ -63,7 +63,7 @@ export default async function DashboardPage({
             </span>
           </div>
           <h1 className="text-4xl font-bold text-onix-900 leading-tight">
-            Revistas mensais
+            Revista Mensal
           </h1>
           <p className="text-sm text-g60 mt-2 max-w-md">
             Gere, revise e publique a revista de cada condomínio sob gestão.

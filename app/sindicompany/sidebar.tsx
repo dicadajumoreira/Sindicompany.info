@@ -13,7 +13,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   {
-    label: "Revistas",
+    label: "Revista Mensal",
     href: "/sindicompany/dashboard",
     emoji: "📕",
     children: [
