@@ -89,6 +89,21 @@ export default async function EditarCondoPage({
             Síndico(a)
           </h2>
 
+          <Field
+            label="By Sindicompany"
+            hint="Se marcado, a revista deste condomínio usa o logotipo do By Sindicompany (Assets BySindicompany) no lugar do logo Sindicompany — LOGO 2 em página de fundo branco, LOGO 1 em fundo escuro."
+          >
+            <label className="flex items-center gap-2 text-sm mt-1">
+              <input
+                type="checkbox"
+                name="is_by_sindico"
+                value="on"
+                defaultChecked={!!meta?.is_by_sindico}
+              />
+              Este síndico faz parte do By Sindicompany
+            </label>
+          </Field>
+
           <Field label="Nome">
             <input
               type="text"

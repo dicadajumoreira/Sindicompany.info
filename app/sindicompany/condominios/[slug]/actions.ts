@@ -146,6 +146,7 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
       ? gestorGeneroRaw
       : "masculino";
   const gestorFotoExistente = getStr(formData, "gestor_foto_existente");
+  const is_by_sindico = getStr(formData, "is_by_sindico") === "on";
 
   const novaFotoSindico = await maybeUploadFoto(formData, "sindico_foto", slug, "sindico");
   const novaFotoGestor = await maybeUploadFoto(formData, "gestor_foto", slug, "gestor");
@@ -165,6 +166,7 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
     gestor_foto_path: gestor_nome
       ? (novaFotoGestor ?? gestorFotoExistente ?? null)
       : null,
+    is_by_sindico,
   };
 
   try {

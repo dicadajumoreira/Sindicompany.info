@@ -11,8 +11,55 @@ from __future__ import annotations
 
 import os
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
+
+
+_BY_LOGO_CACHE: dict[int, str] = {}
+
+
+def _by_logo_url(slot: int) -> str:
+    """URL publica do logo do By Sindicompany no slot dado
+    (__by-logos/logo-{slot}.X). Testa extensoes comuns via HEAD.
+    String vazia se nao houver. Cache por slot."""
+    if slot in _BY_LOGO_CACHE:
+        return _BY_LOGO_CACHE[slot]
+    base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    if not base:
+        _BY_LOGO_CACHE[slot] = ""
+        return ""
+    for ext in ("png", "svg", "webp", "jpg", "jpeg"):
+        url = (
+            f"{base}/storage/v1/object/public/"
+            f"condominios-fotos/__by-logos/logo-{slot}.{ext}"
+        )
+        try:
+            req = urllib.request.Request(
+                url, method="HEAD", headers={"User-Agent": "revista-engine/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status == 200:
+                    _BY_LOGO_CACHE[slot] = url
+                    return url
+        except Exception:  # noqa: BLE001
+            continue
+    _BY_LOGO_CACHE[slot] = ""
+    return ""
+
+
+def _logo_para_revista(revista: dict[str, Any], cd: dict[str, Any], fundo_escuro: bool) -> str:
+    """Decide qual logo usar nesta secao da revista.
+    - Sindico By Sindicompany: usa o logo do By — LOGO 1 em fundo
+      escuro, LOGO 2 em fundo branco.
+    - Caso contrario: usa o logo do sindico cadastrado (cd['logo_url']),
+      ou '' (engine cai no logo Sindicompany padrao)."""
+    if revista.get("is_by_sindico"):
+        by = _by_logo_url(1 if fundo_escuro else 2)
+        if by:
+            return by
+    return (cd.get("logo_url") or "") if isinstance(cd, dict) else ""
 
 # Garante import do package engine + dos scripts de preview (defaults)
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -162,8 +209,10 @@ def build_inputs_from_db(
     if ed.get("foto_capa_url"):
         cover_inputs["foto_capa"] = ed["foto_capa_url"]
     cover_inputs["chamadas"] = _build_chamadas(revista, editorial, condo)
-    if cd.get("logo_url"):
-        cover_inputs["logo_url"] = cd["logo_url"]
+    # Capa tem fundo escuro (foto + overlay) -> LOGO 1 do By, se for By sindico.
+    _logo_capa = _logo_para_revista(revista, cd, fundo_escuro=True)
+    if _logo_capa:
+        cover_inputs["logo_url"] = _logo_capa
 
     # ---- S02 Carta do Síndico
     letter_inputs = dict(LETTER_DEFAULT)
@@ -490,8 +539,10 @@ def build_inputs_from_db(
     back_cover_inputs: dict[str, Any] = {
         "proxima_edicao_label": f"Próxima edição: {MESES[proximo_mes - 1].lower()} {proximo_ano}",
     }
-    if cd.get("logo_url"):
-        back_cover_inputs["logo_url"] = cd["logo_url"]
+    # Contracapa tem fundo onix (escuro) -> LOGO 1 do By, se for By sindico.
+    _logo_contracapa = _logo_para_revista(revista, cd, fundo_escuro=True)
+    if _logo_contracapa:
+        back_cover_inputs["logo_url"] = _logo_contracapa
 
     sequence: list[tuple[str, Any, dict[str, Any]]] = [
         ("S01 Capa",                   Cover(),                cover_inputs),

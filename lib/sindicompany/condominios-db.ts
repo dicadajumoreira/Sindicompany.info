@@ -25,6 +25,8 @@ export interface CondoMeta {
   gestor_nome: string | null;
   gestor_genero: Genero | null;
   gestor_foto_path: string | null;
+  /** Sindico faz parte do By Sindicompany — revista usa logo do By. */
+  is_by_sindico: boolean;
   updated_at: string;
 }
 
@@ -38,6 +40,7 @@ export interface CondoMetaInput {
   gestor_nome?: string | null;
   gestor_genero?: Genero | null;
   gestor_foto_path?: string | null;
+  is_by_sindico?: boolean;
 }
 
 /** Titulo do gestor conforme o genero. */
@@ -76,25 +79,28 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
     gestor_foto_path: input.gestor_foto_path ?? null,
     tem_gestor: !!(input.gestor_nome && input.gestor_nome.trim()),
   };
-  const full = { ...base, gestor_genero: input.gestor_genero ?? null };
-
-  let res = await supabase
-    .from(TABLE)
-    .upsert(full, { onConflict: "nome" })
-    .select()
-    .single();
-
-  // gestor_genero eh coluna nova (migration 20260528). Se ainda nao foi
-  // rodada, o upsert falha com PGRST204 — refaz sem ela.
-  if (res.error && /gestor_genero|PGRST204/.test(res.error.message ?? "")) {
-    res = await supabase
-      .from(TABLE)
-      .upsert(base, { onConflict: "nome" })
-      .select()
-      .single();
+  // Colunas novas (migrations 20260528 / 20260529). Se ainda nao foram
+  // rodadas, o upsert falha com PGRST204 — caímos pra um payload mais
+  // enxuto progressivamente ate dar certo.
+  const attempts: Record<string, unknown>[] = [
+    { ...base, gestor_genero: input.gestor_genero ?? null, is_by_sindico: !!input.is_by_sindico },
+    { ...base, gestor_genero: input.gestor_genero ?? null },
+    base,
+  ];
+  let data: unknown = null;
+  let lastErr: { message?: string } | null = null;
+  for (const payload of attempts) {
+    const r = await supabase.from(TABLE).upsert(payload, { onConflict: "nome" }).select().single();
+    if (!r.error) {
+      data = r.data;
+      lastErr = null;
+      break;
+    }
+    lastErr = r.error;
+    if (!/gestor_genero|is_by_sindico|PGRST204/.test(r.error.message ?? "")) break;
   }
-  if (res.error) throw res.error;
-  return res.data as CondoMeta;
+  if (lastErr) throw lastErr;
+  return data as CondoMeta;
 }
 
 /** Sobe foto do gestor (atrelada a uma revista específica) e retorna URL pública. */

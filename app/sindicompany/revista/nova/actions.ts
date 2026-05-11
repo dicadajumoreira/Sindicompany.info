@@ -147,6 +147,7 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     gestor_nome,
     gestor_foto_url,
     gestor_titulo,
+    is_by_sindico: !!meta.is_by_sindico,
     drive_manutencao_url: drive_manutencao_url || undefined,
     manutencao_zip_url: manutencao_zip_url || undefined,
     manutencao_capa_url: manutencao_capa_url || undefined,
