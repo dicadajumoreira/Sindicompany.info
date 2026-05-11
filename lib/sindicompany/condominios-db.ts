@@ -271,6 +271,41 @@ export function listLogoUrls() {
   return _listSlotUrls("__logos", "logo", LOGO_MAX_SLOTS);
 }
 
+// =============================================================================
+// Assets BySindicompany — buckets __by-patterns / __by-icons /
+// __by-icon-carrossel / __by-logos. Conectados aos carrosseis da
+// marca 'bysindicompany' (a engine usa o prefixo __by- quando o
+// carrossel.brand for bysindicompany).
+// =============================================================================
+
+export function createByPatternUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__by-patterns", "pattern", slot, ext);
+}
+export function listByPatternUrls() {
+  return _listSlotUrls("__by-patterns", "pattern", PATTERN_MAX_SLOTS);
+}
+
+export function createByIconUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__by-icons", "icon", slot, ext);
+}
+export function listByIconUrls() {
+  return _listSlotUrls("__by-icons", "icon", ICON_MAX_SLOTS);
+}
+
+export function createByIconCarrosselUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__by-icon-carrossel", "icon", slot, ext);
+}
+export function listByIconCarrosselUrls() {
+  return _listSlotUrls("__by-icon-carrossel", "icon", ICON_CARROSSEL_MAX_SLOTS);
+}
+
+export function createByLogoUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__by-logos", "logo", slot, ext);
+}
+export function listByLogoUrls() {
+  return _listSlotUrls("__by-logos", "logo", LOGO_MAX_SLOTS);
+}
+
 /** Sobe o arquivo de prestação de contas (imagem ou PDF) atrelado a
  *  uma revista específica. Mantido para fluxos que ainda usam upload
  *  via Server Action (testes locais e arquivos pequenos). O fluxo

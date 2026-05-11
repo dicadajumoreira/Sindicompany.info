@@ -33,6 +33,22 @@ from api.supabase_client import _client as _sb_client
 from api.text_gen import _client as _openai_client, MODEL, _gerar_json
 
 
+# Marca do carrossel atual — setada em main() antes de qualquer
+# lookup de asset. Define qual conjunto de buckets/handle/logo usar.
+_BRAND = "sindicompanybr"
+
+
+def _asset_prefix() -> str:
+    """Prefixo dos buckets de assets conforme a marca:
+    - sindicompanybr -> '__'   (ex: __patterns/, __icons/)
+    - bysindicompany -> '__by-' (ex: __by-patterns/, __by-icons/)"""
+    return "__by-" if _BRAND == "bysindicompany" else "__"
+
+
+def _handle() -> str:
+    return "@bysindicompany" if _BRAND == "bysindicompany" else "@sindicompanybr"
+
+
 _PATTERNS_CACHE: list[str] | None = None  # data URLs prontos pra uso
 
 
@@ -56,7 +72,7 @@ def _patterns_data_urls() -> list[str]:
         for ext in ("png", "jpg", "jpeg", "webp"):
             url = (
                 f"{base}/storage/v1/object/public/"
-                f"condominios-fotos/__patterns/pattern-{i}.{ext}"
+                f"condominios-fotos/{_asset_prefix()}patterns/pattern-{i}.{ext}"
             )
             try:
                 req = urllib.request.Request(
@@ -160,7 +176,7 @@ def _pattern_slot_data_url(slot: int) -> str:
     for ext in ("png", "jpg", "jpeg", "webp"):
         url = (
             f"{base}/storage/v1/object/public/"
-            f"condominios-fotos/__patterns/pattern-{slot}.{ext}"
+            f"condominios-fotos/{_asset_prefix()}patterns/pattern-{slot}.{ext}"
         )
         try:
             req = urllib.request.Request(
@@ -205,7 +221,7 @@ def _logo_slot_data_url(slot: int) -> str:
     for ext in ("png", "svg", "webp", "jpg", "jpeg"):
         url = (
             f"{base}/storage/v1/object/public/"
-            f"condominios-fotos/__logos/logo-{slot}.{ext}"
+            f"condominios-fotos/{_asset_prefix()}logos/logo-{slot}.{ext}"
         )
         try:
             req = urllib.request.Request(
@@ -245,7 +261,7 @@ def _icon_slot_data_url(slot: int) -> str:
     for ext in ("png", "svg", "webp", "jpg", "jpeg"):
         url = (
             f"{base}/storage/v1/object/public/"
-            f"condominios-fotos/__icons/icon-{slot}.{ext}"
+            f"condominios-fotos/{_asset_prefix()}icons/icon-{slot}.{ext}"
         )
         try:
             req = urllib.request.Request(
@@ -287,7 +303,7 @@ def _icon_data_url() -> str:
     for ext in ("png", "svg", "webp", "jpg", "jpeg"):
         url = (
             f"{base}/storage/v1/object/public/"
-            f"condominios-fotos/__icons/icon-1.{ext}"
+            f"condominios-fotos/{_asset_prefix()}icons/icon-1.{ext}"
         )
         try:
             req = urllib.request.Request(
@@ -338,7 +354,7 @@ def _icons_all_data_urls() -> list[str]:
         for ext in ("png", "svg", "webp", "jpg", "jpeg"):
             url = (
                 f"{base}/storage/v1/object/public/"
-                f"condominios-fotos/__icon-carrossel/icon-{i}.{ext}"
+                f"condominios-fotos/{_asset_prefix()}icon-carrossel/icon-{i}.{ext}"
             )
             try:
                 req = urllib.request.Request(
@@ -651,6 +667,7 @@ def _slide_html(
 ) -> str:
     """Monta o HTML de um único slide pronto pra renderizar."""
     p = PALETTE
+    handle = _handle()
     epilogue_url = (
         "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;800;900&display=swap"
     )
@@ -805,7 +822,7 @@ def _slide_html(
     {body_html}
   </div>
   {logo_top_img}
-  <div class="handle">@sindicompanybr</div>
+  <div class="handle">{handle}</div>
   {icon_img}
 </body></html>
 """
@@ -1087,7 +1104,7 @@ def _slide_html(
     {body_html}
   </div>
   {logo_top_img}
-  <div class="handle">@sindicompanybr</div>
+  <div class="handle">{handle}</div>
   {icon_img_internal}
 </body></html>
 """
@@ -1132,12 +1149,19 @@ def _render_slide_png(html: str) -> bytes:
 
 def gerar_carrossel(carrossel_id: str) -> int:
     """Pipeline completo. Retorna 0 se OK, 1 se falhou."""
+    global _BRAND
     print(f"[carrossel] iniciando geração de {carrossel_id}", flush=True)
     try:
         carrossel = _fetch_carrossel(carrossel_id)
         if not carrossel:
             print(f"[carrossel] {carrossel_id} não encontrado", flush=True)
             return 1
+
+        # Define a marca ANTES de qualquer lookup de asset (buckets,
+        # handle, logo). Default sindicompanybr pra registros legacy.
+        b = (carrossel.get("brand") or "sindicompanybr").strip().lower()
+        _BRAND = "bysindicompany" if b == "bysindicompany" else "sindicompanybr"
+        print(f"[carrossel] brand={_BRAND}", flush=True)
 
         _update_carrossel(carrossel_id, {"status": "em_producao", "erro_mensagem": None})
 

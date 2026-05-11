@@ -4,6 +4,10 @@ import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { slugifyCondo } from "@/lib/sindicompany/condominios";
 import {
+  createByIconCarrosselUploadIntent,
+  createByIconUploadIntent,
+  createByLogoUploadIntent,
+  createByPatternUploadIntent,
   createEventosZipUploadIntent,
   createIconCarrosselUploadIntent,
   createIconUploadIntent,
@@ -15,6 +19,7 @@ import {
   ICON_CARROSSEL_MAX_SLOTS,
   ICON_MAX_SLOTS,
   LOGO_MAX_SLOTS,
+  PATTERN_MAX_SLOTS,
 } from "@/lib/sindicompany/condominios-db";
 
 const ALLOWED_PRESTACAO_EXT = new Set(["jpg", "jpeg", "png", "webp", "pdf"]);
@@ -244,4 +249,28 @@ export async function getIconCarrosselUploadIntent(slot: number, ext: string) {
 
 export async function getLogoUploadIntent(slot: number, ext: string) {
   return _slotIntent(ext, slot, LOGO_MAX_SLOTS, "Logo", createLogoUploadIntent);
+}
+
+// --- Assets BySindicompany ---
+
+export async function getByPatternUploadIntent(slot: number, ext: string) {
+  return _slotIntent(
+    ext, slot, PATTERN_MAX_SLOTS, "Pattern (By)", createByPatternUploadIntent,
+  );
+}
+export async function getByIconUploadIntent(slot: number, ext: string) {
+  return _slotIntent(
+    ext, slot, ICON_MAX_SLOTS, "Icon (By)", createByIconUploadIntent,
+  );
+}
+export async function getByIconCarrosselUploadIntent(slot: number, ext: string) {
+  return _slotIntent(
+    ext, slot, ICON_CARROSSEL_MAX_SLOTS, "Fundo Carrossel (By)",
+    createByIconCarrosselUploadIntent,
+  );
+}
+export async function getByLogoUploadIntent(slot: number, ext: string) {
+  return _slotIntent(
+    ext, slot, LOGO_MAX_SLOTS, "Logo (By)", createByLogoUploadIntent,
+  );
 }

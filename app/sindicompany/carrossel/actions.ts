@@ -102,6 +102,9 @@ export async function getCarrosselFotoUploadIntent(
 export async function iniciarCarrosselAction(formData: FormData): Promise<void> {
   await requireAuth();
 
+  const brandRaw = getStr(formData, "brand");
+  const brand: "sindicompanybr" | "bysindicompany" =
+    brandRaw === "bysindicompany" ? "bysindicompany" : "sindicompanybr";
   const titulo = getStr(formData, "titulo");
   const temaSelecionado = getStr(formData, "tema");
   const temaOutro = getStr(formData, "tema_outro");
@@ -128,6 +131,7 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
   if (!formato) backTo("/sindicompany/carrossel/novo", "Selecione o formato.", formData);
 
   const input: CarrosselInput = {
+    brand,
     titulo,
     tema,
     formato,

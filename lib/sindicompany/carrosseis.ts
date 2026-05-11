@@ -13,8 +13,16 @@ export interface CarrosselCopy {
   legenda: string;
 }
 
+export type CarrosselBrand = "sindicompanybr" | "bysindicompany";
+
+export const CARROSSEL_BRANDS: { id: CarrosselBrand; handle: string; label: string }[] = [
+  { id: "sindicompanybr", handle: "@sindicompanybr", label: "Sindicompany" },
+  { id: "bysindicompany", handle: "@bysindicompany", label: "BySindicompany" },
+];
+
 export interface Carrossel {
   id: string;
+  brand: CarrosselBrand;
   titulo: string;
   tema: string | null;
   formato: string | null;
@@ -35,6 +43,7 @@ export interface Carrossel {
 }
 
 export interface CarrosselInput {
+  brand?: CarrosselBrand;
   titulo: string;
   tema?: string;
   formato?: string;
@@ -89,7 +98,11 @@ export async function createCarrossel(input: CarrosselInput): Promise<Carrossel>
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from(TABLE)
-    .insert({ ...input, status: "rascunho" as CarrosselStatus })
+    .insert({
+      ...input,
+      brand: input.brand ?? "sindicompanybr",
+      status: "rascunho" as CarrosselStatus,
+    })
     .select()
     .single();
   if (error) throw error;

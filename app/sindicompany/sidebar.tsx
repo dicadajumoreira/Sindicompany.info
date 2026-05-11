@@ -26,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
     emoji: "🎠",
     children: [
       { label: "@sindicompanybr", href: "/sindicompany/carrossel" },
+      { label: "@bysindicompany", href: "/sindicompany/carrossel/novo?brand=bysindicompany" },
     ],
   },
   { label: "Condomínios", href: "/sindicompany/condominios", emoji: "🏢" },
@@ -38,6 +39,11 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Fundo Carrossel", href: "/sindicompany/icon-carrossel" },
       { label: "Logotipos", href: "/sindicompany/logos" },
     ],
+  },
+  {
+    label: "Assets BySindicompany",
+    emoji: "🪄",
+    children: [{ label: "Patterns · Icons · Fundo · Logos", href: "/sindicompany/by-assets" }],
   },
 ];
 

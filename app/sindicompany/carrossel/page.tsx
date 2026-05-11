@@ -101,9 +101,12 @@ export default async function CarrosseisPage() {
 
         {carrosseis.length > 0 && (
           <div className="rounded-xl border border-onix-100 bg-white overflow-x-auto">
-            <table className="w-full text-sm min-w-[720px]">
+            <table className="w-full text-sm min-w-[840px]">
               <thead className="bg-onix-50">
                 <tr>
+                  <th className="text-left font-semibold text-onix-900 px-5 py-3">
+                    Marca
+                  </th>
                   <th className="text-left font-semibold text-onix-900 px-5 py-3">
                     Título
                   </th>
@@ -133,6 +136,11 @@ export default async function CarrosseisPage() {
                     key={c.id}
                     className="border-t border-onix-100 hover:bg-onix-50/50"
                   >
+                    <td className="px-5 py-3">
+                      <span className="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-onix-100 text-onix-800">
+                        {c.brand === "bysindicompany" ? "@bysindicompany" : "@sindicompanybr"}
+                      </span>
+                    </td>
                     <td className="px-5 py-3">
                       <Link
                         href={`/sindicompany/carrossel/${c.id}`}

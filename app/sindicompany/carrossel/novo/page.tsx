@@ -214,6 +214,34 @@ export default async function NovoCarrosselPage({
         )}
 
         <form action={iniciarCarrosselAction} className="space-y-6">
+          <Field label="Marca" hint="Pra qual Instagram este carrossel é.">
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: "sindicompanybr", label: "@sindicompanybr" },
+                { id: "bysindicompany", label: "@bysindicompany" },
+              ].map((b) => {
+                const cur = v("brand") || "sindicompanybr";
+                return (
+                  <label
+                    key={b.id}
+                    className="flex items-center gap-2 rounded-md border border-onix-100 bg-white px-3 py-2 cursor-pointer hover:bg-onix-50"
+                  >
+                    <input
+                      type="radio"
+                      name="brand"
+                      value={b.id}
+                      defaultChecked={cur === b.id}
+                      required
+                    />
+                    <span className="text-sm font-medium text-onix-900">
+                      {b.label}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </Field>
+
           <Field
             label="Título interno"
             hint="Pra organização — não aparece no post."
