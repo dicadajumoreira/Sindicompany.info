@@ -19,10 +19,11 @@ export interface CondoMeta {
   logo_url: string | null;
   /** Logotipo oficial do condominio — opcional, nao substitui o do sindico. */
   logo_condominio_url: string | null;
-  // Campos de gestor abaixo são deprecated em condo_meta — moved to revistas.
-  // Mantidos no schema só pra não quebrar dados antigos.
+  // Gestor de Atendimento — cadastrado aqui (nao mais por edicao). O
+  // titulo sai do genero: 'Gestor de Atendimento' / 'Gestora de Atendimento'.
   tem_gestor: boolean;
   gestor_nome: string | null;
+  gestor_genero: Genero | null;
   gestor_foto_path: string | null;
   updated_at: string;
 }
@@ -34,6 +35,14 @@ export interface CondoMetaInput {
   sindico_foto_path?: string | null;
   logo_url?: string | null;
   logo_condominio_url?: string | null;
+  gestor_nome?: string | null;
+  gestor_genero?: Genero | null;
+  gestor_foto_path?: string | null;
+}
+
+/** Titulo do gestor conforme o genero. */
+export function gestorTitulo(genero: Genero | null | undefined): string {
+  return genero === "feminino" ? "Gestora de Atendimento" : "Gestor de Atendimento";
 }
 
 export async function getCondoMeta(nome: string): Promise<CondoMeta | null> {
@@ -66,6 +75,10 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
         sindico_foto_path: input.sindico_foto_path ?? null,
         logo_url: input.logo_url ?? null,
         logo_condominio_url: input.logo_condominio_url ?? null,
+        gestor_nome: input.gestor_nome ?? null,
+        gestor_genero: input.gestor_genero ?? null,
+        gestor_foto_path: input.gestor_foto_path ?? null,
+        tem_gestor: !!(input.gestor_nome && input.gestor_nome.trim()),
       },
       { onConflict: "nome" },
     )

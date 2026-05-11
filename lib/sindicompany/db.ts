@@ -27,6 +27,7 @@ export interface Revista {
   tem_gestor: boolean;
   gestor_nome: string | null;
   gestor_foto_url: string | null;
+  gestor_titulo: string | null;
   // Conteúdo do condomínio
   drive_manutencao_url: string | null;
   manutencao_zip_url: string | null;
@@ -64,6 +65,7 @@ export interface RevistaInput {
   tem_gestor?: boolean;
   gestor_nome?: string;
   gestor_foto_url?: string;
+  gestor_titulo?: string;
   drive_manutencao_url?: string;
   manutencao_zip_url?: string;
   manutencao_capa_url?: string;

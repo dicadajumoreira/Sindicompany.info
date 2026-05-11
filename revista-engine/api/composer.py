@@ -186,8 +186,13 @@ def build_inputs_from_db(
     if revista.get("tem_gestor") and revista.get("gestor_nome"):
         gestor_letter_inputs = dict(LETTER_DEFAULT)
         gestor_letter_inputs["nome_sindico"] = revista["gestor_nome"]
-        gestor_letter_inputs["cargo"] = "Gestor de atendimento"
-        gestor_letter_inputs["genero"] = "masculino"
+        # gestor_titulo vem do cadastro do condominio (genero do gestor):
+        # 'Gestor de Atendimento' (M) ou 'Gestora de Atendimento' (F).
+        cargo_gestor = (revista.get("gestor_titulo") or "Gestor de Atendimento").strip()
+        gestor_letter_inputs["cargo"] = cargo_gestor
+        gestor_letter_inputs["genero"] = (
+            "feminino" if "gestora" in cargo_gestor.lower() else "masculino"
+        )
         gestor_letter_inputs["mes_ano"] = mes_ano
         if ed.get("carta_gestor_tema"):
             gestor_letter_inputs["titulo"] = ed["carta_gestor_tema"]

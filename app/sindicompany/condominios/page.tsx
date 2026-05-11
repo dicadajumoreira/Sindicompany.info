@@ -41,9 +41,8 @@ export default async function CondominiosPage() {
         </div>
         <h1 className="text-3xl font-bold text-onix-900">Cadastro de condomínios</h1>
         <p className="text-sm text-g60 mt-2 max-w-xl">
-          Síndico(a) e logotipo de cada condomínio ficam salvos aqui e são
-          aplicados em todas as edições da revista. O gestor agora é cadastrado
-          por edição, em "Nova revista".
+          Síndico(a), Gestor(a) de Atendimento e logotipos de cada condomínio
+          ficam salvos aqui e são aplicados em todas as edições da revista.
         </p>
       </header>
 

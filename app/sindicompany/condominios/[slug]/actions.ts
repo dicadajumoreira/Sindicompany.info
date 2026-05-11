@@ -138,7 +138,17 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   const logoSindicoExistente = getStr(formData, "logo_sindico_existente");
   const logoCondominioExistente = getStr(formData, "logo_condominio_existente");
 
+  // Gestor de Atendimento — opcional. Nome em branco = condo sem gestor.
+  const gestor_nome = getStr(formData, "gestor_nome");
+  const gestorGeneroRaw = getStr(formData, "gestor_genero");
+  const gestor_genero: Genero | undefined =
+    gestorGeneroRaw === "masculino" || gestorGeneroRaw === "feminino"
+      ? gestorGeneroRaw
+      : "masculino";
+  const gestorFotoExistente = getStr(formData, "gestor_foto_existente");
+
   const novaFotoSindico = await maybeUploadFoto(formData, "sindico_foto", slug, "sindico");
+  const novaFotoGestor = await maybeUploadFoto(formData, "gestor_foto", slug, "gestor");
   const novoLogoSindico = await maybeUploadLogo(formData, "logo_sindico_file", slug, "sindico");
   const novoLogoCondominio = await maybeUploadLogo(formData, "logo_condominio_file", slug, "condominio");
 
@@ -150,6 +160,11 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
     logo_url: novoLogoSindico ?? logoSindicoExistente ?? null,
     logo_condominio_url:
       novoLogoCondominio ?? logoCondominioExistente ?? null,
+    gestor_nome: gestor_nome || null,
+    gestor_genero: gestor_nome ? gestor_genero : null,
+    gestor_foto_path: gestor_nome
+      ? (novaFotoGestor ?? gestorFotoExistente ?? null)
+      : null,
   };
 
   try {

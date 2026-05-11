@@ -49,6 +49,9 @@ export default async function EditarCondoPage({
   const sindicoFotoUrl = meta?.sindico_foto_path
     ? getCondoFotoPublicUrl(meta.sindico_foto_path)
     : null;
+  const gestorFotoUrl = meta?.gestor_foto_path
+    ? getCondoFotoPublicUrl(meta.gestor_foto_path)
+    : null;
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
@@ -143,6 +146,86 @@ export default async function EditarCondoPage({
             <input
               type="file"
               name="sindico_foto"
+              accept="image/jpeg,image/png,image/webp"
+              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+            />
+          </Field>
+        </section>
+
+        {/* ============ GESTOR DE ATENDIMENTO ============ */}
+        <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
+            Gestor de Atendimento
+          </h2>
+          <p className="text-xs text-g60 -mt-3">
+            Pessoa de contato da Sindicompany pra esse condomínio. Aparece na
+            carta do gestor e na contracapa da revista. Deixe o nome em branco
+            se o condomínio não tem gestor de atendimento.
+          </p>
+
+          <Field label="Nome" hint="Nome de quem atende esse condomínio.">
+            <input
+              type="hidden"
+              name="gestor_foto_existente"
+              value={meta?.gestor_foto_path ?? ""}
+            />
+            <input
+              type="text"
+              name="gestor_nome"
+              defaultValue={meta?.gestor_nome ?? ""}
+              maxLength={120}
+              placeholder="Ex: Carlos Andrade (deixe em branco se não tem)"
+              className={inputCls}
+            />
+          </Field>
+
+          <Field label="Gênero" hint="Define o título: Gestor / Gestora de Atendimento.">
+            <div className="flex gap-4 mt-1">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="gestor_genero"
+                  value="feminino"
+                  defaultChecked={meta?.gestor_genero === "feminino"}
+                />
+                Gestora de Atendimento
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="gestor_genero"
+                  value="masculino"
+                  defaultChecked={
+                    meta?.gestor_genero === "masculino" || !meta?.gestor_genero
+                  }
+                />
+                Gestor de Atendimento
+              </label>
+            </div>
+          </Field>
+
+          <Field
+            label="Foto"
+            hint="JPG, PNG ou WebP. Máx 5MB. Opcional."
+          >
+            {gestorFotoUrl && (
+              <div className="mb-3 flex items-center gap-3">
+                <Image
+                  src={gestorFotoUrl}
+                  alt={`Foto de ${meta?.gestor_nome ?? "gestor"}`}
+                  width={80}
+                  height={80}
+                  unoptimized
+                  className="rounded-full object-cover w-20 h-20 border border-onix-100"
+                />
+                <span className="text-xs text-g60">
+                  Foto atual. Suba uma nova abaixo para substituir.
+                </span>
+              </div>
+            )}
+            <input
+              type="file"
+              name="gestor_foto"
               accept="image/jpeg,image/png,image/webp"
               className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
             />

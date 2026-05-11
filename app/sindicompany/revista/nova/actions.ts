@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { isCondominioValido, slugifyCondo } from "@/lib/sindicompany/condominios";
-import { getCondoMeta, uploadGestorFotoRevista } from "@/lib/sindicompany/condominios-db";
+import {
+  getCondoFotoPublicUrl,
+  getCondoMeta,
+  gestorTitulo,
+} from "@/lib/sindicompany/condominios-db";
 import { createRevista, type RevistaInput } from "@/lib/sindicompany/db";
 import { getEditorial, editorialEstaPronto } from "@/lib/sindicompany/editoriais";
 import { dispatchGenerateRevista } from "@/lib/sindicompany/engine";
@@ -82,15 +86,16 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
   const sindico_nome = meta.sindico_nome;
   const sindico_genero = meta.sindico_genero;
 
-  // Gestor agora é por edição (vem do form, não do cadastro do condo).
-  const tem_gestor = getBool(formData, "tem_gestor");
-  const gestor_nome = getStr(formData, "gestor_nome");
-  if (tem_gestor && !gestor_nome) {
-    backToFormWithError(
-      "Marcou que tem gestor — informe o nome.",
-      formData,
-    );
-  }
+  // Gestor de Atendimento agora vem do CADASTRO DO CONDOMÍNIO (tela
+  // Condomínios), não mais do form da revista. Se o condo não tem
+  // gestor cadastrado, a carta do gestor não sai na edição.
+  const tem_gestor = !!(meta.gestor_nome && meta.gestor_nome.trim());
+  const gestor_nome = tem_gestor ? (meta.gestor_nome ?? undefined) : undefined;
+  const gestor_titulo = tem_gestor ? gestorTitulo(meta.gestor_genero) : undefined;
+  const gestor_foto_url =
+    tem_gestor && meta.gestor_foto_path
+      ? getCondoFotoPublicUrl(meta.gestor_foto_path)
+      : undefined;
 
   // drive_manutencao_url legado: aceito ainda pra revistas antigas, mas o
   // form novo usa ZIP. drive_prestacao_url removido.
@@ -121,37 +126,6 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     );
   }
 
-  // Foto do gestor: novo upload sobrescreve, senão mantém a existente
-  // (caso ela tenha duplicado uma edição anterior).
-  let gestor_foto_url: string | undefined = getStr(formData, "gestor_foto_existente") || undefined;
-  if (tem_gestor) {
-    const file = formData.get("gestor_foto_file");
-    if (file instanceof File && file.size > 0) {
-      if (file.size > MAX_PHOTO_BYTES) {
-        backToFormWithError("Foto do gestor maior que 5MB.", formData);
-      }
-      if (!ALLOWED_PHOTO_TYPES.has(file.type)) {
-        backToFormWithError("Foto do gestor precisa ser JPG, PNG ou WebP.", formData);
-      }
-      try {
-        const buf = Buffer.from(await file.arrayBuffer());
-        const ext = PHOTO_EXT_BY_TYPE[file.type];
-        // Upload com placeholder de id; vamos atualizar com o id real após criar
-        gestor_foto_url = await uploadGestorFotoRevista(
-          slugifyCondo(condominio),
-          `pending-${Date.now()}`,
-          buf,
-          file.type,
-          ext,
-        );
-      } catch (e) {
-        backToFormWithError(`Falha ao subir foto do gestor: ${describeError(e)}`, formData);
-      }
-    }
-  } else {
-    gestor_foto_url = undefined;
-  }
-
   // Os arquivos (ZIP de manutenção, dashboard de prestação) são subidos
   // direto do navegador pro Supabase Storage via signed URL. O form só
   // recebe a URL pública resultante. Isso evita o limite de body do
@@ -170,8 +144,9 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     sindico_nome,
     sindico_genero,
     tem_gestor,
-    gestor_nome: tem_gestor ? gestor_nome : undefined,
-    gestor_foto_url: tem_gestor ? gestor_foto_url : undefined,
+    gestor_nome,
+    gestor_foto_url,
+    gestor_titulo,
     drive_manutencao_url: drive_manutencao_url || undefined,
     manutencao_zip_url: manutencao_zip_url || undefined,
     manutencao_capa_url: manutencao_capa_url || undefined,
