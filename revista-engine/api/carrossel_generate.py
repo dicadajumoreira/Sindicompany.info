@@ -703,7 +703,10 @@ def _slide_html(
         "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;800;900&display=swap"
     )
     # Logo 5 sempre no topo de TODOS os slides (capa + internos + CTA)
-    logo_top_url = _logo_slot_data_url(5)
+    # Logo no topo de TODOS os slides. @sindicompanybr usa o slot 5;
+    # @bysindicompany usa o slot 1 (LOGO 1 do bucket __by-logos).
+    logo_top_slot = 1 if _BRAND == "bysindicompany" else 5
+    logo_top_url = _logo_slot_data_url(logo_top_slot)
     logo_top_img = (
         f'<img class="logo-top" src="{logo_top_url}" alt="" />'
         if logo_top_url
