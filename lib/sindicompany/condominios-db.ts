@@ -65,27 +65,36 @@ export async function listCondoMetas(): Promise<CondoMeta[]> {
 
 export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  const base = {
+    nome: input.nome,
+    sindico_nome: input.sindico_nome ?? null,
+    sindico_genero: input.sindico_genero ?? null,
+    sindico_foto_path: input.sindico_foto_path ?? null,
+    logo_url: input.logo_url ?? null,
+    logo_condominio_url: input.logo_condominio_url ?? null,
+    gestor_nome: input.gestor_nome ?? null,
+    gestor_foto_path: input.gestor_foto_path ?? null,
+    tem_gestor: !!(input.gestor_nome && input.gestor_nome.trim()),
+  };
+  const full = { ...base, gestor_genero: input.gestor_genero ?? null };
+
+  let res = await supabase
     .from(TABLE)
-    .upsert(
-      {
-        nome: input.nome,
-        sindico_nome: input.sindico_nome ?? null,
-        sindico_genero: input.sindico_genero ?? null,
-        sindico_foto_path: input.sindico_foto_path ?? null,
-        logo_url: input.logo_url ?? null,
-        logo_condominio_url: input.logo_condominio_url ?? null,
-        gestor_nome: input.gestor_nome ?? null,
-        gestor_genero: input.gestor_genero ?? null,
-        gestor_foto_path: input.gestor_foto_path ?? null,
-        tem_gestor: !!(input.gestor_nome && input.gestor_nome.trim()),
-      },
-      { onConflict: "nome" },
-    )
+    .upsert(full, { onConflict: "nome" })
     .select()
     .single();
-  if (error) throw error;
-  return data as CondoMeta;
+
+  // gestor_genero eh coluna nova (migration 20260528). Se ainda nao foi
+  // rodada, o upsert falha com PGRST204 — refaz sem ela.
+  if (res.error && /gestor_genero|PGRST204/.test(res.error.message ?? "")) {
+    res = await supabase
+      .from(TABLE)
+      .upsert(base, { onConflict: "nome" })
+      .select()
+      .single();
+  }
+  if (res.error) throw res.error;
+  return res.data as CondoMeta;
 }
 
 /** Sobe foto do gestor (atrelada a uma revista específica) e retorna URL pública. */
