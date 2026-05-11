@@ -111,8 +111,10 @@ export async function gerarTresCopies(input: {
     `- Formato: ${formato_label}\n` +
     `- Quantidade de slides: ${input.n_slides}\n` +
     (input.briefing ? `- Contexto extra: ${input.briefing}\n` : "") +
+    `\nCONTEXTO OBRIGATÓRIO:\n` +
+    `- O carrossel sempre fala de CONDOMÍNIO e VIVÊNCIA DE CONDOMÍNIO. Cada copy precisa ancorar o tema dentro do dia a dia do condomínio: assembleia, taxa, sindico, morador, area comum, regulamento, convivencia, fachada, manutencao, etc. Pelo menos UM dos slides deve mencionar literalmente "condomínio" ou "condominial".\n` +
     `\nREGRAS POR SLIDE:\n` +
-    `- SLIDE 1 (capa): título-gancho curto que JÁ INTRODUZ o tema do carrossel (não fique só na curiosidade — o leitor precisa entender em 1.5s do que se trata). O tema "${input.tema}" deve aparecer literal ou em paráfrase clara no título. Body opcional, máx 20 palavras (capa inteira soma no máximo 20 palavras).\n` +
+    `- SLIDE 1 (capa): título-gancho curto que JÁ INTRODUZ o tema do carrossel (não fique só na curiosidade — o leitor precisa entender em 1.5s do que se trata). O tema "${input.tema}" deve aparecer literal ou em paráfrase clara no título, sempre ancorado no contexto condominial. Body opcional, máx 20 palavras (capa inteira soma no máximo 20 palavras).\n` +
     `- SLIDES INTERNOS: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras).\n` +
     `- ÚLTIMO SLIDE: pergunta SIM/NÃO simples ou call-to-action.\n` +
     `\nREGRAS DE PORTUGUÊS (humanização):\n` +
