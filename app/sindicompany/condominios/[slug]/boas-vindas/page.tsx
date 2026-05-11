@@ -7,6 +7,7 @@ import {
   getCondoFotoPublicUrl,
   getCondoMeta,
   gestorTitulo,
+  listByLogoUrls,
   listCondoMetas,
   listPatternUrls,
 } from "@/lib/sindicompany/condominios-db";
@@ -78,6 +79,38 @@ export default async function RevistaBoasVindasPage({
         aria-hidden="true"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity, pointerEvents: "none" }}
       />
+    );
+  };
+
+  // Sindico By Sindicompany: usa o logo By (slot 1 = fundo escuro, slot 2
+  // = fundo claro) ao lado do logo do sindico no rodape de cada pagina.
+  const ehBy = meta?.is_by_sindico === true;
+  const byLogos = ehBy ? await listByLogoUrls().catch(() => [] as (string | null)[]) : [];
+  const byLogoDark = ehBy ? (byLogos[0] ?? byLogos[1] ?? null) : null;
+  const byLogoLight = ehBy ? (byLogos[1] ?? byLogos[0] ?? null) : null;
+  // Rodape com o logotipo do sindico no canto direito. Em paginas de
+  // fundo escuro, um leve fundo branco arredondado garante visibilidade.
+  const footerLogos = (dark: boolean) => {
+    const byLogo = dark ? byLogoDark : byLogoLight;
+    if (!logoUrl && !byLogo) return null;
+    return (
+      <div
+        style={{
+          position: "absolute", bottom: "6mm", right: "8mm",
+          display: "flex", alignItems: "center", gap: "3mm",
+          ...(dark ? { background: "rgba(255,255,255,.92)", borderRadius: "2mm", padding: "1.5mm 3mm" } : null),
+        }}
+      >
+        {logoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt="Logotipo do síndico" style={{ maxHeight: "11mm", maxWidth: "42mm", objectFit: "contain" }} />
+        )}
+        {byLogo && logoUrl && <span style={{ width: "1px", alignSelf: "stretch", background: dark ? "rgba(0,0,0,.15)" : "rgba(0,0,0,.12)", margin: "1mm 0" }} />}
+        {byLogo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={byLogo} alt="By Sindicompany" style={{ maxHeight: "9mm", maxWidth: "34mm", objectFit: "contain" }} />
+        )}
+      </div>
     );
   };
 
@@ -154,9 +187,10 @@ export default async function RevistaBoasVindasPage({
                 Agora vocês fazem parte da nossa família.
               </p>
             </div>
-            <div style={{ position: "absolute", bottom: "9mm", left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,.7)", fontSize: "9pt", letterSpacing: ".1em" }}>
+            <div style={{ position: "absolute", bottom: "9mm", left: "8mm", textAlign: "left", color: "rgba(255,255,255,.7)", fontSize: "9pt", letterSpacing: ".1em" }}>
               Revista de Boas-Vindas
             </div>
+            {footerLogos(true)}
           </div>
         </div>
 
@@ -164,7 +198,7 @@ export default async function RevistaBoasVindasPage({
         <div className="bv-page">
           <div className="bv-safe">
           {patternBg(0, 0.06)}
-          <div style={{ position: "relative", padding: "14mm 16mm" }}>
+          <div style={{ position: "relative", padding: "14mm 16mm 22mm" }}>
             <div style={{ fontSize: "9pt", letterSpacing: ".26em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginBottom: "4mm" }}>
               Carta de agradecimento
             </div>
@@ -278,6 +312,7 @@ export default async function RevistaBoasVindasPage({
               );
             })()}
           </div>
+          {footerLogos(false)}
           </div>
         </div>
 
@@ -343,9 +378,10 @@ export default async function RevistaBoasVindasPage({
               </div>
             )}
           </div>
-          <div style={{ position: "absolute", bottom: "9mm", left: 0, right: 0, textAlign: "center", color: "#9ca3af", fontSize: "9pt" }}>
+          <div style={{ position: "absolute", bottom: "9mm", left: "8mm", textAlign: "left", color: "#9ca3af", fontSize: "9pt" }}>
             Sindicompany · gestão condominial
           </div>
+          {footerLogos(false)}
           </div>
         </div>
 
@@ -405,6 +441,7 @@ export default async function RevistaBoasVindasPage({
               Sindicompany · gestão condominial profissional
             </div>
           </div>
+          {footerLogos(true)}
           </div>
         </div>
       </div>
