@@ -80,15 +80,20 @@ export default async function RevistaBoasVindasPage({
         {/* ---------- PÁGINA 1 — CAPA ---------- */}
         <div className="bv-page">
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg,#84C7D3 0%,#1A1C29 100%)" }} />
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40mm 24mm", textAlign: "center", color: "#fff" }}>
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="Logo do síndico" style={{ maxWidth: "120mm", maxHeight: "55mm", objectFit: "contain", marginBottom: "20mm", filter: "drop-shadow(0 4px 12px rgba(0,0,0,.25))" }} />
-            ) : (
-              <div style={{ fontSize: "11pt", letterSpacing: ".3em", textTransform: "uppercase", marginBottom: "20mm", opacity: .8 }}>
-                {sindicoTitulo} {sindicoNome}
-              </div>
-            )}
+          {/* Logo do sindico: topo, canto esquerdo, ate ~metade da pagina (105mm de 210mm) */}
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt="Logo do síndico"
+              style={{ position: "absolute", top: "16mm", left: "16mm", maxWidth: "105mm", maxHeight: "70mm", objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,.25))" }}
+            />
+          ) : (
+            <div style={{ position: "absolute", top: "18mm", left: "16mm", fontSize: "11pt", letterSpacing: ".3em", textTransform: "uppercase", color: "rgba(255,255,255,.85)" }}>
+              {sindicoTitulo} {sindicoNome}
+            </div>
+          )}
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "90mm 24mm 40mm", textAlign: "center", color: "#fff" }}>
             <h1 style={{ fontSize: "30pt", fontWeight: 900, lineHeight: 1.15, margin: 0 }}>
               Seja bem-vindo, Condomínio {nome}.
             </h1>
