@@ -108,10 +108,11 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
   const titulo = getStr(formData, "titulo");
   const temaSelecionado = getStr(formData, "tema");
   const temaOutro = getStr(formData, "tema_outro");
-  // 'Outro' eh um marcador da UI — substitui pelo texto livre que a
-  // editora digitou na caixa que aparece quando seleciona 'Outro'.
-  const tema =
-    temaSelecionado === "Outro" ? temaOutro : temaSelecionado;
+  // 'Outro'/'Outros' eh um marcador da UI — substitui pelo texto livre
+  // que a editora digitou na caixa que aparece quando seleciona ele.
+  const ehTemaLivre =
+    temaSelecionado === "Outro" || temaSelecionado === "Outros";
+  const tema = ehTemaLivre ? temaOutro : temaSelecionado;
   const formato = getStr(formData, "formato");
   const briefing = getStr(formData, "briefing");
   const n_slides_raw = parseInt(getStr(formData, "n_slides"), 10);
@@ -121,7 +122,7 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
 
   if (!titulo) backTo("/sindicompany/carrossel/novo", "Informe o título do carrossel.", formData);
   if (!temaSelecionado) backTo("/sindicompany/carrossel/novo", "Selecione o tema.", formData);
-  if (temaSelecionado === "Outro" && !temaOutro) {
+  if (ehTemaLivre && !temaOutro) {
     backTo(
       "/sindicompany/carrossel/novo",
       "Descreva o tema na caixa de texto.",

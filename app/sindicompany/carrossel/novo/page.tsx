@@ -4,8 +4,9 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { DashboardShell } from "../../shell";
 import { iniciarCarrosselAction } from "../actions";
-import { TemaPicker } from "./tema-picker";
+import { BrandTemaPicker } from "./brand-tema-picker";
 
+// Temas pro @sindicompanybr — pauta voltada pro MORADOR comum.
 const TEMAS = [
   "Direitos do morador",
   "Deveres do morador",
@@ -152,6 +153,116 @@ const TEMAS = [
   "Outro",
 ];
 
+// Temas pro @bysindicompany — pauta voltada pro SÍNDICO PROFISSIONAL.
+const TEMAS_BY = [
+  "Liderança na sindicatura",
+  "Crescimento profissional",
+  "Posicionamento de mercado",
+  "Autoridade profissional",
+  "Gestão estratégica",
+  "Inteligência emocional",
+  "Bastidores da sindicatura",
+  "Comunicação do síndico",
+  "Assembleias difíceis",
+  "Gestão de conflitos",
+  "Síndico profissional moderno",
+  "Síndico empreendedor",
+  "Marca pessoal do síndico",
+  "Networking",
+  "Expansão de carteira",
+  "Gestão de equipes",
+  "Relação com moradores",
+  "Gestão de crise",
+  "Alta performance",
+  "Rotina do síndico",
+  "Organização operacional",
+  "Produtividade",
+  "Burnout do síndico",
+  "Saúde mental do síndico",
+  "Condomínio de alto conflito",
+  "Gestão empresarial",
+  "Erros comuns de síndicos",
+  "Síndico iniciante",
+  "Síndico em crescimento",
+  "Estratégia para síndicos",
+  "Reputação profissional",
+  "Marketing para síndicos",
+  "Instagram para síndicos",
+  "Conteúdo para síndicos",
+  "Carreira na sindicatura",
+  "Evolução da sindicatura",
+  "Futuro da gestão condominial",
+  "Tendências do mercado",
+  "Gestão humanizada",
+  "Liderança em assembleias",
+  "Postura profissional",
+  "Tomada de decisão",
+  "Negociação",
+  "Gestão financeira",
+  "Planejamento estratégico",
+  "Cultura condominial",
+  "Comunicação em crise",
+  "Segurança jurídica na gestão",
+  "Compliance condominial",
+  "Gestão técnica",
+  "Síndico e tecnologia",
+  "IA em condomínios",
+  "Automação condominial",
+  "Gestão de manutenção",
+  "Engenharia condominial",
+  "Gestão de fornecedores",
+  "Atendimento ao morador",
+  "Convivência em condomínios",
+  "Política em condomínios",
+  "Conselho consultivo",
+  "Conselho fiscal",
+  "Relação com administradoras",
+  "Captar condomínios",
+  "Conquistar autoridade",
+  "Cobrar valorização profissional",
+  "Crescer no mercado",
+  "Sair da sobrecarga",
+  "Parar de apagar incêndios",
+  "Estruturar a operação",
+  "Liderar condomínios grandes",
+  "Lidar com pressão",
+  "Enfrentar críticas",
+  "Ser respeitado pelo condomínio",
+  "Conduzir reuniões",
+  "Fortalecer a imagem profissional",
+  "Construir credibilidade",
+  "Gerar confiança",
+  "Diferenciar no mercado",
+  "Precificar a sindicatura",
+  "Criar processos",
+  "Delegar tarefas",
+  "Evitar desgaste emocional",
+  "Profissionalizar a gestão",
+  "Presença digital",
+  "Aumentar ticket médio",
+  "Escalar a sindicatura",
+  "Construir marca forte",
+  "Crescer com apoio de rede",
+  "Desenvolvimento profissional contínuo",
+  "Mentalidade de crescimento",
+  "Gestão por processos",
+  "Síndico vs improviso",
+  "Condomínio não é grupo de WhatsApp",
+  "O peso da responsabilidade",
+  "O lado invisível da sindicatura",
+  "O síndico que ninguém vê",
+  "O custo do despreparo",
+  "O erro de querer agradar todos",
+  "O síndico que trabalha sozinho",
+  "O síndico que virou referência",
+  "Perder o controle da gestão",
+  "Saber liderar pessoas",
+  "Quando o condomínio percebe a má gestão",
+  "O mercado mudou para os síndicos",
+  "O novo perfil do síndico",
+  "Outros",
+];
+
 const FORMATOS = [
   { id: "historia_real", label: "História real", hint: "O que mais engaja e salva" },
   { id: "lista", label: "Lista", hint: "5–7 itens numerados" },
@@ -214,33 +325,13 @@ export default async function NovoCarrosselPage({
         )}
 
         <form action={iniciarCarrosselAction} className="space-y-6">
-          <Field label="Marca" hint="Pra qual Instagram este carrossel é.">
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { id: "sindicompanybr", label: "@sindicompanybr" },
-                { id: "bysindicompany", label: "@bysindicompany" },
-              ].map((b) => {
-                const cur = v("brand") || "sindicompanybr";
-                return (
-                  <label
-                    key={b.id}
-                    className="flex items-center gap-2 rounded-md border border-onix-100 bg-white px-3 py-2 cursor-pointer hover:bg-onix-50"
-                  >
-                    <input
-                      type="radio"
-                      name="brand"
-                      value={b.id}
-                      defaultChecked={cur === b.id}
-                      required
-                    />
-                    <span className="text-sm font-medium text-onix-900">
-                      {b.label}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </Field>
+          <BrandTemaPicker
+            temasSindico={TEMAS}
+            temasBy={TEMAS_BY}
+            defaultBrand={v("brand") || "sindicompanybr"}
+            defaultTema={v("tema")}
+            defaultTemaOutro={v("tema_outro")}
+          />
 
           <Field
             label="Título interno"
@@ -254,14 +345,6 @@ export default async function NovoCarrosselPage({
               maxLength={120}
               placeholder='Ex: "História real — síndico que reduziu inadimplência"'
               className={inputCls}
-            />
-          </Field>
-
-          <Field label="Tema" hint="Assunto principal do carrossel. Selecione 'Outro' pra digitar um tema livre.">
-            <TemaPicker
-              temas={TEMAS}
-              defaultTema={v("tema")}
-              defaultTemaOutro={v("tema_outro")}
             />
           </Field>
 
