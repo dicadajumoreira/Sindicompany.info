@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { CONDOMINIOS, slugifyCondo } from "@/lib/sindicompany/condominios";
-import { getCondoMeta } from "@/lib/sindicompany/condominios-db";
+import { getCondoMeta, listCondoMetas } from "@/lib/sindicompany/condominios-db";
 import { getRevista } from "@/lib/sindicompany/db";
 import {
   getEditorial,
@@ -44,6 +44,15 @@ export default async function NovaEdicaoPage({
   // Modo "duplicar": copia os campos editáveis de uma revista existente.
   const duplicarId = getStr(sp, "duplicar");
   const fonte = duplicarId ? await getRevista(duplicarId).catch(() => null) : null;
+
+  // Lista de condominios pro dropdown = lista canonica + os criados
+  // so no banco (condominios_meta), em ordem alfabetica pt-BR.
+  const metaNames = await listCondoMetas()
+    .then((ms) => ms.map((m) => m.nome))
+    .catch(() => [] as string[]);
+  const condominiosOptions = Array.from(
+    new Set<string>([...CONDOMINIOS, ...metaNames]),
+  ).sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
 
   // Defaults: lê da URL primeiro; senão, fonte da duplicação (mês+1);
   // senão, próxima edição (mês atual + 1).
@@ -203,7 +212,7 @@ export default async function NovaEdicaoPage({
 
           <Field label="Condomínio">
             <CondoSelect
-              condominios={CONDOMINIOS}
+              condominios={condominiosOptions}
               defaultValue={v("condominio")}
               className={selectCls}
             />

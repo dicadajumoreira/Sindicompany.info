@@ -61,7 +61,7 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
   const mesRaw = getStr(formData, "mes");
   const anoRaw = getStr(formData, "ano");
 
-  if (!condominio || !isCondominioValido(condominio)) {
+  if (!condominio) {
     backToFormWithError("Condomínio inválido.", formData);
   }
 
@@ -76,6 +76,14 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
 
   // Liderança vem do cadastro do condomínio (condominios_meta).
   const meta = await getCondoMeta(condominio).catch(() => null);
+  // Aceita o condominio se estiver na lista canonica OU se tiver
+  // cadastro no banco (condominios novos vivem so no condominios_meta).
+  if (!isCondominioValido(condominio) && !meta) {
+    backToFormWithError(
+      `Condomínio "${condominio}" não encontrado. Cadastre-o em Condomínios primeiro.`,
+      formData,
+    );
+  }
   if (!meta || !meta.sindico_nome || !meta.sindico_genero) {
     backToFormWithError(
       `Cadastre o(a) síndico(a) de "${condominio}" antes de gerar a revista. ` +
