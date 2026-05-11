@@ -7,9 +7,25 @@ import { condoFromSlug, slugifyCondo } from "@/lib/sindicompany/condominios";
 import {
   getCondoMeta,
   getCondoFotoPublicUrl,
+  listCondoMetas,
   type CondoMeta,
 } from "@/lib/sindicompany/condominios-db";
 import { salvarCondoMetaAction } from "./actions";
+
+/** Resolve o nome do condominio a partir do slug: tenta a lista
+ *  canonica estatica; se nao achar, procura nos condominios criados
+ *  via banco (condominios_meta). */
+async function resolveCondoNome(slug: string): Promise<string | null> {
+  const estatico = condoFromSlug(slug);
+  if (estatico) return estatico;
+  try {
+    const metas = await listCondoMetas();
+    const m = metas.find((x) => slugifyCondo(x.nome) === slug);
+    return m?.nome ?? null;
+  } catch {
+    return null;
+  }
+}
 
 function getStr(s: Record<string, string | string[] | undefined>, k: string): string {
   const v = s[k];
@@ -38,7 +54,7 @@ export default async function EditarCondoPage({
   }
 
   const { slug } = await params;
-  const nome = condoFromSlug(slug);
+  const nome = await resolveCondoNome(slug);
   if (!nome) notFound();
 
   const sp = await searchParams;
@@ -84,6 +100,7 @@ export default async function EditarCondoPage({
 
       <form action={salvarCondoMetaAction} encType="multipart/form-data" className="space-y-8">
         <input type="hidden" name="slug" value={slugifyCondo(nome)} />
+        <input type="hidden" name="condo_nome" value={nome} />
         <input type="hidden" name="sindico_foto_existente" value={meta?.sindico_foto_path ?? ""} />
 
         {/* ============ SÍNDICO ============ */}

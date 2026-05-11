@@ -121,7 +121,10 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   await requireAuth();
 
   const slug = getStr(formData, "slug");
-  const nome = condoFromSlug(slug);
+  // Prefere o nome enviado pelo form (resolvido na pagina, cobre
+  // condominios criados via banco); cai pra lista estatica como
+  // fallback.
+  const nome = getStr(formData, "condo_nome") || condoFromSlug(slug) || "";
   if (!nome) {
     redirect("/sindicompany/condominios");
   }

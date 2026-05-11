@@ -25,6 +25,13 @@ export default async function CondominiosPage() {
 
   const { metas, error } = await safeListMetas();
 
+  // Lista exibida = lista canonica estatica + qualquer condominio
+  // cadastrado so no banco (criado pelo botao 'Novo condominio'),
+  // tudo em ordem alfabetica pt-BR.
+  const todosNomes = Array.from(
+    new Set<string>([...CONDOMINIOS, ...Array.from(metas.keys())]),
+  ).sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
+
   return (
     <DashboardShell>
     <main className="max-w-5xl mx-auto px-6 py-12">
@@ -35,15 +42,24 @@ export default async function CondominiosPage() {
         ← Voltar
       </Link>
 
-      <header className="mb-10">
-        <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2">
-          Condomínios
+      <header className="mb-10 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="text-xs uppercase tracking-[0.24em] text-mint-700 font-semibold mb-2">
+            Condomínios
+          </div>
+          <h1 className="text-3xl font-bold text-onix-900">Cadastro de condomínios</h1>
+          <p className="text-sm text-g60 mt-2 max-w-xl">
+            Síndico(a), Gestor(a) de Atendimento, logotipos, contatos e
+            comunidade de cada condomínio ficam salvos aqui e são aplicados em
+            todas as edições da revista.
+          </p>
         </div>
-        <h1 className="text-3xl font-bold text-onix-900">Cadastro de condomínios</h1>
-        <p className="text-sm text-g60 mt-2 max-w-xl">
-          Síndico(a), Gestor(a) de Atendimento e logotipos de cada condomínio
-          ficam salvos aqui e são aplicados em todas as edições da revista.
-        </p>
+        <Link
+          href="/sindicompany/condominios/novo"
+          className="inline-flex items-center px-4 py-2.5 rounded-lg bg-onix-900 text-white font-medium hover:bg-onix-800 text-sm whitespace-nowrap"
+        >
+          + Novo condomínio
+        </Link>
       </header>
 
       {error && (
@@ -69,7 +85,7 @@ export default async function CondominiosPage() {
             </tr>
           </thead>
           <tbody>
-            {CONDOMINIOS.map((nome) => {
+            {todosNomes.map((nome) => {
               const meta = metas.get(nome);
               const slug = slugifyCondo(nome);
               const sindicoStatus = meta?.sindico_nome
