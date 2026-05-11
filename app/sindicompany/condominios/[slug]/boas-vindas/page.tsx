@@ -65,15 +65,17 @@ export default async function RevistaBoasVindasPage({
       <style>{`
         @page { size: A4; margin: 0; }
         @media print {
+          html, body { width: 210mm; }
           .no-print { display: none !important; }
           .bv-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; }
           .bv-page:last-child { page-break-after: auto; }
           body { background: #fff !important; }
         }
         .bv-page {
-          width: 210mm; min-height: 297mm; margin: 16px auto; background: #fff;
+          width: 210mm; height: 297mm; margin: 16px auto; background: #fff;
           box-shadow: 0 4px 24px rgba(0,0,0,.12); position: relative; overflow: hidden;
           font-family: 'Epilogue', sans-serif; color: #1A1C29;
+          box-sizing: border-box;
         }
       `}</style>
 
