@@ -658,6 +658,7 @@ def _slide_html(
     display: inline-block;
     background: {p["mint"]};
     color: {p["onix"]};
+    font-family: 'Epilogue', sans-serif;
     font-weight: 800;
     font-size: 80px;
     letter-spacing: 0.18em;
@@ -890,6 +891,7 @@ def _slide_html(
     display: inline-block;
     background: {accent};
     color: {accent_text};
+    font-family: 'Epilogue', sans-serif;
     font-weight: 800;
     font-size: {badge_font}px;
     letter-spacing: 0.18em;
