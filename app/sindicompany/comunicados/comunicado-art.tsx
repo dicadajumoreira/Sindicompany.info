@@ -37,7 +37,7 @@ const DIMS: Record<Variant, {
   a4: {
     w: 794, h: 1123, pad: 52,
     frameTop: 122, frameBot: 124,
-    logoH: 64, logoW: 360, illoH: 152, illoW: 220,
+    logoH: 88, logoW: 397, illoH: 152, illoW: 220,
     kicker: 13, titulo: 31, sub: 19, body: 14.5, bodyGap: 11,
     footerLogoH: 40, byLogoH: 34, contentPad: 32,
   },
@@ -45,7 +45,7 @@ const DIMS: Record<Variant, {
     // Story do Instagram (1080x1920). Fontes ampliadas pra leitura no celular.
     w: 1080, h: 1920, pad: 84,
     frameTop: 236, frameBot: 260,
-    logoH: 128, logoW: 560, illoH: 360, illoW: 430,
+    logoH: 172, logoW: 540, illoH: 360, illoW: 430,
     kicker: 27, titulo: 60, sub: 38, body: 32, bodyGap: 26,
     footerLogoH: 78, byLogoH: 64, contentPad: 60,
   },
@@ -93,11 +93,11 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         overflow: "hidden", boxSizing: "border-box",
       }}
     >
-      {/* Logo do condominio no canto superior esquerdo */}
-      <div style={{ position: "absolute", top: d.pad * 0.7, left: d.pad, maxWidth: d.logoW, zIndex: 1 }}>
+      {/* Logo do condominio: topo esquerdo, ocupa ate a metade da largura da arte */}
+      <div style={{ position: "absolute", top: d.pad * 0.45, left: d.pad, maxWidth: d.logoW, zIndex: 1 }}>
         {props.logoCondominioUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={props.logoCondominioUrl} alt={props.condominio} crossOrigin="anonymous" style={{ maxHeight: d.logoH, maxWidth: d.logoW, objectFit: "contain" }} />
+          <img src={props.logoCondominioUrl} alt={props.condominio} crossOrigin="anonymous" style={{ maxHeight: d.logoH, maxWidth: d.logoW, objectFit: "contain", display: "block" }} />
         ) : (
           <div style={{ fontFamily: "'Provicali', 'Liberation Serif', serif", fontSize: d.titulo, color: ONIX, lineHeight: 1.05, letterSpacing: "-0.01em" }}>
             {props.condominio}
