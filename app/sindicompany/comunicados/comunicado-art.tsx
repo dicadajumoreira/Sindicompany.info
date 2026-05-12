@@ -36,18 +36,18 @@ const DIMS: Record<Variant, {
 }> = {
   a4: {
     w: 794, h: 1123, pad: 52,
-    frameTop: 122, frameBot: 124,
-    logoH: 88, logoW: 397, illoH: 152, illoW: 220,
-    kicker: 13, titulo: 31, sub: 19, body: 14.5, bodyGap: 11,
-    footerLogoH: 40, byLogoH: 34, contentPad: 32,
+    frameTop: 214, frameBot: 122,
+    logoH: 180, logoW: 397, illoH: 152, illoW: 215,
+    kicker: 13, titulo: 30, sub: 18, body: 14.5, bodyGap: 11,
+    footerLogoH: 40, byLogoH: 34, contentPad: 30,
   },
   celular: {
     // Story do Instagram (1080x1920). Fontes ampliadas pra leitura no celular.
     w: 1080, h: 1920, pad: 84,
-    frameTop: 236, frameBot: 260,
-    logoH: 172, logoW: 540, illoH: 360, illoW: 430,
-    kicker: 27, titulo: 60, sub: 38, body: 32, bodyGap: 26,
-    footerLogoH: 78, byLogoH: 64, contentPad: 60,
+    frameTop: 410, frameBot: 232,
+    logoH: 350, logoW: 540, illoH: 360, illoW: 420,
+    kicker: 26, titulo: 56, sub: 36, body: 30, bodyGap: 24,
+    footerLogoH: 78, byLogoH: 64, contentPad: 54,
   },
 };
 
