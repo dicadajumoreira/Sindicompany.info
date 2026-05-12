@@ -35,9 +35,12 @@ const DIMS: Record<Variant, {
   footerLogoH: number; byLogoH: number; contentPad: number;
 }> = {
   a4: {
-    // logoInset: 15mm @ 96dpi (A4 = 210mm = 794px -> ~3.78px/mm).
+    // logoInset = 15mm @ 96dpi (A4 = 210mm = 794px -> ~3.78px/mm). Tambem usado
+    // como margem das linhas laterais da moldura ate a borda da pagina, e como
+    // distancia da linha horizontal ate o logotipo.
     w: 794, h: 1123, pad: 52,
-    frameTop: 282, frameBot: 110,
+    // frameTop = logoInset + logoH + logoInset (15mm abaixo do logo)
+    frameTop: 324, frameBot: 110,
     logoH: 210, logoW: 340, logoInset: 57,
     kicker: 13, titulo: 30, sub: 18, body: 14, bodyGap: 10,
     footerLogoH: 38, byLogoH: 32, contentPad: 28,
@@ -45,10 +48,11 @@ const DIMS: Record<Variant, {
   celular: {
     // Story do Instagram (1080x1920). Fontes ampliadas pra leitura no celular.
     w: 1080, h: 1920, pad: 84,
-    frameTop: 484, frameBot: 200,
-    logoH: 380, logoW: 456, logoInset: 84,
-    kicker: 25, titulo: 54, sub: 34, body: 28, bodyGap: 22,
-    footerLogoH: 76, byLogoH: 62, contentPad: 48,
+    // frameTop = logoInset + logoH + logoInset
+    frameTop: 508, frameBot: 180,
+    logoH: 340, logoW: 456, logoInset: 84,
+    kicker: 25, titulo: 52, sub: 33, body: 27, bodyGap: 21,
+    footerLogoH: 76, byLogoH: 62, contentPad: 44,
   },
 };
 
@@ -113,11 +117,12 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         );
       })()}
 
-      {/* Moldura mint: topo + laterais, ABERTA embaixo (sem linha de delimitacao) */}
+      {/* Moldura mint: laterais a 15mm das bordas, linha horizontal 15mm abaixo
+          do logo; ABERTA embaixo (sem linha de delimitacao). */}
       <div
         style={{
           position: "absolute",
-          top: d.frameTop, left: d.pad * 0.85, right: d.pad * 0.85, bottom: d.frameBot,
+          top: d.frameTop, left: d.logoInset, right: d.logoInset, bottom: d.frameBot,
           borderTop: `2px solid ${MINT}`,
           borderLeft: `2px solid ${MINT}`,
           borderRight: `2px solid ${MINT}`,
@@ -142,8 +147,8 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         style={{
           position: "absolute",
           top: d.frameTop + d.contentPad,
-          left: d.pad * 0.85 + d.contentPad,
-          right: d.pad * 0.85 + d.contentPad,
+          left: d.logoInset + d.contentPad,
+          right: d.logoInset + d.contentPad,
           bottom: d.frameBot + d.contentPad * 0.6,
           display: "flex", flexDirection: "column", zIndex: 2,
         }}
