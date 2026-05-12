@@ -80,16 +80,21 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   const corpo = (props.corpo || "").replace(/\r\n/g, "\n").replace(/\s*[‐‑‒–—―]\s*/g, ", ").trimEnd();
 
   const temIlustracao = !!props.ilustracaoUrl;
-  // Largura maxima da ilustracao (canto sup. direito); pode encostar um pouco
-  // no bloco do logo (que costuma sobrar espaco a direita).
-  const illoMaxW = d.w - d.logoInset - d.logoW + 56;
-  // 8mm (proporcional aos 15mm do logoInset).
+  // Largura maxima da ilustracao (canto sup. direito) ~ 1/3 da largura util.
+  const illoMaxW = Math.round((d.w - 2 * d.logoInset) * 0.34);
+  // 8mm e 4mm, proporcionais aos 15mm do logoInset.
   const mm8 = Math.round((d.logoInset * 8) / 15);
+  const mm4 = Math.round((d.logoInset * 4) / 15);
+  // x da borda esquerda da ilustracao (ela e alinhada a direita).
+  const illoLeftX = d.w - illoMaxW;
   // Linha horizontal do topo da moldura: vai do canto esquerdo ate ~8mm antes
   // da ilustracao (quando ha ilustracao); senao atravessa toda a largura.
   const topLineW = temIlustracao
-    ? Math.max(d.logoW * 0.4, d.w - illoMaxW - mm8 - d.logoInset)
+    ? Math.max(d.logoW * 0.5, illoLeftX - mm8 - d.logoInset)
     : d.w - 2 * d.logoInset;
+  // Borda direita do bloco de conteudo: quando ha ilustracao, fica 4mm a
+  // esquerda dela; senao usa o recuo de 4mm da moldura.
+  const contentRight = temIlustracao ? d.w - illoLeftX + mm4 : d.logoInset + mm4;
 
   // Rodape: lista de logos a mostrar (sindico [+ by] OU fallback Sindicompany).
   const footerImgs: { src: string; h: number; maxW: number }[] = [];
@@ -158,29 +163,27 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.75), maxWidth: illoMaxW, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
+          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.35), maxWidth: illoMaxW, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
         />
       )}
 
-      {/* Conteudo dentro da moldura */}
+      {/* Conteudo: titulo a 4mm da moldura (topo e laterais) e a 4mm da
+          ilustracao quando houver. */}
       <div
         style={{
           position: "absolute",
-          top: d.frameTop + d.contentPad,
-          left: d.logoInset + d.contentPad,
-          right: d.logoInset + d.contentPad,
-          bottom: d.frameBot + d.contentPad * 0.6,
+          top: d.frameTop + mm4,
+          left: d.logoInset + mm4,
+          right: contentRight,
+          bottom: d.frameBot + mm4 * 2,
           display: "flex", flexDirection: "column", zIndex: 2,
         }}
       >
-        <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.kicker, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: d.contentPad * 0.3 }}>
-          Comunicado importante
-        </div>
         <h1 style={{ color: MINT_DARK, fontWeight: 800, fontSize: d.titulo, lineHeight: 1.08, margin: 0 }}>{props.titulo}</h1>
         {props.subtitulo && (
-          <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.sub, lineHeight: 1.15, marginTop: d.contentPad * 0.18 }}>{props.subtitulo}</div>
+          <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.sub, lineHeight: 1.15, marginTop: mm4 * 0.5 }}>{props.subtitulo}</div>
         )}
-        <div style={{ marginTop: d.contentPad * 0.9, fontSize: d.body, lineHeight: 1.55, color: INK, textAlign: "justify", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+        <div style={{ marginTop: mm4 * 1.6, fontSize: d.body, lineHeight: 1.55, color: INK, textAlign: "justify", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
           {corpo ? corpo : <span style={{ color: "#9ca3af" }}>(sem texto)</span>}
         </div>
       </div>
