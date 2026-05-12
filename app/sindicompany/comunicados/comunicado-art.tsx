@@ -132,7 +132,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: 0, right: 0, maxHeight: d.logoH + d.pad, maxWidth: d.illoW, objectFit: "contain", zIndex: 3 }}
+          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.35), maxWidth: d.w - d.logoW - 8, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
         />
       )}
 
