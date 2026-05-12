@@ -93,17 +93,23 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         overflow: "hidden", boxSizing: "border-box",
       }}
     >
-      {/* Logo do condominio: topo esquerdo, ocupa ate a metade da largura da arte */}
-      <div style={{ position: "absolute", top: d.pad * 0.45, left: d.pad, maxWidth: d.logoW, zIndex: 1 }}>
-        {props.logoCondominioUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={props.logoCondominioUrl} alt={props.condominio} crossOrigin="anonymous" style={{ maxHeight: d.logoH, maxWidth: d.logoW, objectFit: "contain", display: "block" }} />
-        ) : (
-          <div style={{ fontFamily: "'Provicali', 'Liberation Serif', serif", fontSize: d.titulo, color: ONIX, lineHeight: 1.05, letterSpacing: "-0.01em" }}>
-            {props.condominio}
+      {/* Logo do condominio: topo esquerdo, ocupa ate a metade da largura da arte.
+          Usa o logo do condominio; se nao houver, cai pro logo do(a) sindico(a). */}
+      {(() => {
+        const topLogo = props.logoCondominioUrl || props.logoSindicoUrl || null;
+        return (
+          <div style={{ position: "absolute", top: d.pad * 0.45, left: d.pad, width: d.logoW, zIndex: 1 }}>
+            {topLogo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={topLogo} alt={props.condominio} crossOrigin="anonymous" style={{ width: "100%", maxHeight: d.logoH, objectFit: "contain", objectPosition: "left center", display: "block" }} />
+            ) : (
+              <div style={{ fontFamily: "'Provicali', 'Liberation Serif', serif", fontSize: d.titulo, color: ONIX, lineHeight: 1.05, letterSpacing: "-0.01em" }}>
+                {props.condominio}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Moldura mint: topo + laterais, ABERTA embaixo (sem linha de delimitacao) */}
       <div
