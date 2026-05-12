@@ -94,9 +94,9 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
       }}
     >
       {/* Logo do condominio: topo esquerdo, ocupa ate a metade da largura da arte.
-          Usa o logo do condominio; se nao houver, cai pro logo do(a) sindico(a). */}
+          Sem logo do condominio cadastrado -> mostra o nome do condominio. */}
       {(() => {
-        const topLogo = props.logoCondominioUrl || props.logoSindicoUrl || null;
+        const topLogo = props.logoCondominioUrl || null;
         return (
           <div style={{ position: "absolute", top: d.pad * 0.45, left: d.pad, width: d.logoW, zIndex: 1 }}>
             {topLogo ? (

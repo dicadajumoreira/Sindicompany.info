@@ -63,7 +63,7 @@ export default async function NovoComunicadoPage({
           <div>
             <label className="block text-sm font-medium text-onix-900 mb-1">Texto do comunicado <span className="text-g60 font-normal">(opcional — pode gerar com IA depois)</span></label>
             <textarea name="corpo" rows={8} placeholder={"Prezados moradores,\n\n…"} className="w-full rounded-lg border border-onix-200 px-3 py-2 text-sm" />
-            <p className="text-[11px] text-g60 mt-1">Dica: mantenha em torno de 130 palavras / 3-4 parágrafos curtos pra caber tanto no Story quanto no A4. (A IA já gera nesse tamanho.)</p>
+            <p className="text-[11px] text-g60 mt-1">Dica: mantenha em torno de 150–190 palavras / 4-5 parágrafos curtos pra caber tanto no Story quanto no A4. (A IA já gera nesse tamanho.)</p>
           </div>
           <button type="submit" className="inline-flex items-center px-5 py-2.5 rounded-lg bg-onix-900 text-white font-medium hover:bg-onix-800 text-sm">
             Criar comunicado

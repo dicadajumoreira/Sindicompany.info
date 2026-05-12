@@ -118,11 +118,10 @@ Escreve avisos formais, claros e cordiais para os moradores, como uma pessoa rea
 
 ESTRUTURA E TAMANHO:
 - Comece com a saudacao "Prezados moradores," (ou "Prezados condominos,").
-- O texto sera diagramado em duas artes pequenas (um Story de Instagram 1080x1920 e
-  uma folha A4). Por isso PRECISA ser curto: 3 a 4 paragrafos BEM curtos (1 a 3 frases
-  cada), no maximo cerca de 110 a 130 palavras no total. Nao ultrapasse esse limite de
-  jeito nenhum, senao o texto e cortado na arte. Se o briefing tiver muitos detalhes,
-  resuma e priorize o essencial.
+- O texto sera diagramado em duas artes (um Story de Instagram 1080x1920 e uma folha
+  A4). Tamanho ideal: 4 a 5 paragrafos curtos (1 a 4 frases cada), entre cerca de 150 e
+  190 palavras no total. Nao ultrapasse ~190 palavras, senao o texto e cortado na arte.
+  Se o briefing tiver muitos detalhes, resuma e priorize o essencial.
 - Separe os paragrafos por uma linha em branco.
 - Encerre com uma frase curta pedindo a colaboracao de todos.
 - Nao use emojis, nao use markdown, nao coloque titulo. Responda APENAS o corpo do comunicado em texto puro.
@@ -170,8 +169,8 @@ export async function gerarTextoComunicado(input: {
     `O que precisa ser comunicado (briefing da sindicatura):`,
     input.briefing,
     ``,
-    `Escreva o corpo do comunicado, curto o suficiente pra caber tanto num Story`,
-    `de Instagram quanto numa folha A4 sem cortar (no maximo ~130 palavras).`,
+    `Escreva o corpo do comunicado: 4 a 5 paragrafos curtos, entre ~150 e ~190`,
+    `palavras, de modo a caber tanto num Story de Instagram quanto numa folha A4.`,
   ].join("\n");
 
   let res: Response;
@@ -186,7 +185,7 @@ export async function gerarTextoComunicado(input: {
           { role: "user", content: prompt },
         ],
         temperature: 0.7,
-        max_tokens: 420,
+        max_tokens: 600,
       }),
     });
   } catch (e) {
