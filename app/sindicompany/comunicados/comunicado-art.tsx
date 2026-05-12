@@ -30,22 +30,23 @@ type Variant = "a4" | "celular";
 const DIMS: Record<Variant, {
   w: number; h: number; pad: number;
   frameTop: number; frameBot: number;
-  logoH: number; logoW: number; illoH: number; illoW: number;
+  logoH: number; logoW: number; logoInset: number;
   kicker: number; titulo: number; sub: number; body: number; bodyGap: number;
   footerLogoH: number; byLogoH: number; contentPad: number;
 }> = {
   a4: {
+    // logoInset: 15mm @ 96dpi (A4 = 210mm = 794px -> ~3.78px/mm).
     w: 794, h: 1123, pad: 52,
-    frameTop: 274, frameBot: 110,
-    logoH: 240, logoW: 397, illoH: 152, illoW: 210,
+    frameTop: 282, frameBot: 110,
+    logoH: 210, logoW: 340, logoInset: 57,
     kicker: 13, titulo: 30, sub: 18, body: 14, bodyGap: 10,
     footerLogoH: 38, byLogoH: 32, contentPad: 28,
   },
   celular: {
     // Story do Instagram (1080x1920). Fontes ampliadas pra leitura no celular.
     w: 1080, h: 1920, pad: 84,
-    frameTop: 488, frameBot: 200,
-    logoH: 430, logoW: 540, illoH: 360, illoW: 400,
+    frameTop: 484, frameBot: 200,
+    logoH: 380, logoW: 456, logoInset: 84,
     kicker: 25, titulo: 54, sub: 34, body: 28, bodyGap: 22,
     footerLogoH: 76, byLogoH: 62, contentPad: 48,
   },
@@ -93,13 +94,13 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         overflow: "hidden", boxSizing: "border-box",
       }}
     >
-      {/* Logo do condominio: ocupa a faixa do topo (metade da largura x altura
-          do cabecalho), o maior possivel sem distorcer. Sem logo cadastrado ->
+      {/* Logo do condominio: a 15mm da borda esquerda e 15mm do topo (A4),
+          ocupando ate a metade da largura da arte. Sem logo cadastrado ->
           mostra o nome do condominio. */}
       {(() => {
         const topLogo = props.logoCondominioUrl || null;
         return (
-          <div style={{ position: "absolute", top: d.pad * 0.4, left: d.pad, width: d.logoW, height: d.logoH, display: "flex", alignItems: "center", zIndex: 1 }}>
+          <div style={{ position: "absolute", top: d.logoInset, left: d.logoInset, width: d.logoW, height: d.logoH, display: "flex", alignItems: "center", zIndex: 1 }}>
             {topLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={topLogo} alt={props.condominio} crossOrigin="anonymous" style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "left center", display: "block" }} />
@@ -132,7 +133,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.35), maxWidth: d.w - d.logoW - 8, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
+          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.35), maxWidth: d.w - (d.logoInset + d.logoW) - 8, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
         />
       )}
 
