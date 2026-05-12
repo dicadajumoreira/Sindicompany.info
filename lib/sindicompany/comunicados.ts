@@ -116,9 +116,14 @@ const OPENAI_API = "https://api.openai.com/v1/chat/completions";
 const SYSTEM_COMUNICADO = `Voce e o redator de comunicados de condominio da Sindicompany.
 Escreve avisos formais, claros e cordiais para os moradores. Regras:
 - Comece com a saudacao "Prezados moradores," (ou "Prezados condominos,").
-- 3 a 5 paragrafos curtos, separados por linha em branco.
+- TAMANHO: o texto sera diagramado em duas artes pequenas (um Story de Instagram
+  1080x1920 e uma folha A4). Por isso ele PRECISA ser curto: 3 a 4 paragrafos
+  BEM curtos (1 a 3 frases cada), no maximo cerca de 110 a 130 palavras no total.
+  Nao ultrapasse esse limite de jeito nenhum, senao o texto e cortado na arte.
+  Se o briefing tiver muitos detalhes, resuma e priorize o essencial.
+- Separe os paragrafos por uma linha em branco.
 - Linguagem objetiva, respeitosa, sem juridiques pesado, sem alarmismo.
-- Encerre com uma frase pedindo a colaboracao de todos.
+- Encerre com uma frase curta pedindo a colaboracao de todos.
 - Portugues do Brasil correto, com acentuacao. NUNCA use travessao (—); use virgula ou ponto.
 - Nao use emojis, nao use markdown, nao coloque titulo. Responda APENAS o corpo do comunicado em texto puro.`;
 
@@ -147,7 +152,8 @@ export async function gerarTextoComunicado(input: {
     `O que precisa ser comunicado (briefing da sindicatura):`,
     input.briefing,
     ``,
-    `Escreva o corpo do comunicado.`,
+    `Escreva o corpo do comunicado, curto o suficiente pra caber tanto num Story`,
+    `de Instagram quanto numa folha A4 sem cortar (no maximo ~130 palavras).`,
   ].join("\n");
 
   let res: Response;
@@ -162,7 +168,7 @@ export async function gerarTextoComunicado(input: {
           { role: "user", content: prompt },
         ],
         temperature: 0.7,
-        max_tokens: 900,
+        max_tokens: 420,
       }),
     });
   } catch (e) {
