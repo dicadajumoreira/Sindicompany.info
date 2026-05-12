@@ -71,10 +71,7 @@ export interface ComunicadoArtProps {
 
 export function ComunicadoArt(props: ComunicadoArtProps) {
   const d = DIMS[props.variant];
-  const paras = (props.corpo || "")
-    .split(/\n{2,}/)
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const corpo = (props.corpo || "").replace(/\r\n/g, "\n").trimEnd();
 
   // Rodape: lista de logos a mostrar (sindico [+ by] OU fallback Sindicompany).
   const footerImgs: { src: string; h: number; maxW: number }[] = [];
@@ -149,12 +146,8 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         {props.subtitulo && (
           <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.sub, lineHeight: 1.15, marginTop: d.contentPad * 0.18 }}>{props.subtitulo}</div>
         )}
-        <div style={{ marginTop: d.contentPad * 0.9, fontSize: d.body, lineHeight: 1.55, color: INK, textAlign: "justify" }}>
-          {paras.length ? (
-            paras.map((p, i) => <p key={i} style={{ margin: `0 0 ${d.bodyGap}px` }}>{p}</p>)
-          ) : (
-            <p style={{ margin: 0, color: "#9ca3af" }}>(sem texto)</p>
-          )}
+        <div style={{ marginTop: d.contentPad * 0.9, fontSize: d.body, lineHeight: 1.55, color: INK, textAlign: "justify", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+          {corpo ? corpo : <span style={{ color: "#9ca3af" }}>(sem texto)</span>}
         </div>
       </div>
 
