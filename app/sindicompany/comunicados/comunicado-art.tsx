@@ -36,18 +36,18 @@ const DIMS: Record<Variant, {
 }> = {
   a4: {
     w: 794, h: 1123, pad: 52,
-    frameTop: 166, frameBot: 128,
-    logoH: 66, logoW: 360, illoH: 150, illoW: 220,
+    frameTop: 122, frameBot: 124,
+    logoH: 64, logoW: 360, illoH: 152, illoW: 220,
     kicker: 13, titulo: 31, sub: 19, body: 14.5, bodyGap: 11,
-    footerLogoH: 40, byLogoH: 34, contentPad: 34,
+    footerLogoH: 40, byLogoH: 34, contentPad: 32,
   },
   celular: {
     // Story do Instagram (1080x1920). Fontes ampliadas pra leitura no celular.
     w: 1080, h: 1920, pad: 84,
-    frameTop: 360, frameBot: 270,
-    logoH: 130, logoW: 560, illoH: 360, illoW: 430,
+    frameTop: 236, frameBot: 260,
+    logoH: 128, logoW: 560, illoH: 360, illoW: 430,
     kicker: 27, titulo: 60, sub: 38, body: 32, bodyGap: 26,
-    footerLogoH: 78, byLogoH: 64, contentPad: 64,
+    footerLogoH: 78, byLogoH: 64, contentPad: 60,
   },
 };
 
@@ -71,7 +71,8 @@ export interface ComunicadoArtProps {
 
 export function ComunicadoArt(props: ComunicadoArtProps) {
   const d = DIMS[props.variant];
-  const corpo = (props.corpo || "").replace(/\r\n/g, "\n").trimEnd();
+  // Nunca exibir travessao no texto, venha de onde vier.
+  const corpo = (props.corpo || "").replace(/\r\n/g, "\n").replace(/\s*[‐‑‒–—―]\s*/g, ", ").trimEnd();
 
   // Rodape: lista de logos a mostrar (sindico [+ by] OU fallback Sindicompany).
   const footerImgs: { src: string; h: number; maxW: number }[] = [];
@@ -124,7 +125,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: 0, right: 0, maxHeight: d.illoH + d.frameTop * 0.45, maxWidth: d.illoW, objectFit: "contain", zIndex: 3 }}
+          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.3), maxWidth: d.illoW, objectFit: "contain", zIndex: 3 }}
         />
       )}
 
