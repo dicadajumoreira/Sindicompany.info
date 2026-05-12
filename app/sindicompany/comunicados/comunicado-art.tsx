@@ -79,6 +79,18 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   // Nunca exibir travessao no texto, venha de onde vier.
   const corpo = (props.corpo || "").replace(/\r\n/g, "\n").replace(/\s*[‐‑‒–—―]\s*/g, ", ").trimEnd();
 
+  const temIlustracao = !!props.ilustracaoUrl;
+  // Largura maxima da ilustracao (canto sup. direito); pode encostar um pouco
+  // no bloco do logo (que costuma sobrar espaco a direita).
+  const illoMaxW = d.w - d.logoInset - d.logoW + 56;
+  // 8mm (proporcional aos 15mm do logoInset).
+  const mm8 = Math.round((d.logoInset * 8) / 15);
+  // Linha horizontal do topo da moldura: vai do canto esquerdo ate ~8mm antes
+  // da ilustracao (quando ha ilustracao); senao atravessa toda a largura.
+  const topLineW = temIlustracao
+    ? Math.max(d.logoW * 0.4, d.w - illoMaxW - mm8 - d.logoInset)
+    : d.w - 2 * d.logoInset;
+
   // Rodape: lista de logos a mostrar (sindico [+ by] OU fallback Sindicompany).
   const footerImgs: { src: string; h: number; maxW: number }[] = [];
   if (props.ehBy) {
@@ -117,16 +129,23 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         );
       })()}
 
-      {/* Moldura mint: laterais a 15mm das bordas, linha horizontal 15mm abaixo
-          do logo; ABERTA embaixo (sem linha de delimitacao). */}
+      {/* Moldura mint: laterais a 15mm das bordas; ABERTA embaixo. */}
       <div
         style={{
           position: "absolute",
           top: d.frameTop, left: d.logoInset, right: d.logoInset, bottom: d.frameBot,
-          borderTop: `2px solid ${MINT}`,
           borderLeft: `2px solid ${MINT}`,
           borderRight: `2px solid ${MINT}`,
           zIndex: 1,
+        }}
+      />
+      {/* Linha horizontal do topo (15mm abaixo do logo). Quando ha ilustracao,
+          recua ~8mm antes dela, pra moldura nao encostar na imagem. */}
+      <div
+        style={{
+          position: "absolute",
+          top: d.frameTop, left: d.logoInset, width: topLineW, height: 2,
+          background: MINT, zIndex: 1,
         }}
       />
 
@@ -139,7 +158,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.75), maxWidth: d.w - d.logoInset - d.logoW + 56, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
+          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.75), maxWidth: illoMaxW, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
         />
       )}
 
