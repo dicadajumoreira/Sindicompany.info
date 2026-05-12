@@ -76,7 +76,7 @@ export interface ComunicadoArtProps {
 
 export function ComunicadoArt(props: ComunicadoArtProps) {
   const d = DIMS[props.variant];
-  const { mm15, mm8, mm5, mm4, w, h } = d;
+  const { mm15, mm8, mm4, w, h } = d;
   // Nunca exibir travessao no texto, venha de onde vier.
   const corpo = (props.corpo || "").replace(/\r\n/g, "\n").replace(/\s*[‐‑‒–—―]\s*/g, ", ").trimEnd();
 
@@ -84,13 +84,15 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   const usableW = w - 2 * mm15;
 
   // Logo: alinhado a moldura vertical (15mm da borda), ate 50% da largura.
+  // Pinado proximo do topo (8mm) pra deixar o minimo de espaco no topo.
   const logoLeftX = mm15;
+  const logoTopY = mm8;
   const logoW = Math.round(w * 0.5);
 
   // Ilustracao: canto superior direito, 8mm das bordas. Limites generosos.
   const illoTopY = mm8;
   const illoMaxW = Math.round(usableW * 0.33);
-  const illoMaxH = Math.round(usableW * 0.6);
+  const illoMaxH = Math.round(usableW * 0.62);
 
   // Altura realmente renderizada da ilustracao, medida ao carregar a imagem.
   const imgRef = useRef<HTMLImageElement>(null);
@@ -101,14 +103,13 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   }, [props.ilustracaoUrl]);
 
   // Linha horizontal da moldura:
-  //  - sem ilustracao: 15mm abaixo do logo (e o logo centralizado).
-  //  - com ilustracao: 5mm acima da base da ilustracao (= a ilustracao cobre a
-  //    linha em 5mm), mas nunca tao alta que o logo nao caiba acima dela.
-  const frameTopLogo = mm15 + d.logoH + mm15; // logo centralizado: 15mm acima e 15mm abaixo
-  const frameTopIllo = temIlustracao && illoH ? illoTopY + illoH - mm5 : 0;
+  //  - sem ilustracao: 8mm abaixo do bloco do logo.
+  //  - com ilustracao: a ilustracao ULTRAPASSA a moldura, cobrindo a linha em
+  //    ~30% da propria altura (a linha fica 30% acima da base da ilustracao);
+  //    nunca tao alta que o logo nao caiba acima dela.
+  const frameTopLogo = logoTopY + d.logoH + mm8;
+  const frameTopIllo = temIlustracao && illoH ? illoTopY + illoH - Math.round(illoH * 0.3) : 0;
   const frameTop = Math.max(frameTopLogo, frameTopIllo);
-  // Logo centralizado verticalmente entre a borda do topo e a linha horizontal.
-  const logoTopY = Math.round((frameTop - d.logoH) / 2);
 
   // x da borda esquerda da ilustracao (alinhada a direita, a 8mm da borda).
   const illoLeftX = w - mm8 - illoMaxW;
