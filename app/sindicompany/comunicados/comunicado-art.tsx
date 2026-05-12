@@ -105,11 +105,15 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   // Linha horizontal da moldura:
   //  - sem ilustracao: 8mm abaixo do bloco do logo.
   //  - com ilustracao: a ilustracao ULTRAPASSA a moldura, cobrindo a linha em
-  //    ~30% da propria altura (a linha fica 30% acima da base da ilustracao);
+  //    ~12% da propria altura (recuo discreto, pra nao sobrepor o conteudo);
   //    nunca tao alta que o logo nao caiba acima dela.
   const frameTopLogo = logoTopY + d.logoH + mm8;
-  const frameTopIllo = temIlustracao && illoH ? illoTopY + illoH - Math.round(illoH * 0.3) : 0;
+  const illoOverlap = illoH ? Math.round(illoH * 0.12) : 0;
+  const frameTopIllo = temIlustracao && illoH ? illoTopY + illoH - illoOverlap : 0;
   const frameTop = Math.max(frameTopLogo, frameTopIllo);
+  // Base da ilustracao (y). Quando o logo manda no frameTop, a ilustracao pode
+  // terminar acima da linha; entao o valor pode ser menor que frameTop.
+  const illoBottomY = temIlustracao && illoH ? illoTopY + illoH : 0;
 
   // x da borda esquerda da ilustracao (alinhada a direita, a 8mm da borda).
   const illoLeftX = w - mm8 - illoMaxW;
@@ -122,6 +126,13 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   const contentRight = mm15 + mm4;
   // So o titulo recua a mais pra manter 4mm da ilustracao.
   const tituloMarginRight = temIlustracao ? Math.max(0, mm8 + illoMaxW + mm4 - mm15) : 0;
+  // O corpo do texto comeca abaixo da base da ilustracao (caso ela ultrapasse a
+  // linha) + 4mm; senao usa o espacamento normal apos o titulo.
+  const tituloEstAltura = Math.round(d.titulo * 1.1) + (props.subtitulo ? Math.round(d.sub * 1.15) + Math.round(mm4 * 0.5) : 0);
+  const bodyMarginTop = Math.max(
+    Math.round(mm4 * 1.6),
+    illoBottomY - frameTop + mm4 - tituloEstAltura,
+  );
 
   // Rodape: lista de logos a mostrar (sindico [+ by] OU fallback Sindicompany).
   const footerImgs: { src: string; h: number; maxW: number }[] = [];
@@ -202,7 +213,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         {props.subtitulo && (
           <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.sub, lineHeight: 1.15, marginTop: mm4 * 0.5, marginRight: tituloMarginRight }}>{props.subtitulo}</div>
         )}
-        <div style={{ marginTop: mm4 * 1.6, fontSize: d.body, lineHeight: 1.55, color: INK, textAlign: "justify", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+        <div style={{ marginTop: bodyMarginTop, fontSize: d.body, lineHeight: 1.55, color: INK, textAlign: "justify", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
           {corpo ? corpo : <span style={{ color: "#9ca3af" }}>(sem texto)</span>}
         </div>
       </div>
