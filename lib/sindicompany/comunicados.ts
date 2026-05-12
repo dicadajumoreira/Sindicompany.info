@@ -114,18 +114,36 @@ export function getComunicadoIlustracaoUrl(path: string): string {
 const OPENAI_API = "https://api.openai.com/v1/chat/completions";
 
 const SYSTEM_COMUNICADO = `Voce e o redator de comunicados de condominio da Sindicompany.
-Escreve avisos formais, claros e cordiais para os moradores. Regras:
+Escreve avisos formais, claros e cordiais para os moradores, como uma pessoa real escreveria.
+
+ESTRUTURA E TAMANHO:
 - Comece com a saudacao "Prezados moradores," (ou "Prezados condominos,").
-- TAMANHO: o texto sera diagramado em duas artes pequenas (um Story de Instagram
-  1080x1920 e uma folha A4). Por isso ele PRECISA ser curto: 3 a 4 paragrafos
-  BEM curtos (1 a 3 frases cada), no maximo cerca de 110 a 130 palavras no total.
-  Nao ultrapasse esse limite de jeito nenhum, senao o texto e cortado na arte.
-  Se o briefing tiver muitos detalhes, resuma e priorize o essencial.
+- O texto sera diagramado em duas artes pequenas (um Story de Instagram 1080x1920 e
+  uma folha A4). Por isso PRECISA ser curto: 3 a 4 paragrafos BEM curtos (1 a 3 frases
+  cada), no maximo cerca de 110 a 130 palavras no total. Nao ultrapasse esse limite de
+  jeito nenhum, senao o texto e cortado na arte. Se o briefing tiver muitos detalhes,
+  resuma e priorize o essencial.
 - Separe os paragrafos por uma linha em branco.
-- Linguagem objetiva, respeitosa, sem juridiques pesado, sem alarmismo.
 - Encerre com uma frase curta pedindo a colaboracao de todos.
-- Portugues do Brasil correto, com acentuacao. NUNCA use travessao (—); use virgula ou ponto.
-- Nao use emojis, nao use markdown, nao coloque titulo. Responda APENAS o corpo do comunicado em texto puro.`;
+- Nao use emojis, nao use markdown, nao coloque titulo. Responda APENAS o corpo do comunicado em texto puro.
+
+PORTUGUES (revise antes de responder):
+- Portugues do Brasil correto, gramatical, com TODOS os acentos: a, e, i, o, u, a~, o~,
+  a^, e^, o^, c-cedilha, crase. Confira: voce, sindico, condominio, gestao, manutencao,
+  reuniao, area, seguranca, atencao, periodo, veiculo -> com acento.
+- Linguagem objetiva, respeitosa, sem juridiques pesado, sem alarmismo.
+
+ESTILO (skill humanizer, regras duras):
+- NUNCA use travessoes (—, –). Use virgulas, pontos, dois-pontos ou parenteses.
+- Use "e/sao/tem" direto (NAO "configura-se como", "representa um", "constitui-se").
+- NAO force grupos de tres ("limpeza, organizacao e bem-estar"); no maximo dois itens.
+- NAO use frases prontas de IA: "E com grande satisfacao que...", "Vale ressaltar",
+  "E importante destacar", "Nesse contexto", "Em um mundo onde...", "Dito isso".
+- NAO infle a importancia ("momento crucial", "papel fundamental", "reflete a evolucao").
+- NAO use "-ndo" decorativo pra dar profundidade falsa ("garantindo", "proporcionando",
+  "destacando", "visando", "buscando", "fomentando").
+- NAO use "nao apenas X, mas tambem Y".
+- Frases de tamanhos variados, tom de gente de verdade falando com vizinhos.`;
 
 export async function gerarTextoComunicado(input: {
   condominio: string;
@@ -191,7 +209,61 @@ export async function gerarTextoComunicado(input: {
   }
   const content = data.choices?.[0]?.message?.content?.trim();
   if (!content) return { ok: false, error: "OpenAI retornou resposta vazia." };
-  // Remove travessoes que o modelo eventualmente insere.
-  const limpo = content.replace(/\s*[—–]\s*/g, ", ").replace(/[ \t]+\n/g, "\n").trim();
-  return { ok: true, texto: limpo };
+  return { ok: true, texto: limparTextoComunicado(content) };
+}
+
+// --------------------------------------------------------------
+// Pos-processamento (skill humanizer + revisao pt-BR): normaliza
+// acentos, remove travessoes, normaliza espacos. Rede de seguranca
+// alem das instrucoes do system prompt.
+// --------------------------------------------------------------
+
+const DASH_RX = /[‐‑‒–—―]/g;
+
+// Palavras pt-BR frequentes em comunicados de condominio que aparecem
+// sem acento em texto gerado/copiado. So palavras inequivocas.
+const ACENTOS: Record<string, string> = {
+  voce: "você", voces: "vocês", sindico: "síndico", sindica: "síndica",
+  condominio: "condomínio", condominios: "condomínios", condomino: "condômino",
+  condominos: "condôminos", gestao: "gestão", administracao: "administração",
+  manutencao: "manutenção", manutencoes: "manutenções", reuniao: "reunião",
+  reunioes: "reuniões", area: "área", areas: "áreas", comuns: "comuns",
+  seguranca: "segurança", convivencia: "convivência", colaboracao: "colaboração",
+  atencao: "atenção", informacao: "informação", informacoes: "informações",
+  comunicacao: "comunicação", organizacao: "organização", responsabilidade: "responsabilidade",
+  permitida: "permitida", permitido: "permitido", proibido: "proibido", proibida: "proibida",
+  necessario: "necessário", necessaria: "necessária", periodo: "período",
+  horario: "horário", horarios: "horários", veiculo: "veículo", veiculos: "veículos",
+  agua: "água", energia: "energia", sao: "são", estao: "estão", entao: "então",
+  ja: "já", apos: "após", possivel: "possível", responsavel: "responsável",
+  responsaveis: "responsáveis", dejetos: "dejetos", limpeza: "limpeza",
+  garagem: "garagem", elevador: "elevador", elevadores: "elevadores",
+  obras: "obras", lixeiras: "lixeiras", lixeira: "lixeira", camera: "câmera",
+  cameras: "câmeras", portao: "portão", portoes: "portões", reconhecimento: "reconhecimento",
+  contamos: "contamos", harmoniosa: "harmoniosa", agradavel: "agradável",
+  ambiente: "ambiente", visa: "visa", citacao: "citação",
+};
+
+function ajustaAcentosPalavra(w: string): string {
+  const lower = w.toLowerCase();
+  const fix = ACENTOS[lower];
+  if (!fix) return w;
+  if (w === lower) return fix;
+  if (w === w.toUpperCase()) return fix.toUpperCase();
+  if (w[0] === w[0].toUpperCase()) return fix[0].toUpperCase() + fix.slice(1);
+  return fix;
+}
+
+export function limparTextoComunicado(text: string): string {
+  let out = (text || "").normalize("NFC").replace(/\r\n/g, "\n");
+  out = out.replace(DASH_RX, ", ");
+  // Ajusta acentos palavra por palavra (mantem pontuacao colada).
+  out = out.replace(/[A-Za-zÀ-ÿ]+/g, (m) => ajustaAcentosPalavra(m));
+  out = out
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/ ?,\s*,/g, ",")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return out;
 }
