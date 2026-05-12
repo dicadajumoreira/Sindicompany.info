@@ -42,10 +42,10 @@ const DIMS: Record<Variant, {
   },
   celular: {
     // Story do Instagram (1080x1920). Margens proporcionais; fontes ampliadas.
-    w: 1080, h: 1920, frameBot: 168,
+    w: 1080, h: 1920, frameBot: 150,
     logoH: 320, logoW: 456, mm15: 84, mm8: 44, mm4: 22,
-    titulo: 52, sub: 33, body: 27,
-    footerLogoH: 76, byLogoH: 62, footerGap: 38,
+    titulo: 52, sub: 33, body: 26,
+    footerLogoH: 70, byLogoH: 58, footerGap: 36,
   },
 };
 
@@ -84,6 +84,8 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   const illoTopY = mm8;
   // Largura maxima da ilustracao (canto sup. direito) ~ 1/3 da largura util.
   const illoMaxW = Math.round((w - 2 * mm15) * 0.34);
+  // Altura maxima: ultrapassa a linha horizontal em ate ~10mm.
+  const illoMaxH = frameTop - illoTopY + Math.round(mm15 * 0.7);
   // x da borda esquerda da ilustracao (alinhada a direita, a 8mm da borda).
   const illoLeftX = w - mm8 - illoMaxW;
   // Linha horizontal do topo da moldura: do canto esquerdo da moldura ate
@@ -91,9 +93,10 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   const topLineW = temIlustracao
     ? Math.max(d.logoW * 0.5, illoLeftX - mm8 - mm15)
     : w - 2 * mm15;
-  // Borda direita do bloco de conteudo: 4mm a esquerda da ilustracao quando
-  // houver; senao recuo de 4mm da moldura.
-  const contentRight = temIlustracao ? w - illoLeftX + mm4 : mm15 + mm4;
+  // O bloco de conteudo (texto) vai ate a moldura direita, com 4mm de recuo.
+  const contentRight = mm15 + mm4;
+  // So o TITULO recua a mais pra nao encostar na ilustracao (4mm dela).
+  const tituloMarginRight = temIlustracao ? Math.max(0, mm8 + illoMaxW - mm15) : 0;
 
   // Rodape: lista de logos a mostrar (sindico [+ by] OU fallback Sindicompany).
   const footerImgs: { src: string; h: number; maxW: number }[] = [];
@@ -161,12 +164,12 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: illoTopY, right: mm8, maxHeight: Math.round((frameTop - illoTopY) * 1.6), maxWidth: illoMaxW, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
+          style={{ position: "absolute", top: illoTopY, right: mm8, maxHeight: illoMaxH, maxWidth: illoMaxW, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
         />
       )}
 
-      {/* Conteudo: titulo a 4mm da moldura (topo e laterais) e a 4mm da
-          ilustracao quando houver. */}
+      {/* Conteudo: titulo a 4mm da moldura; texto vai ate a moldura direita
+          (4mm de recuo). O titulo recua a mais pra nao encostar na ilustracao. */}
       <div
         style={{
           position: "absolute",
@@ -174,12 +177,12 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           left: mm15 + mm4,
           right: contentRight,
           bottom: d.frameBot + mm4 * 2,
-          display: "flex", flexDirection: "column", zIndex: 2,
+          display: "flex", flexDirection: "column", overflow: "hidden", zIndex: 2,
         }}
       >
-        <h1 style={{ color: MINT_DARK, fontWeight: 800, fontSize: d.titulo, lineHeight: 1.08, margin: 0 }}>{props.titulo}</h1>
+        <h1 style={{ color: MINT_DARK, fontWeight: 800, fontSize: d.titulo, lineHeight: 1.08, margin: 0, marginRight: tituloMarginRight }}>{props.titulo}</h1>
         {props.subtitulo && (
-          <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.sub, lineHeight: 1.15, marginTop: mm4 * 0.5 }}>{props.subtitulo}</div>
+          <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.sub, lineHeight: 1.15, marginTop: mm4 * 0.5, marginRight: tituloMarginRight }}>{props.subtitulo}</div>
         )}
         <div style={{ marginTop: mm4 * 1.6, fontSize: d.body, lineHeight: 1.55, color: INK, textAlign: "justify", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
           {corpo ? corpo : <span style={{ color: "#9ca3af" }}>(sem texto)</span>}
