@@ -36,18 +36,18 @@ const DIMS: Record<Variant, {
 }> = {
   a4: {
     w: 794, h: 1123, pad: 52,
-    frameTop: 214, frameBot: 122,
-    logoH: 180, logoW: 397, illoH: 152, illoW: 215,
-    kicker: 13, titulo: 30, sub: 18, body: 14.5, bodyGap: 11,
-    footerLogoH: 40, byLogoH: 34, contentPad: 30,
+    frameTop: 274, frameBot: 110,
+    logoH: 240, logoW: 397, illoH: 152, illoW: 210,
+    kicker: 13, titulo: 30, sub: 18, body: 14, bodyGap: 10,
+    footerLogoH: 38, byLogoH: 32, contentPad: 28,
   },
   celular: {
     // Story do Instagram (1080x1920). Fontes ampliadas pra leitura no celular.
     w: 1080, h: 1920, pad: 84,
-    frameTop: 410, frameBot: 232,
-    logoH: 350, logoW: 540, illoH: 360, illoW: 420,
-    kicker: 26, titulo: 56, sub: 36, body: 30, bodyGap: 24,
-    footerLogoH: 78, byLogoH: 64, contentPad: 54,
+    frameTop: 488, frameBot: 200,
+    logoH: 430, logoW: 540, illoH: 360, illoW: 400,
+    kicker: 25, titulo: 54, sub: 34, body: 28, bodyGap: 22,
+    footerLogoH: 76, byLogoH: 62, contentPad: 48,
   },
 };
 
@@ -93,17 +93,18 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         overflow: "hidden", boxSizing: "border-box",
       }}
     >
-      {/* Logo do condominio: topo esquerdo, ocupa ate a metade da largura da arte.
-          Sem logo do condominio cadastrado -> mostra o nome do condominio. */}
+      {/* Logo do condominio: ocupa a faixa do topo (metade da largura x altura
+          do cabecalho), o maior possivel sem distorcer. Sem logo cadastrado ->
+          mostra o nome do condominio. */}
       {(() => {
         const topLogo = props.logoCondominioUrl || null;
         return (
-          <div style={{ position: "absolute", top: d.pad * 0.45, left: d.pad, width: d.logoW, zIndex: 1 }}>
+          <div style={{ position: "absolute", top: d.pad * 0.4, left: d.pad, width: d.logoW, height: d.logoH, display: "flex", alignItems: "center", zIndex: 1 }}>
             {topLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={topLogo} alt={props.condominio} crossOrigin="anonymous" style={{ width: "100%", maxHeight: d.logoH, objectFit: "contain", objectPosition: "left center", display: "block" }} />
+              <img src={topLogo} alt={props.condominio} crossOrigin="anonymous" style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "left center", display: "block" }} />
             ) : (
-              <div style={{ fontFamily: "'Provicali', 'Liberation Serif', serif", fontSize: d.titulo, color: ONIX, lineHeight: 1.05, letterSpacing: "-0.01em" }}>
+              <div style={{ fontFamily: "'Provicali', 'Liberation Serif', serif", fontSize: d.titulo * 1.3, color: ONIX, lineHeight: 1.05, letterSpacing: "-0.01em" }}>
                 {props.condominio}
               </div>
             )}
@@ -131,7 +132,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.3), maxWidth: d.illoW, objectFit: "contain", zIndex: 3 }}
+          style={{ position: "absolute", top: 0, right: 0, maxHeight: d.logoH + d.pad, maxWidth: d.illoW, objectFit: "contain", zIndex: 3 }}
         />
       )}
 
