@@ -102,18 +102,22 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
     if (el && el.complete && el.offsetHeight) setIlloH(el.offsetHeight);
   }, [props.ilustracaoUrl]);
 
+  // Base (y) da ilustracao e quanto ela "transpassa" a moldura (~12% da altura).
+  const illoBottomY = temIlustracao && illoH ? illoTopY + illoH : 0;
+  const illoOverlap = illoH ? Math.round(illoH * 0.12) : 0;
   // Linha horizontal da moldura:
   //  - sem ilustracao: 8mm abaixo do bloco do logo.
-  //  - com ilustracao: a ilustracao ULTRAPASSA a moldura, cobrindo a linha em
-  //    ~12% da propria altura (recuo discreto, pra nao sobrepor o conteudo);
-  //    nunca tao alta que o logo nao caiba acima dela.
-  const frameTopLogo = logoTopY + d.logoH + mm8;
-  const illoOverlap = illoH ? Math.round(illoH * 0.12) : 0;
-  const frameTopIllo = temIlustracao && illoH ? illoTopY + illoH - illoOverlap : 0;
-  const frameTop = Math.max(frameTopLogo, frameTopIllo);
-  // Base da ilustracao (y). Quando o logo manda no frameTop, a ilustracao pode
-  // terminar acima da linha; entao o valor pode ser menor que frameTop.
-  const illoBottomY = temIlustracao && illoH ? illoTopY + illoH : 0;
+  //  - com ilustracao: logo abaixo da base da ilustracao (a ilustracao a
+  //    transpassa, sem deixar espaco em branco entre as duas), respeitando um
+  //    limite minimo (pra o logo caber acima) e maximo (pra sobrar espaco pro texto).
+  const logoMinH = Math.round(d.logoH * 0.55);
+  const minFrameTop = logoTopY + logoMinH + mm4;
+  const maxFrameTop = Math.round(h * 0.36);
+  const frameTop = temIlustracao && illoH
+    ? Math.min(maxFrameTop, Math.max(minFrameTop, illoBottomY - illoOverlap))
+    : logoTopY + d.logoH + mm8;
+  // Altura util do bloco do logo (encolhe se a linha estiver alta).
+  const logoBoxH = Math.min(d.logoH, frameTop - logoTopY - mm4);
 
   // x da borda esquerda da ilustracao (alinhada a direita, a 8mm da borda).
   const illoLeftX = w - mm8 - illoMaxW;
@@ -154,7 +158,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
       }}
     >
       {/* Logo do condominio */}
-      <div style={{ position: "absolute", top: logoTopY, left: logoLeftX, width: logoW, height: d.logoH, display: "flex", alignItems: "center", zIndex: 1 }}>
+      <div style={{ position: "absolute", top: logoTopY, left: logoLeftX, width: logoW, height: logoBoxH, display: "flex", alignItems: "center", zIndex: 1 }}>
         {props.logoCondominioUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={props.logoCondominioUrl} alt={props.condominio} crossOrigin="anonymous" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", objectPosition: "left center", display: "block" }} />
