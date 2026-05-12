@@ -51,7 +51,7 @@ const DIMS: Record<Variant, {
     // Story do Instagram (1080x1920). Margens proporcionais; fontes ampliadas.
     w: 1080, h: 1920, frameBot: 150,
     logoH: 450, mm15: 84, mm8: 44, mm5: 28, mm4: 22,
-    titulo: 52, sub: 33, body: 26,
+    titulo: 52, sub: 33, body: 30,
     footerLogoH: 70, byLogoH: 58, footerGap: 36,
   },
 };
