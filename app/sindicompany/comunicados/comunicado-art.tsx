@@ -130,7 +130,8 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         }}
       />
 
-      {/* Ilustracao no canto superior direito — ACIMA da linha da moldura */}
+      {/* Ilustracao no canto superior direito. Fica POR CIMA da moldura e
+          ULTRAPASSA a linha horizontal (bleed pra baixo). */}
       {props.ilustracaoUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -138,7 +139,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.35), maxWidth: d.w - (d.logoInset + d.logoW) - 8, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
+          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.75), maxWidth: d.w - d.logoInset - d.logoW + 56, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
         />
       )}
 
