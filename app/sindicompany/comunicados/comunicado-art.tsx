@@ -28,31 +28,24 @@ const SINDICOMPANY_LOGO =
 type Variant = "a4" | "celular";
 
 const DIMS: Record<Variant, {
-  w: number; h: number; pad: number;
-  frameTop: number; frameBot: number;
-  logoH: number; logoW: number; logoInset: number;
-  kicker: number; titulo: number; sub: number; body: number; bodyGap: number;
-  footerLogoH: number; byLogoH: number; contentPad: number;
+  w: number; h: number; frameBot: number;
+  logoH: number; logoW: number; mm15: number; mm8: number; mm4: number;
+  titulo: number; sub: number; body: number;
+  footerLogoH: number; byLogoH: number; footerGap: number;
 }> = {
   a4: {
-    // logoInset = 15mm @ 96dpi (A4 = 210mm = 794px -> ~3.78px/mm). Tambem usado
-    // como margem das linhas laterais da moldura ate a borda da pagina, e como
-    // distancia da linha horizontal ate o logotipo.
-    w: 794, h: 1123, pad: 52,
-    // frameTop = logoInset + logoH + logoInset (15mm abaixo do logo)
-    frameTop: 324, frameBot: 110,
-    logoH: 210, logoW: 340, logoInset: 57,
-    kicker: 13, titulo: 30, sub: 18, body: 14, bodyGap: 10,
-    footerLogoH: 38, byLogoH: 32, contentPad: 28,
+    // 15mm @ 96dpi (A4 = 210mm = 794px -> ~3.78px/mm).
+    w: 794, h: 1123, frameBot: 100,
+    logoH: 200, logoW: 340, mm15: 57, mm8: 30, mm4: 15,
+    titulo: 30, sub: 18, body: 14,
+    footerLogoH: 38, byLogoH: 32, footerGap: 24,
   },
   celular: {
-    // Story do Instagram (1080x1920). Fontes ampliadas pra leitura no celular.
-    w: 1080, h: 1920, pad: 84,
-    // frameTop = logoInset + logoH + logoInset
-    frameTop: 508, frameBot: 180,
-    logoH: 340, logoW: 456, logoInset: 84,
-    kicker: 25, titulo: 52, sub: 33, body: 27, bodyGap: 21,
-    footerLogoH: 76, byLogoH: 62, contentPad: 44,
+    // Story do Instagram (1080x1920). Margens proporcionais; fontes ampliadas.
+    w: 1080, h: 1920, frameBot: 168,
+    logoH: 320, logoW: 456, mm15: 84, mm8: 44, mm4: 22,
+    titulo: 52, sub: 33, body: 27,
+    footerLogoH: 76, byLogoH: 62, footerGap: 38,
   },
 };
 
@@ -76,52 +69,54 @@ export interface ComunicadoArtProps {
 
 export function ComunicadoArt(props: ComunicadoArtProps) {
   const d = DIMS[props.variant];
+  const { mm15, mm8, mm4, w, h } = d;
   // Nunca exibir travessao no texto, venha de onde vier.
   const corpo = (props.corpo || "").replace(/\r\n/g, "\n").replace(/\s*[‐‑‒–—―]\s*/g, ", ").trimEnd();
 
   const temIlustracao = !!props.ilustracaoUrl;
+  // Logo e ilustracao a 8mm das bordas (topo / esquerda / direita).
+  const logoTopY = mm8;
+  const logoLeftX = mm8;
+  // Linha horizontal da moldura: 15mm abaixo do bloco do logo.
+  const frameTop = logoTopY + d.logoH + mm15;
   // Largura maxima da ilustracao (canto sup. direito) ~ 1/3 da largura util.
-  const illoMaxW = Math.round((d.w - 2 * d.logoInset) * 0.34);
-  // 8mm e 4mm, proporcionais aos 15mm do logoInset.
-  const mm8 = Math.round((d.logoInset * 8) / 15);
-  const mm4 = Math.round((d.logoInset * 4) / 15);
-  // x da borda esquerda da ilustracao (ela e alinhada a direita).
-  const illoLeftX = d.w - illoMaxW;
-  // Linha horizontal do topo da moldura: vai do canto esquerdo ate ~8mm antes
-  // da ilustracao (quando ha ilustracao); senao atravessa toda a largura.
+  const illoMaxW = Math.round((w - 2 * mm15) * 0.34);
+  // x da borda esquerda da ilustracao (alinhada a direita, a 8mm da borda).
+  const illoLeftX = w - mm8 - illoMaxW;
+  // Linha horizontal do topo da moldura: do canto esquerdo da moldura ate
+  // ~8mm antes da ilustracao (quando houver); senao atravessa toda a largura.
   const topLineW = temIlustracao
-    ? Math.max(d.logoW * 0.5, illoLeftX - mm8 - d.logoInset)
-    : d.w - 2 * d.logoInset;
-  // Borda direita do bloco de conteudo: quando ha ilustracao, fica 4mm a
-  // esquerda dela; senao usa o recuo de 4mm da moldura.
-  const contentRight = temIlustracao ? d.w - illoLeftX + mm4 : d.logoInset + mm4;
+    ? Math.max(d.logoW * 0.5, illoLeftX - mm8 - mm15)
+    : w - 2 * mm15;
+  // Borda direita do bloco de conteudo: 4mm a esquerda da ilustracao quando
+  // houver; senao recuo de 4mm da moldura.
+  const contentRight = temIlustracao ? w - illoLeftX + mm4 : mm15 + mm4;
 
   // Rodape: lista de logos a mostrar (sindico [+ by] OU fallback Sindicompany).
   const footerImgs: { src: string; h: number; maxW: number }[] = [];
   if (props.ehBy) {
-    if (props.logoSindicoUrl) footerImgs.push({ src: props.logoSindicoUrl, h: d.footerLogoH, maxW: d.w * 0.32 });
-    if (props.byLogoUrl) footerImgs.push({ src: props.byLogoUrl, h: d.byLogoH, maxW: d.w * 0.3 });
-    if (footerImgs.length === 0) footerImgs.push({ src: SINDICOMPANY_LOGO, h: d.footerLogoH, maxW: d.w * 0.42 });
+    if (props.logoSindicoUrl) footerImgs.push({ src: props.logoSindicoUrl, h: d.footerLogoH, maxW: w * 0.32 });
+    if (props.byLogoUrl) footerImgs.push({ src: props.byLogoUrl, h: d.byLogoH, maxW: w * 0.3 });
+    if (footerImgs.length === 0) footerImgs.push({ src: SINDICOMPANY_LOGO, h: d.footerLogoH, maxW: w * 0.42 });
   } else {
-    footerImgs.push({ src: props.logoSindicoUrl || SINDICOMPANY_LOGO, h: d.footerLogoH, maxW: d.w * 0.42 });
+    footerImgs.push({ src: props.logoSindicoUrl || SINDICOMPANY_LOGO, h: d.footerLogoH, maxW: w * 0.42 });
   }
 
   return (
     <div
       id={props.nodeId}
       style={{
-        position: "relative", width: d.w, height: d.h, background: PAPER,
+        position: "relative", width: w, height: h, background: PAPER,
         fontFamily: "'Epilogue', 'DejaVu Sans', sans-serif", color: INK,
         overflow: "hidden", boxSizing: "border-box",
       }}
     >
-      {/* Logo do condominio: a 15mm da borda esquerda e 15mm do topo (A4),
-          ocupando ate a metade da largura da arte. Sem logo cadastrado ->
-          mostra o nome do condominio. */}
+      {/* Logo do condominio: 8mm do topo e 8mm da borda esquerda, ocupando ate
+          ~metade da largura da arte. Sem logo -> nome do condominio. */}
       {(() => {
         const topLogo = props.logoCondominioUrl || null;
         return (
-          <div style={{ position: "absolute", top: d.logoInset, left: d.logoInset, width: d.logoW, height: d.logoH, display: "flex", alignItems: "center", zIndex: 1 }}>
+          <div style={{ position: "absolute", top: logoTopY, left: logoLeftX, width: d.logoW, height: d.logoH, display: "flex", alignItems: "center", zIndex: 1 }}>
             {topLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={topLogo} alt={props.condominio} crossOrigin="anonymous" style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "left center", display: "block" }} />
@@ -138,7 +133,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
       <div
         style={{
           position: "absolute",
-          top: d.frameTop, left: d.logoInset, right: d.logoInset, bottom: d.frameBot,
+          top: frameTop, left: mm15, right: mm15, bottom: d.frameBot,
           borderLeft: `2px solid ${MINT}`,
           borderRight: `2px solid ${MINT}`,
           zIndex: 1,
@@ -149,13 +144,13 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
       <div
         style={{
           position: "absolute",
-          top: d.frameTop, left: d.logoInset, width: topLineW, height: 2,
+          top: frameTop, left: mm15, width: topLineW, height: 2,
           background: MINT, zIndex: 1,
         }}
       />
 
-      {/* Ilustracao no canto superior direito. Fica POR CIMA da moldura e
-          ULTRAPASSA a linha horizontal (bleed pra baixo). */}
+      {/* Ilustracao: canto superior direito, 8mm das bordas (topo e direita).
+          Fica POR CIMA da moldura e ULTRAPASSA a linha horizontal. */}
       {props.ilustracaoUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -163,7 +158,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: 0, right: 0, maxHeight: Math.round(d.frameTop * 1.35), maxWidth: illoMaxW, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
+          style={{ position: "absolute", top: mm8, right: mm8, maxHeight: Math.round((frameTop - mm8) * 1.6), maxWidth: illoMaxW, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
         />
       )}
 
@@ -172,8 +167,8 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
       <div
         style={{
           position: "absolute",
-          top: d.frameTop + mm4,
-          left: d.logoInset + mm4,
+          top: frameTop + mm4,
+          left: mm15 + mm4,
           right: contentRight,
           bottom: d.frameBot + mm4 * 2,
           display: "flex", flexDirection: "column", zIndex: 2,
@@ -189,9 +184,9 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
       </div>
 
       {/* Rodape: logotipo(s) centralizado(s), sem linha */}
-      <div style={{ position: "absolute", bottom: d.pad * 0.55, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: d.pad * 0.45, zIndex: 2 }}>
+      <div style={{ position: "absolute", bottom: mm15 * 0.6, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: d.footerGap, zIndex: 2 }}>
         {footerImgs.map((it, i) => (
-          <span key={i} style={{ display: "flex", alignItems: "center", gap: d.pad * 0.45 }}>
+          <span key={i} style={{ display: "flex", alignItems: "center", gap: d.footerGap }}>
             {i > 0 && <span style={{ width: 1, height: it.h * 0.8, background: "rgba(0,0,0,.18)" }} />}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={it.src} alt="" crossOrigin="anonymous" style={{ maxHeight: it.h, maxWidth: it.maxW, objectFit: "contain" }} />
