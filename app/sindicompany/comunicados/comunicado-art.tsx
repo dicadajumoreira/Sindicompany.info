@@ -44,7 +44,7 @@ const DIMS: Record<Variant, {
     // 15mm @ 96dpi (A4 = 210mm = 794px -> ~3.78px/mm).
     w: 794, h: 1123, frameBot: 100,
     logoH: 285, mm15: 57, mm8: 30, mm5: 19, mm4: 15,
-    titulo: 30, sub: 18, body: 14,
+    titulo: 30, sub: 18, body: 16,
     footerLogoH: 38, byLogoH: 32, footerGap: 24,
   },
   celular: {
