@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   { label: "Revista de Boas-Vindas", href: "/sindicompany/boas-vindas", emoji: "📰" },
+  { label: "Comunicados", href: "/sindicompany/comunicados", emoji: "📣" },
   {
     label: "Carrosséis",
     href: "/sindicompany/carrossel",
