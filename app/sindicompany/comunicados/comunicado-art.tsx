@@ -1,20 +1,27 @@
+"use client";
+
 /**
  * Arte do comunicado, renderizada em pixels exatos para os 2 formatos:
  *  - "a4"      : 794 x 1123 px   (A4 retrato @ 96dpi, para impressao/mural)
  *  - "celular" : 1080 x 1920 px  (Story do Instagram, 9:16)
  *
- * O mesmo no e usado para o preview na tela e como alvo do
- * html-to-image (download em PNG). Por isso usa estilos inline.
+ * O mesmo no e usado para o preview na tela e como alvo do html-to-image
+ * (download em PNG). Por isso usa estilos inline.
  *
  * Layout:
- *  - topo esquerda: logotipo do condominio (do cadastro do condo)
- *  - topo direita : ilustracao (enviada por comunicado), POR CIMA da
- *    linha (moldura) que delimita a pagina
- *  - moldura mint aberta embaixo (top + laterais, SEM linha embaixo)
- *  - conteudo: "COMUNICADO IMPORTANTE" + titulo (mint) + texto justificado
- *  - rodape (centro, sem linha): logotipo do(a) sindico(a). Se o sindico
- *    for By Sindicompany, ao lado vem o logotipo "by sindicompany".
+ *  - logotipo do condominio: alinhado a moldura vertical (15mm da borda),
+ *    ocupando ate 50% da largura, sem distorcer, centralizado verticalmente
+ *    entre a borda do topo e a linha horizontal da moldura.
+ *  - ilustracao: canto superior direito, 8mm das bordas, POR CIMA da moldura.
+ *  - moldura mint: laterais a 15mm das bordas; a linha horizontal fica 5mm
+ *    "atras" da ilustracao (a ilustracao a cobre); aberta embaixo. A posicao
+ *    da linha se adequa a altura real da ilustracao (medida ao carregar).
+ *  - conteudo: titulo a 4mm da moldura (e 4mm da ilustracao); texto vai ate a
+ *    moldura direita (4mm de recuo).
+ *  - rodape (centro, sem linha): logotipo do(a) sindico(a) [+ By Sindicompany].
  */
+
+import { useEffect, useRef, useState } from "react";
 
 const MINT = "#56CFE1";
 const MINT_DARK = "#2E9AAC";
@@ -29,21 +36,21 @@ type Variant = "a4" | "celular";
 
 const DIMS: Record<Variant, {
   w: number; h: number; frameBot: number;
-  logoH: number; logoW: number; mm15: number; mm8: number; mm4: number;
+  logoH: number; mm15: number; mm8: number; mm5: number; mm4: number;
   titulo: number; sub: number; body: number;
   footerLogoH: number; byLogoH: number; footerGap: number;
 }> = {
   a4: {
     // 15mm @ 96dpi (A4 = 210mm = 794px -> ~3.78px/mm).
     w: 794, h: 1123, frameBot: 100,
-    logoH: 200, logoW: 340, mm15: 57, mm8: 30, mm4: 15,
+    logoH: 190, mm15: 57, mm8: 30, mm5: 19, mm4: 15,
     titulo: 30, sub: 18, body: 14,
     footerLogoH: 38, byLogoH: 32, footerGap: 24,
   },
   celular: {
     // Story do Instagram (1080x1920). Margens proporcionais; fontes ampliadas.
     w: 1080, h: 1920, frameBot: 150,
-    logoH: 320, logoW: 456, mm15: 84, mm8: 44, mm4: 22,
+    logoH: 300, mm15: 84, mm8: 44, mm5: 28, mm4: 22,
     titulo: 52, sub: 33, body: 26,
     footerLogoH: 70, byLogoH: 58, footerGap: 36,
   },
@@ -69,34 +76,51 @@ export interface ComunicadoArtProps {
 
 export function ComunicadoArt(props: ComunicadoArtProps) {
   const d = DIMS[props.variant];
-  const { mm15, mm8, mm4, w, h } = d;
+  const { mm15, mm8, mm5, mm4, w, h } = d;
   // Nunca exibir travessao no texto, venha de onde vier.
   const corpo = (props.corpo || "").replace(/\r\n/g, "\n").replace(/\s*[‐‑‒–—―]\s*/g, ", ").trimEnd();
 
   const temIlustracao = !!props.ilustracaoUrl;
-  // Logo: 8mm da borda esquerda; verticalmente CENTRALIZADO entre a borda do
-  // topo e a linha horizontal da moldura (margem igual em cima e embaixo = 15mm).
-  const logoLeftX = mm8;
-  const logoTopY = mm15;
-  // Linha horizontal da moldura: 15mm abaixo do bloco do logo (= centralizado).
-  const frameTop = logoTopY + d.logoH + mm15;
-  // Ilustracao: 8mm da borda do topo e 8mm da direita.
+  const usableW = w - 2 * mm15;
+
+  // Logo: alinhado a moldura vertical (15mm da borda), ate 50% da largura.
+  const logoLeftX = mm15;
+  const logoW = Math.round(w * 0.5);
+
+  // Ilustracao: canto superior direito, 8mm das bordas. Limites generosos.
   const illoTopY = mm8;
-  // Largura maxima da ilustracao (canto sup. direito) ~ 1/3 da largura util.
-  const illoMaxW = Math.round((w - 2 * mm15) * 0.34);
-  // Altura maxima: ultrapassa a linha horizontal em ate ~10mm.
-  const illoMaxH = frameTop - illoTopY + Math.round(mm15 * 0.7);
+  const illoMaxW = Math.round(usableW * 0.33);
+  const illoMaxH = Math.round(usableW * 0.6);
+
+  // Altura realmente renderizada da ilustracao, medida ao carregar a imagem.
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [illoH, setIlloH] = useState<number | null>(null);
+  useEffect(() => {
+    const el = imgRef.current;
+    if (el && el.complete && el.offsetHeight) setIlloH(el.offsetHeight);
+  }, [props.ilustracaoUrl]);
+
+  // Linha horizontal da moldura:
+  //  - sem ilustracao: 15mm abaixo do logo (e o logo centralizado).
+  //  - com ilustracao: 5mm acima da base da ilustracao (= a ilustracao cobre a
+  //    linha em 5mm), mas nunca tao alta que o logo nao caiba acima dela.
+  const frameTopLogo = mm15 + d.logoH + mm15; // logo centralizado: 15mm acima e 15mm abaixo
+  const frameTopIllo = temIlustracao && illoH ? illoTopY + illoH - mm5 : 0;
+  const frameTop = Math.max(frameTopLogo, frameTopIllo);
+  // Logo centralizado verticalmente entre a borda do topo e a linha horizontal.
+  const logoTopY = Math.round((frameTop - d.logoH) / 2);
+
   // x da borda esquerda da ilustracao (alinhada a direita, a 8mm da borda).
   const illoLeftX = w - mm8 - illoMaxW;
-  // Linha horizontal do topo da moldura: do canto esquerdo da moldura ate
-  // ~8mm antes da ilustracao (quando houver); senao atravessa toda a largura.
+  // Linha horizontal do topo: do canto esquerdo da moldura ate ~8mm antes da
+  // ilustracao (quando houver); senao atravessa toda a largura util.
   const topLineW = temIlustracao
-    ? Math.max(d.logoW * 0.5, illoLeftX - mm8 - mm15)
-    : w - 2 * mm15;
-  // O bloco de conteudo (texto) vai ate a moldura direita, com 4mm de recuo.
+    ? Math.max(logoW * 0.4, illoLeftX - mm8 - mm15)
+    : usableW;
+  // Texto do corpo vai ate a moldura direita (4mm de recuo).
   const contentRight = mm15 + mm4;
-  // So o TITULO recua a mais pra nao encostar na ilustracao (4mm dela).
-  const tituloMarginRight = temIlustracao ? Math.max(0, mm8 + illoMaxW - mm15) : 0;
+  // So o titulo recua a mais pra manter 4mm da ilustracao.
+  const tituloMarginRight = temIlustracao ? Math.max(0, mm8 + illoMaxW + mm4 - mm15) : 0;
 
   // Rodape: lista de logos a mostrar (sindico [+ by] OU fallback Sindicompany).
   const footerImgs: { src: string; h: number; maxW: number }[] = [];
@@ -117,23 +141,17 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         overflow: "hidden", boxSizing: "border-box",
       }}
     >
-      {/* Logo do condominio: 8mm do topo e 8mm da borda esquerda, ocupando ate
-          ~metade da largura da arte. Sem logo -> nome do condominio. */}
-      {(() => {
-        const topLogo = props.logoCondominioUrl || null;
-        return (
-          <div style={{ position: "absolute", top: logoTopY, left: logoLeftX, width: d.logoW, height: d.logoH, display: "flex", alignItems: "center", zIndex: 1 }}>
-            {topLogo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={topLogo} alt={props.condominio} crossOrigin="anonymous" style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "left center", display: "block" }} />
-            ) : (
-              <div style={{ fontFamily: "'Provicali', 'Liberation Serif', serif", fontSize: d.titulo * 1.3, color: ONIX, lineHeight: 1.05, letterSpacing: "-0.01em" }}>
-                {props.condominio}
-              </div>
-            )}
+      {/* Logo do condominio */}
+      <div style={{ position: "absolute", top: logoTopY, left: logoLeftX, width: logoW, height: d.logoH, display: "flex", alignItems: "center", zIndex: 1 }}>
+        {props.logoCondominioUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={props.logoCondominioUrl} alt={props.condominio} crossOrigin="anonymous" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", objectPosition: "left center", display: "block" }} />
+        ) : (
+          <div style={{ fontFamily: "'Provicali', 'Liberation Serif', serif", fontSize: d.titulo * 1.3, color: ONIX, lineHeight: 1.05, letterSpacing: "-0.01em" }}>
+            {props.condominio}
           </div>
-        );
-      })()}
+        )}
+      </div>
 
       {/* Moldura mint: laterais a 15mm das bordas; ABERTA embaixo. */}
       <div
@@ -145,8 +163,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           zIndex: 1,
         }}
       />
-      {/* Linha horizontal do topo (15mm abaixo do logo). Quando ha ilustracao,
-          recua ~8mm antes dela, pra moldura nao encostar na imagem. */}
+      {/* Linha horizontal do topo. Quando ha ilustracao, recua ~8mm antes dela. */}
       <div
         style={{
           position: "absolute",
@@ -155,21 +172,21 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         }}
       />
 
-      {/* Ilustracao: canto superior direito, 8mm das bordas (topo e direita).
-          Fica POR CIMA da moldura e ULTRAPASSA a linha horizontal. */}
+      {/* Ilustracao: 8mm das bordas (topo e direita), POR CIMA da moldura. */}
       {props.ilustracaoUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
+          ref={imgRef}
           src={props.ilustracaoUrl}
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: illoTopY, right: mm8, maxHeight: illoMaxH, maxWidth: illoMaxW, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
+          onLoad={(e) => setIlloH((e.currentTarget as HTMLImageElement).offsetHeight)}
+          style={{ position: "absolute", top: illoTopY, right: mm8, maxHeight: illoMaxH, maxWidth: illoMaxW, display: "block", zIndex: 3 }}
         />
       )}
 
-      {/* Conteudo: titulo a 4mm da moldura; texto vai ate a moldura direita
-          (4mm de recuo). O titulo recua a mais pra nao encostar na ilustracao. */}
+      {/* Conteudo */}
       <div
         style={{
           position: "absolute",
