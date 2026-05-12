@@ -1,10 +1,19 @@
 /**
  * Arte do comunicado, renderizada em pixels exatos para os 2 formatos:
- *  - "a4"      : 794 x 1123 px  (A4 retrato @ 96dpi)
- *  - "celular" : 1080 x 1350 px (4:5, padrao Instagram/WhatsApp)
+ *  - "a4"      : 794 x 1123 px   (A4 retrato @ 96dpi, para impressao/mural)
+ *  - "celular" : 1080 x 1920 px  (Story do Instagram, 9:16)
  *
  * O mesmo no e usado para o preview na tela e como alvo do
  * html-to-image (download em PNG). Por isso usa estilos inline.
+ *
+ * Layout:
+ *  - topo esquerda: logotipo do condominio (do cadastro do condo)
+ *  - topo direita : ilustracao (enviada por comunicado), POR CIMA da
+ *    linha (moldura) que delimita a pagina
+ *  - moldura mint aberta embaixo (top + laterais, SEM linha embaixo)
+ *  - conteudo: "COMUNICADO IMPORTANTE" + titulo (mint) + texto justificado
+ *  - rodape (centro, sem linha): logotipo do(a) sindico(a). Se o sindico
+ *    for By Sindicompany, ao lado vem o logotipo "by sindicompany".
  */
 
 const MINT = "#56CFE1";
@@ -22,22 +31,23 @@ const DIMS: Record<Variant, {
   w: number; h: number; pad: number;
   frameTop: number; frameBot: number;
   logoH: number; logoW: number; illoH: number; illoW: number;
-  kicker: number; titulo: number; sub: number; body: number;
-  footerLogoH: number; byLogoH: number;
+  kicker: number; titulo: number; sub: number; body: number; bodyGap: number;
+  footerLogoH: number; byLogoH: number; contentPad: number;
 }> = {
   a4: {
-    w: 794, h: 1123, pad: 56,
-    frameTop: 168, frameBot: 132,
-    logoH: 64, logoW: 340, illoH: 168, illoW: 230,
-    kicker: 13, titulo: 30, sub: 19, body: 14.5,
-    footerLogoH: 38, byLogoH: 32,
+    w: 794, h: 1123, pad: 52,
+    frameTop: 166, frameBot: 128,
+    logoH: 66, logoW: 360, illoH: 150, illoW: 220,
+    kicker: 13, titulo: 31, sub: 19, body: 14.5, bodyGap: 11,
+    footerLogoH: 40, byLogoH: 34, contentPad: 34,
   },
   celular: {
-    w: 1080, h: 1350, pad: 70,
-    frameTop: 210, frameBot: 168,
-    logoH: 90, logoW: 470, illoH: 240, illoW: 320,
-    kicker: 17, titulo: 40, sub: 25, body: 19,
-    footerLogoH: 52, byLogoH: 44,
+    // Story do Instagram (1080x1920). Fontes ampliadas pra leitura no celular.
+    w: 1080, h: 1920, pad: 84,
+    frameTop: 360, frameBot: 270,
+    logoH: 130, logoW: 560, illoH: 360, illoW: 430,
+    kicker: 27, titulo: 60, sub: 38, body: 32, bodyGap: 26,
+    footerLogoH: 78, byLogoH: 64, contentPad: 64,
   },
 };
 
@@ -51,11 +61,11 @@ export interface ComunicadoArtProps {
   ilustracaoUrl?: string | null;
   /** Logo proprio do condominio (canto superior esquerdo). */
   logoCondominioUrl?: string | null;
-  /** Logo do(a) sindico(a)/administradora (rodape, quando By Sindicompany). */
+  /** Logo do(a) sindico(a)/administradora (rodape). */
   logoSindicoUrl?: string | null;
   /** Logo "by sindicompany" dos assets (rodape, quando By Sindicompany). */
   byLogoUrl?: string | null;
-  /** true quando o sindico do condo e By Sindicompany (2 logos no rodape). */
+  /** true quando o sindico do condo e By Sindicompany. */
   ehBy: boolean;
 }
 
@@ -65,27 +75,16 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
     .split(/\n{2,}/)
     .map((s) => s.trim())
     .filter(Boolean);
-  const topLogo = props.logoCondominioUrl || props.logoSindicoUrl || null;
 
-  // Rodape: By -> logo do sindico + logo by sindicompany; senao -> logo Sindicompany.
-  const footerNodes = props.ehBy && (props.logoSindicoUrl || props.byLogoUrl) ? (
-    <>
-      {props.logoSindicoUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={props.logoSindicoUrl} alt="" crossOrigin="anonymous" style={{ maxHeight: d.footerLogoH, maxWidth: d.w * 0.32, objectFit: "contain" }} />
-      )}
-      {props.logoSindicoUrl && props.byLogoUrl && (
-        <span style={{ width: 1, height: d.footerLogoH * 0.8, background: "rgba(0,0,0,.18)" }} />
-      )}
-      {props.byLogoUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={props.byLogoUrl} alt="by sindicompany" crossOrigin="anonymous" style={{ maxHeight: d.byLogoH, maxWidth: d.w * 0.3, objectFit: "contain" }} />
-      )}
-    </>
-  ) : (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={SINDICOMPANY_LOGO} alt="Sindicompany" crossOrigin="anonymous" style={{ maxHeight: d.footerLogoH, maxWidth: d.w * 0.42, objectFit: "contain" }} />
-  );
+  // Rodape: lista de logos a mostrar (sindico [+ by] OU fallback Sindicompany).
+  const footerImgs: { src: string; h: number; maxW: number }[] = [];
+  if (props.ehBy) {
+    if (props.logoSindicoUrl) footerImgs.push({ src: props.logoSindicoUrl, h: d.footerLogoH, maxW: d.w * 0.32 });
+    if (props.byLogoUrl) footerImgs.push({ src: props.byLogoUrl, h: d.byLogoH, maxW: d.w * 0.3 });
+    if (footerImgs.length === 0) footerImgs.push({ src: SINDICOMPANY_LOGO, h: d.footerLogoH, maxW: d.w * 0.42 });
+  } else {
+    footerImgs.push({ src: props.logoSindicoUrl || SINDICOMPANY_LOGO, h: d.footerLogoH, maxW: d.w * 0.42 });
+  }
 
   return (
     <div
@@ -96,7 +95,31 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         overflow: "hidden", boxSizing: "border-box",
       }}
     >
-      {/* Ilustracao no canto superior direito */}
+      {/* Logo do condominio no canto superior esquerdo */}
+      <div style={{ position: "absolute", top: d.pad * 0.7, left: d.pad, maxWidth: d.logoW, zIndex: 1 }}>
+        {props.logoCondominioUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={props.logoCondominioUrl} alt={props.condominio} crossOrigin="anonymous" style={{ maxHeight: d.logoH, maxWidth: d.logoW, objectFit: "contain" }} />
+        ) : (
+          <div style={{ fontFamily: "'Provicali', 'Liberation Serif', serif", fontSize: d.titulo, color: ONIX, lineHeight: 1.05, letterSpacing: "-0.01em" }}>
+            {props.condominio}
+          </div>
+        )}
+      </div>
+
+      {/* Moldura mint: topo + laterais, ABERTA embaixo (sem linha de delimitacao) */}
+      <div
+        style={{
+          position: "absolute",
+          top: d.frameTop, left: d.pad * 0.85, right: d.pad * 0.85, bottom: d.frameBot,
+          borderTop: `2px solid ${MINT}`,
+          borderLeft: `2px solid ${MINT}`,
+          borderRight: `2px solid ${MINT}`,
+          zIndex: 1,
+        }}
+      />
+
+      {/* Ilustracao no canto superior direito — ACIMA da linha da moldura */}
       {props.ilustracaoUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -104,55 +127,46 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: 0, right: 0, maxHeight: d.illoH + d.pad * 0.6, maxWidth: d.illoW, objectFit: "contain" }}
+          style={{ position: "absolute", top: 0, right: 0, maxHeight: d.illoH + d.frameTop * 0.45, maxWidth: d.illoW, objectFit: "contain", zIndex: 3 }}
         />
       )}
 
-      {/* Logo do condominio no canto superior esquerdo */}
-      <div style={{ position: "absolute", top: d.pad * 0.7, left: d.pad, maxWidth: d.logoW }}>
-        {topLogo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={topLogo} alt={props.condominio} crossOrigin="anonymous" style={{ maxHeight: d.logoH, maxWidth: d.logoW, objectFit: "contain" }} />
-        ) : (
-          <div style={{ fontFamily: "'Provicali', 'Liberation Serif', serif", fontSize: d.titulo, color: ONIX, lineHeight: 1, letterSpacing: "-0.01em" }}>
-            {props.condominio}
-          </div>
-        )}
-      </div>
-
-      {/* Moldura mint */}
-      <div style={{ position: "absolute", top: d.frameTop, left: d.pad * 0.85, right: d.pad * 0.85, bottom: d.frameBot, border: `2px solid ${MINT}` }} />
-
-      {/* Conteudo */}
+      {/* Conteudo dentro da moldura */}
       <div
         style={{
           position: "absolute",
-          top: d.frameTop + d.pad * 0.85,
-          left: d.pad * 0.85 + d.pad * 0.85,
-          right: d.pad * 0.85 + d.pad * 0.85,
-          bottom: d.frameBot + d.pad * 0.6,
-          display: "flex", flexDirection: "column",
+          top: d.frameTop + d.contentPad,
+          left: d.pad * 0.85 + d.contentPad,
+          right: d.pad * 0.85 + d.contentPad,
+          bottom: d.frameBot + d.contentPad * 0.6,
+          display: "flex", flexDirection: "column", zIndex: 2,
         }}
       >
-        <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.kicker, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: d.pad * 0.18 }}>
+        <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.kicker, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: d.contentPad * 0.3 }}>
           Comunicado importante
         </div>
         <h1 style={{ color: MINT_DARK, fontWeight: 800, fontSize: d.titulo, lineHeight: 1.08, margin: 0 }}>{props.titulo}</h1>
         {props.subtitulo && (
-          <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.sub, lineHeight: 1.15, marginTop: d.pad * 0.1 }}>{props.subtitulo}</div>
+          <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.sub, lineHeight: 1.15, marginTop: d.contentPad * 0.18 }}>{props.subtitulo}</div>
         )}
-        <div style={{ marginTop: d.pad * 0.7, fontSize: d.body, lineHeight: 1.6, color: INK, textAlign: "justify" }}>
+        <div style={{ marginTop: d.contentPad * 0.9, fontSize: d.body, lineHeight: 1.55, color: INK, textAlign: "justify" }}>
           {paras.length ? (
-            paras.map((p, i) => <p key={i} style={{ margin: `0 0 ${d.pad * 0.5}px` }}>{p}</p>)
+            paras.map((p, i) => <p key={i} style={{ margin: `0 0 ${d.bodyGap}px` }}>{p}</p>)
           ) : (
             <p style={{ margin: 0, color: "#9ca3af" }}>(sem texto)</p>
           )}
         </div>
       </div>
 
-      {/* Rodape: logotipos centralizados */}
-      <div style={{ position: "absolute", bottom: d.pad * 0.5, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: d.pad * 0.45 }}>
-        {footerNodes}
+      {/* Rodape: logotipo(s) centralizado(s), sem linha */}
+      <div style={{ position: "absolute", bottom: d.pad * 0.55, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: d.pad * 0.45, zIndex: 2 }}>
+        {footerImgs.map((it, i) => (
+          <span key={i} style={{ display: "flex", alignItems: "center", gap: d.pad * 0.45 }}>
+            {i > 0 && <span style={{ width: 1, height: it.h * 0.8, background: "rgba(0,0,0,.18)" }} />}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={it.src} alt="" crossOrigin="anonymous" style={{ maxHeight: it.h, maxWidth: it.maxW, objectFit: "contain" }} />
+          </span>
+        ))}
       </div>
     </div>
   );

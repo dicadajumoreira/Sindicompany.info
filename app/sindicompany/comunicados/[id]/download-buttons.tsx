@@ -45,11 +45,11 @@ export function DownloadButtons({ baseName }: { baseName: string }) {
         </button>
         <button
           type="button"
-          onClick={() => baixar("comunicado-celular", "celular", 2)}
+          onClick={() => baixar("comunicado-celular", "story", 1.5)}
           disabled={busy !== null}
           className="inline-flex items-center px-4 py-2 rounded-lg bg-mint-600 text-white text-sm font-medium hover:bg-mint-700 disabled:opacity-50"
         >
-          {busy === "celular" ? "Gerando…" : "Baixar Celular (PNG)"}
+          {busy === "story" ? "Gerando…" : "Baixar Celular / Story (PNG)"}
         </button>
       </div>
       {erro && <p className="text-xs text-rose-600">{erro}</p>}

@@ -67,7 +67,7 @@ export default async function ComunicadoPage({
   };
 
   const A4_SCALE = 0.46;
-  const CEL_SCALE = 0.34;
+  const CEL_SCALE = 0.27;
 
   return (
     <DashboardShell>
@@ -100,9 +100,9 @@ export default async function ComunicadoPage({
             </div>
           </div>
           <div>
-            <div className="text-xs uppercase tracking-wider text-g60 font-semibold mb-2">Formato Celular (4:5)</div>
-            <div style={{ width: 1080 * CEL_SCALE, height: 1350 * CEL_SCALE, overflow: "hidden", borderRadius: 8, boxShadow: "0 2px 14px rgba(0,0,0,.14)", background: "#FBFAF6" }}>
-              <div style={{ transform: `scale(${CEL_SCALE})`, transformOrigin: "top left", width: 1080, height: 1350 }}>
+            <div className="text-xs uppercase tracking-wider text-g60 font-semibold mb-2">Formato Celular (Story 9:16)</div>
+            <div style={{ width: 1080 * CEL_SCALE, height: 1920 * CEL_SCALE, overflow: "hidden", borderRadius: 8, boxShadow: "0 2px 14px rgba(0,0,0,.14)", background: "#FBFAF6" }}>
+              <div style={{ transform: `scale(${CEL_SCALE})`, transformOrigin: "top left", width: 1080, height: 1920 }}>
                 <ComunicadoArt nodeId="comunicado-celular" variant="celular" {...artProps} />
               </div>
             </div>
