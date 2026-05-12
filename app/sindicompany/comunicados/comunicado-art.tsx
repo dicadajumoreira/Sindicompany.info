@@ -74,11 +74,14 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   const corpo = (props.corpo || "").replace(/\r\n/g, "\n").replace(/\s*[‐‑‒–—―]\s*/g, ", ").trimEnd();
 
   const temIlustracao = !!props.ilustracaoUrl;
-  // Logo e ilustracao a 8mm das bordas (topo / esquerda / direita).
-  const logoTopY = mm8;
+  // Logo: 8mm da borda esquerda; verticalmente CENTRALIZADO entre a borda do
+  // topo e a linha horizontal da moldura (margem igual em cima e embaixo = 15mm).
   const logoLeftX = mm8;
-  // Linha horizontal da moldura: 15mm abaixo do bloco do logo.
+  const logoTopY = mm15;
+  // Linha horizontal da moldura: 15mm abaixo do bloco do logo (= centralizado).
   const frameTop = logoTopY + d.logoH + mm15;
+  // Ilustracao: 8mm da borda do topo e 8mm da direita.
+  const illoTopY = mm8;
   // Largura maxima da ilustracao (canto sup. direito) ~ 1/3 da largura util.
   const illoMaxW = Math.round((w - 2 * mm15) * 0.34);
   // x da borda esquerda da ilustracao (alinhada a direita, a 8mm da borda).
@@ -158,7 +161,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           alt=""
           aria-hidden="true"
           crossOrigin="anonymous"
-          style={{ position: "absolute", top: mm8, right: mm8, maxHeight: Math.round((frameTop - mm8) * 1.6), maxWidth: illoMaxW, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
+          style={{ position: "absolute", top: illoTopY, right: mm8, maxHeight: Math.round((frameTop - illoTopY) * 1.6), maxWidth: illoMaxW, objectFit: "contain", objectPosition: "right top", zIndex: 3 }}
         />
       )}
 
