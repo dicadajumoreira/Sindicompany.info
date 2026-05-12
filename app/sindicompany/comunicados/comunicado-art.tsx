@@ -43,14 +43,14 @@ const DIMS: Record<Variant, {
   a4: {
     // 15mm @ 96dpi (A4 = 210mm = 794px -> ~3.78px/mm).
     w: 794, h: 1123, frameBot: 100,
-    logoH: 190, mm15: 57, mm8: 30, mm5: 19, mm4: 15,
+    logoH: 285, mm15: 57, mm8: 30, mm5: 19, mm4: 15,
     titulo: 30, sub: 18, body: 14,
     footerLogoH: 38, byLogoH: 32, footerGap: 24,
   },
   celular: {
     // Story do Instagram (1080x1920). Margens proporcionais; fontes ampliadas.
     w: 1080, h: 1920, frameBot: 150,
-    logoH: 300, mm15: 84, mm8: 44, mm5: 28, mm4: 22,
+    logoH: 450, mm15: 84, mm8: 44, mm5: 28, mm4: 22,
     titulo: 52, sub: 33, body: 26,
     footerLogoH: 70, byLogoH: 58, footerGap: 36,
   },
@@ -90,9 +90,8 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   const logoW = Math.round(w * 0.5);
 
   // Ilustracao: canto superior direito, 8mm das bordas. Limites generosos.
-  const illoTopY = mm8;
-  const illoMaxW = Math.round(usableW * 0.33);
-  const illoMaxH = Math.round(usableW * 0.62);
+  const illoMaxW = Math.round(usableW * 0.34);
+  const illoMaxH = Math.round(usableW * 0.7);
 
   // Altura realmente renderizada da ilustracao, medida ao carregar a imagem.
   const imgRef = useRef<HTMLImageElement>(null);
@@ -102,20 +101,22 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
     if (el && el.complete && el.offsetHeight) setIlloH(el.offsetHeight);
   }, [props.ilustracaoUrl]);
 
-  // Base (y) da ilustracao e quanto ela "transpassa" a moldura (~12% da altura).
-  const illoBottomY = temIlustracao && illoH ? illoTopY + illoH : 0;
-  const illoOverlap = illoH ? Math.round(illoH * 0.12) : 0;
   // Linha horizontal da moldura:
   //  - sem ilustracao: 8mm abaixo do bloco do logo.
-  //  - com ilustracao: logo abaixo da base da ilustracao (a ilustracao a
-  //    transpassa, sem deixar espaco em branco entre as duas), respeitando um
-  //    limite minimo (pra o logo caber acima) e maximo (pra sobrar espaco pro texto).
-  const logoMinH = Math.round(d.logoH * 0.55);
+  //  - com ilustracao: a linha fica logo abaixo da BASE da ilustracao (a
+  //    ilustracao a transpassa ~10% da propria altura, sem espaco em branco
+  //    entre as duas). Respeita um minimo (pro logo caber acima) e um maximo
+  //    (pra sobrar espaco pro texto).
+  const illoOverlap = illoH ? Math.round(illoH * 0.1) : 0;
+  const logoMinH = Math.round(d.logoH * 0.62);
   const minFrameTop = logoTopY + logoMinH + mm4;
-  const maxFrameTop = Math.round(h * 0.36);
+  const maxFrameTop = Math.round(h * 0.4);
   const frameTop = temIlustracao && illoH
-    ? Math.min(maxFrameTop, Math.max(minFrameTop, illoBottomY - illoOverlap))
+    ? Math.min(maxFrameTop, Math.max(minFrameTop, mm8 + illoH - illoOverlap))
     : logoTopY + d.logoH + mm8;
+  // Posicao real da ilustracao: ancorada de modo que a BASE transpasse a linha.
+  const illoTopY = illoH ? Math.max(mm8, frameTop + illoOverlap - illoH) : mm8;
+  const illoBottomY = temIlustracao && illoH ? illoTopY + illoH : 0;
   // Altura util do bloco do logo (encolhe se a linha estiver alta).
   const logoBoxH = Math.min(d.logoH, frameTop - logoTopY - mm4);
 
