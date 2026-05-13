@@ -21,28 +21,52 @@ export function PrintButton({ baseName }: PrintButtonProps) {
         setBusy(null);
         return;
       }
+      // Em telas pequenas (mobile), reduz o pixel ratio pra nao estourar
+      // a memoria do canvas em iOS Safari / Android Chrome (geram OOM
+      // silencioso em A4 com pixelRatio 2+).
+      const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 900px)").matches;
+      const pixelRatio = isMobile ? 1.3 : 2;
       const { jsPDF } = await import("jspdf");
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       for (let i = 0; i < pages.length; i++) {
         // Dois passes ajudam a embutir imagens externas (logos, ilustracoes)
-        // com fontes carregadas. Pixel ratio 2 da nitidez razoavel pra A4
-        // sem inflar o arquivo demais.
-        await toPng(pages[i], { cacheBust: true, pixelRatio: 2 });
+        // com fontes carregadas.
+        await toPng(pages[i], { cacheBust: true, pixelRatio });
         const dataUrl = await toPng(pages[i], {
           cacheBust: true,
-          pixelRatio: 2,
+          pixelRatio,
           backgroundColor: "#FFFFFF",
         });
         if (i > 0) pdf.addPage("a4", "portrait");
-        // A4 em mm: 210 x 297. Adiciona cada pagina como imagem ocupando
-        // a folha inteira (full bleed).
         pdf.addImage(dataUrl, "PNG", 0, 0, 210, 297, undefined, "FAST");
       }
       const file = (baseName?.trim() || "revista-boas-vindas")
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
-      pdf.save(`${file || "revista-boas-vindas"}.pdf`);
+      const fileName = `${file || "revista-boas-vindas"}.pdf`;
+
+      // Em desktop o pdf.save() resolve. Em mobile o atributo download
+      // do <a> nao e confiavel (especialmente iOS Safari): abre num
+      // ObjectURL em nova aba, ai o usuario salva pelo proprio navegador.
+      if (isMobile) {
+        const blob = pdf.output("blob");
+        const url = URL.createObjectURL(blob);
+        const w = window.open(url, "_blank");
+        if (!w) {
+          // Pop-up bloqueado: faz o download tradicional como fallback.
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+        // Libera o ObjectURL depois de uns segundos pra a aba conseguir ler.
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      } else {
+        pdf.save(fileName);
+      }
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao gerar o PDF.");
     } finally {
