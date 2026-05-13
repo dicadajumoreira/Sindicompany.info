@@ -275,20 +275,14 @@ def build_inputs_from_db(
     if foto_hero:
         hero["foto"] = foto_hero
     else:
-        # IA falhou nas duas tentativas (especifica + generica). Cai pra
-        # foto de capa do editorial mensal pra nao deixar o hero vazio.
-        _foto_fallback = (ed.get("foto_capa_url") or "").strip()
-        if _foto_fallback:
-            print(
-                "[composer] agenda hero IA falhou, usando foto_capa_url do editorial como fallback",
-                flush=True,
-            )
-            hero["foto"] = _foto_fallback
-        else:
-            print(
-                "[composer] agenda hero IA falhou e nao ha foto_capa_url no editorial; hero ficara com gradiente placeholder",
-                flush=True,
-            )
+        # IA falhou em todas as tentativas. NAO usamos foto de capa do
+        # editorial como fallback pra nao colocar uma imagem nao
+        # relacionada ao destaque — preferimos o placeholder em gradient
+        # (renderizado pela secao CulturalAgenda quando hero.foto vazio).
+        print(
+            "[composer] agenda hero IA falhou; hero ficara com gradiente placeholder",
+            flush=True,
+        )
     agenda_inputs = {
         "mes_referencia": mes_ano,
         "hero": hero,

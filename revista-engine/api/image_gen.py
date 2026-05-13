@@ -195,37 +195,106 @@ def gerar_foto_receita(titulo: str, descricao: str = "") -> str | None:
     return _gerar_imagem(prompt, size="1792x1024")
 
 
+def _scene_for_category(cat: str) -> str:
+    """Cena evocativa por categoria, pra manter a foto da agenda
+    sempre relacionada ao tema do destaque (sem citar nomes proprios
+    que costumam disparar safety filter)."""
+    c = (cat or "").lower()
+    if any(x in c for x in ("teatro", "musical", "broadway", "peca")):
+        return (
+            "elegant Brazilian theater interior, red velvet curtains, warm "
+            "stage lights, ornate balcony, empty stage waiting for performance"
+        )
+    if any(x in c for x in ("cinema", "filme", "movie")):
+        return (
+            "cozy modern cinema auditorium, warm screen glow on rows of seats, "
+            "subtle ambient lighting, no audience"
+        )
+    if any(x in c for x in ("netflix", "streaming", "prime", "disney", "globoplay", "hbo")):
+        return (
+            "modern Brazilian living room at night with a large TV showing a "
+            "soft warm scene, ambient lamp light, cozy sofa, atmospheric"
+        )
+    if any(x in c for x in ("expos", "museu", "arte", "galer")):
+        return (
+            "contemporary Brazilian art gallery interior, framed abstract paintings "
+            "on white walls, polished concrete floor, soft museum lighting"
+        )
+    if any(x in c for x in ("musica", "show", "concerto", "festival", "banda")):
+        return (
+            "concert venue with stage lights, atmospheric haze, instruments on "
+            "stage, audience silhouettes in the foreground"
+        )
+    if any(x in c for x in ("gastr", "restaur", "comida", "culin")):
+        return (
+            "elegant Brazilian restaurant interior at night with warm lighting, "
+            "plated gourmet dishes on a wooden table, wine glasses, hands serving"
+        )
+    if any(x in c for x in ("danca", "ballet")):
+        return (
+            "dance studio with wooden floor and large mirrors, soft natural light "
+            "through tall windows, performer silhouette mid-movement"
+        )
+    return (
+        "cultural event venue in São Paulo at golden hour, warm string lights, "
+        "people enjoying the atmosphere, urban brick wall background"
+    )
+
+
 def gerar_foto_agenda_hero(titulo: str, categoria: str = "") -> str | None:
     """Gera foto pro destaque (hero) da agenda cultural.
 
-    Faz uma tentativa com prompt especifico (titulo + categoria) e, se
-    falhar (None), tenta um prompt generico/neutro pra agendas culturais.
+    Mantem a foto SEMPRE relacionada ao tema do destaque, com tres
+    tentativas em ordem de especificidade decrescente:
+     1) prompt completo (titulo + categoria);
+     2) sem o titulo (pode disparar safety por nome de obra), com cena
+        evocativa da categoria;
+     3) cena generica de evento cultural brasileiro.
     """
     if not titulo:
         print("[image_gen] agenda_hero: titulo vazio, pulando", flush=True)
         return None
-    prompt = (
-        f"Editorial photograph for cultural section, theme: '{titulo}'. "
-        f"Category: {categoria}. Style: high-end Brazilian magazine, candid, "
-        f"natural lighting, cinematic, real-world setting (theater stage, "
-        f"cinema, museum, gastronomic event, concert). Photorealistic, "
-        f"hyper-detailed, warm tones, no text, no logos, no graphic art."
+
+    base_style = (
+        "Style: high-end Brazilian magazine editorial photography, candid, "
+        "natural cinematic lighting, warm tones, photorealistic, hyper-detailed, "
+        "no text, no logos, no graphic art, no recognizable copyrighted "
+        "characters or branded posters."
     )
-    out = _gerar_imagem(prompt, size="1792x1024")
+
+    # Tentativa 1: titulo + categoria (mais especifica).
+    prompt1 = (
+        f"Editorial photograph evoking the mood of the cultural event "
+        f"'{titulo}' (category: {categoria or 'cultura'}). {base_style}"
+    )
+    out = _gerar_imagem(prompt1, size="1792x1024")
     if out:
         return out
 
-    print(f"[image_gen] agenda_hero: prompt especifico falhou, tentando generico", flush=True)
-    prompt_generico = (
-        "Editorial photograph for a Brazilian cultural events magazine section. "
-        "Composition: a culturally evocative scene from any of these venues: "
-        "theater interior with red curtain, art gallery with framed paintings, "
-        "cinema seats with warm screen glow, or jazz concert with stage lights. "
-        "Style: high-end magazine photography, natural cinematic lighting, "
-        "warm tones, photorealistic, hyper-detailed. No people facing the camera. "
-        "No text, no logos, no graphic art."
+    # Tentativa 2: cena tematica da categoria (sem o nome da obra).
+    print(
+        f"[image_gen] agenda_hero: prompt com titulo falhou, tentando cena tematica da categoria '{categoria}'",
+        flush=True,
     )
-    return _gerar_imagem(prompt_generico, size="1792x1024")
+    scene = _scene_for_category(categoria)
+    prompt2 = (
+        f"Editorial photograph for a Brazilian cultural section. "
+        f"Scene: {scene}. {base_style}"
+    )
+    out = _gerar_imagem(prompt2, size="1792x1024")
+    if out:
+        return out
+
+    # Tentativa 3: cena generica de evento cultural.
+    print(
+        "[image_gen] agenda_hero: cena tematica falhou, tentando cena cultural generica",
+        flush=True,
+    )
+    prompt3 = (
+        f"Editorial photograph for a Brazilian cultural events magazine section. "
+        f"Scene: {_scene_for_category('')}. {base_style}"
+    )
+    return _gerar_imagem(prompt3, size="1792x1024")
 
 
 def gerar_foto_lifestyle(titulo: str, kicker: str = "") -> str | None:
