@@ -217,11 +217,10 @@ def build_inputs_from_db(
     if ed.get("foto_capa_url"):
         cover_inputs["foto_capa"] = ed["foto_capa_url"]
     cover_inputs["chamadas"] = _build_chamadas(revista, editorial, condo)
-    # Capa tem fundo escuro (foto + overlay) -> LOGO 1 do By, se for By sindico.
-    # Em condominios By Sindicompany, o logo da capa varia conforme o brilho
-    # da foto de capa: fundo claro -> LOGO 2; fundo escuro -> LOGO 1.
-    _fundo_capa_escuro = not bool(revista.get("foto_capa_clara"))
-    _logo_capa = _logo_para_revista(revista, cd, fundo_escuro=_fundo_capa_escuro)
+    # Logo do topo da capa: sempre o logotipo do(a) sindico(a) cadastrado
+    # no condominio (campo cd.logo_url), independente de o sindico ser By
+    # Sindicompany ou nao.
+    _logo_capa = (cd.get("logo_url") or "").strip()
     if _logo_capa:
         cover_inputs["logo_url"] = _logo_capa
 
