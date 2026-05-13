@@ -211,7 +211,11 @@ export default async function RevistaBoasVindasPage({
               Carta de agradecimento
             </div>
             <h2 style={{ fontSize: "20pt", fontWeight: 800, margin: "0 0 6mm", lineHeight: 1.1 }}>
-              {ehEmpresa ? "Obrigado pela confiança." : "Obrigado pelo voto de confiança."}
+              {ehEmpresa
+                ? "Obrigado pela confiança."
+                : meta?.sindico_genero === "feminino"
+                  ? "Obrigada pelo voto de confiança."
+                  : "Obrigado pelo voto de confiança."}
             </h2>
             <div style={{ fontSize: "11.5pt", lineHeight: 1.6, color: "#3a3d4a", textAlign: "justify" }}>
               <p style={{ margin: "0 0 4mm" }}>
@@ -243,8 +247,7 @@ export default async function RevistaBoasVindasPage({
                 <p style={{ margin: "0 0 4mm" }}>
                   <strong>Faça parte da comunidade de WhatsApp do condomínio.</strong>{" "}
                   É lá que circulam avisos, novidades e o dia a dia do prédio.
-                  Entre por aqui: <span style={{ color: "#1A1C29", fontWeight: 700, wordBreak: "break-all" }}>{comunidadeUrl}</span>{" "}
-                  (o QR code também está na próxima página).
+                  O link e o QR code estão na próxima página.
                 </p>
               )}
               <p style={{ margin: "4mm 0 0", fontWeight: 700 }}>
