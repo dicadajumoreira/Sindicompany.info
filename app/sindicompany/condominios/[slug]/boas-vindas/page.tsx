@@ -158,7 +158,7 @@ export default async function RevistaBoasVindasPage({
         <div className="text-sm">
           Revista de Boas-Vindas · <strong>{nome}</strong>
         </div>
-        <PrintButton />
+        <PrintButton baseName={`revista-boas-vindas-${nome}`} />
       </div>
 
       <div className="bv-pages bg-onix-50 py-6">
