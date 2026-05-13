@@ -86,54 +86,84 @@ def _upload_supabase(bytes_: bytes, content_type: str = "image/png") -> str | No
 
 def _gerar_imagem(prompt: str, size: str = "1792x1024") -> str | None:
     """Gera imagem via OpenAI e devolve URL estável (no Supabase).
-    Retorna None se algo falhar."""
+    Retorna None se algo falhar. Tenta o modelo configurado e, em caso de
+    falha (ex.: conta sem acesso ao gpt-image-1), cai pro dall-e-3."""
     cli = _openai_client()
     if cli is None:
         print("[image_gen] OPENAI_API_KEY ausente", flush=True)
         return None
 
-    size_norm = _map_size(size)
-    quality = _quality_arg()
-    print(f"[image_gen] modelo={IMAGE_MODEL} size={size_norm} q={quality} prompt='{prompt[:60]}...'", flush=True)
-    try:
-        resp = cli.images.generate(
-            model=IMAGE_MODEL,
-            prompt=prompt,
-            size=size_norm,  # type: ignore[arg-type]
-            quality=quality,  # type: ignore[arg-type]
-            n=1,
-        )
-        if not resp.data:
-            print("[image_gen] resposta sem data", flush=True)
-            return None
-        item = resp.data[0]
-        # gpt-image-1 retorna b64_json; dall-e-3 retorna url (com response_format default).
-        b64 = getattr(item, "b64_json", None)
-        url = getattr(item, "url", None)
-    except Exception as e:  # noqa: BLE001
-        print(f"[image_gen] OpenAI falhou: {type(e).__name__}: {e}", flush=True)
-        return None
+    # Lista de modelos a tentar: o primario (env) + o fallback (dall-e-3).
+    candidatos = [IMAGE_MODEL]
+    if IMAGE_MODEL != "dall-e-3":
+        candidatos.append("dall-e-3")
 
-    if b64:
-        import base64
+    for modelo in candidatos:
+        is_dalle = modelo.startswith("dall-e")
+        # tamanhos e qualidade variam por modelo
+        if is_dalle:
+            if size in ("1536x1024",):
+                size_norm = "1792x1024"
+            elif size in ("1024x1536",):
+                size_norm = "1024x1792"
+            elif size == "auto":
+                size_norm = "1024x1024"
+            else:
+                size_norm = size
+            quality = "hd"
+        else:
+            if size == "1792x1024":
+                size_norm = "1536x1024"
+            elif size == "1024x1792":
+                size_norm = "1024x1536"
+            else:
+                size_norm = size
+            quality = "high"
+
+        print(f"[image_gen] modelo={modelo} size={size_norm} q={quality} prompt='{prompt[:60]}...'", flush=True)
         try:
-            content = base64.b64decode(b64)
+            resp = cli.images.generate(
+                model=modelo,
+                prompt=prompt,
+                size=size_norm,  # type: ignore[arg-type]
+                quality=quality,  # type: ignore[arg-type]
+                n=1,
+            )
+            if not resp.data:
+                print(f"[image_gen] {modelo}: resposta sem data", flush=True)
+                continue
+            item = resp.data[0]
+            b64 = getattr(item, "b64_json", None)
+            url = getattr(item, "url", None)
         except Exception as e:  # noqa: BLE001
-            print(f"[image_gen] decode b64 falhou: {type(e).__name__}: {e}", flush=True)
-            return None
-        return _upload_supabase(content)
+            print(f"[image_gen] {modelo} falhou: {type(e).__name__}: {e}", flush=True)
+            continue
 
-    if url:
-        # Modo legado dall-e-3: baixa e re-upload pra ter URL estavel.
-        try:
-            r = requests.get(url, timeout=60)
-            r.raise_for_status()
-            return _upload_supabase(r.content)
-        except Exception as e:  # noqa: BLE001
-            print(f"[image_gen] download/upload falhou: {type(e).__name__}: {e}", flush=True)
-            return None
+        if b64:
+            import base64
+            try:
+                content = base64.b64decode(b64)
+            except Exception as e:  # noqa: BLE001
+                print(f"[image_gen] {modelo}: decode b64 falhou: {type(e).__name__}: {e}", flush=True)
+                continue
+            up = _upload_supabase(content)
+            if up:
+                return up
+            continue
 
-    print("[image_gen] resposta sem b64_json nem url", flush=True)
+        if url:
+            try:
+                r = requests.get(url, timeout=60)
+                r.raise_for_status()
+                up = _upload_supabase(r.content)
+                if up:
+                    return up
+            except Exception as e:  # noqa: BLE001
+                print(f"[image_gen] {modelo}: download/upload falhou: {type(e).__name__}: {e}", flush=True)
+            continue
+
+        print(f"[image_gen] {modelo}: resposta sem b64_json nem url", flush=True)
+
     return None
 
 

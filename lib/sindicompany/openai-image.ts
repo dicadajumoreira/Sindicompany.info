@@ -101,90 +101,102 @@ export async function generateImage(
   const projId = (process.env.OPENAI_PROJECT ?? "").trim();
   if (projId) headers["OpenAI-Project"] = projId;
 
-  const model = _imageModel();
-  const size = _mapSizeForModel(opts.size ?? "1024x1792", model);
-  const quality = _mapQualityForModel(opts.quality, model);
-  const body: Record<string, unknown> = {
-    model,
-    prompt,
-    n: 1,
-    size,
-    quality,
-  };
-  if (model.startsWith("dall-e")) {
-    // Parametros so de dall-e-3.
-    body.style = opts.style ?? "natural";
-    body.response_format = "url";
-  }
-  // gpt-image-1 sempre retorna b64_json; sem response_format.
+  // Tenta o modelo configurado e, em caso de falha (ex.: conta sem acesso
+  // a gpt-image-1), cai pra dall-e-3.
+  const primario = _imageModel();
+  const candidatos = primario === "dall-e-3" ? ["dall-e-3"] : [primario, "dall-e-3"];
 
-  let res: Response;
-  try {
-    res = await fetch(OPENAI_API, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    });
-  } catch (e) {
-    return {
-      ok: false,
-      error: e instanceof Error ? `Falha de rede: ${e.message}` : "Falha de rede.",
+  let ultimoErro = "OpenAI falhou em todos os modelos disponíveis.";
+
+  for (const model of candidatos) {
+    const size = _mapSizeForModel(opts.size ?? "1024x1792", model);
+    const quality = _mapQualityForModel(opts.quality, model);
+    const body: Record<string, unknown> = {
+      model,
+      prompt,
+      n: 1,
+      size,
+      quality,
     };
-  }
+    if (model.startsWith("dall-e")) {
+      body.style = opts.style ?? "natural";
+      body.response_format = "url";
+    }
+    // gpt-image-1 sempre retorna b64_json; sem response_format.
 
-  if (!res.ok) {
-    let detail = "";
+    let res: Response;
     try {
-      const j = await res.json();
-      detail = j?.error?.message ?? JSON.stringify(j);
+      res = await fetch(OPENAI_API, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+    } catch (e) {
+      ultimoErro = e instanceof Error ? `Falha de rede (${model}): ${e.message}` : `Falha de rede (${model}).`;
+      console.error("[openai-image]", ultimoErro);
+      continue;
+    }
+
+    if (!res.ok) {
+      let detail = "";
+      try {
+        const j = await res.json();
+        detail = j?.error?.message ?? JSON.stringify(j);
+      } catch {
+        detail = await res.text().catch(() => "");
+      }
+      if (res.status === 401) {
+        const isProjKey = apiKey.startsWith("sk-proj-");
+        const dica = isProjKey
+          ? "Sua chave é do tipo 'project' (sk-proj-...). Defina também as variáveis OPENAI_PROJECT (proj_...) e/ou OPENAI_ORGANIZATION (org_...) no Vercel."
+          : "Verifique se OPENAI_API_KEY está correta no Vercel (sem espaços, sem aspas) e se a conta tem créditos.";
+        // 401 e auth — nao adianta tentar outro modelo, devolve direto.
+        return {
+          ok: false,
+          error: `OpenAI 401 (auth inválida): ${detail.slice(0, 160)}. ${dica}`,
+        };
+      }
+      ultimoErro = `${model} retornou ${res.status}: ${detail.slice(0, 200)}`;
+      console.error("[openai-image]", ultimoErro);
+      // 403/400 podem ser "model not available" -> tenta o proximo.
+      continue;
+    }
+
+    let json: { data?: Array<{ url?: string; b64_json?: string; revised_prompt?: string }> };
+    try {
+      json = await res.json();
     } catch {
-      detail = await res.text().catch(() => "");
+      ultimoErro = `${model}: OpenAI retornou resposta não-JSON.`;
+      continue;
     }
-    // Mensagens mais úteis pra status codes comuns
-    if (res.status === 401) {
-      const isProjKey = apiKey.startsWith("sk-proj-");
-      const dica = isProjKey
-        ? "Sua chave é do tipo 'project' (sk-proj-...). Defina também as variáveis OPENAI_PROJECT (proj_...) e/ou OPENAI_ORGANIZATION (org_...) no Vercel."
-        : "Verifique se OPENAI_API_KEY está correta no Vercel (sem espaços, sem aspas) e se a conta tem créditos.";
-      return {
-        ok: false,
-        error: `OpenAI 401 (auth inválida): ${detail.slice(0, 160)}. ${dica}`,
-      };
+
+    const item = json.data?.[0];
+    if (!item) {
+      ultimoErro = `${model}: resposta sem dados de imagem.`;
+      continue;
     }
-    return {
-      ok: false,
-      error: `OpenAI retornou ${res.status}: ${detail.slice(0, 200)}`,
-    };
+    if (item.b64_json) {
+      try {
+        const bytes = Buffer.from(item.b64_json, "base64");
+        return { ok: true, bytes, revised_prompt: item.revised_prompt };
+      } catch (e) {
+        ultimoErro = `${model}: falha ao decodificar b64_json: ${e instanceof Error ? e.message : String(e)}`;
+        continue;
+      }
+    }
+    if (item.url) {
+      try {
+        const bytes = await downloadImageBytes(item.url);
+        return { ok: true, bytes, url: item.url, revised_prompt: item.revised_prompt };
+      } catch (e) {
+        ultimoErro = `${model}: falha ao baixar imagem: ${e instanceof Error ? e.message : String(e)}`;
+        continue;
+      }
+    }
+    ultimoErro = `${model}: resposta sem url nem b64_json.`;
   }
 
-  let json: { data?: Array<{ url?: string; b64_json?: string; revised_prompt?: string }> };
-  try {
-    json = await res.json();
-  } catch {
-    return { ok: false, error: "OpenAI retornou resposta não-JSON." };
-  }
-
-  const item = json.data?.[0];
-  if (!item) return { ok: false, error: "Resposta sem dados de imagem." };
-  if (item.b64_json) {
-    let bytes: Buffer;
-    try {
-      bytes = Buffer.from(item.b64_json, "base64");
-    } catch (e) {
-      return { ok: false, error: `Falha ao decodificar b64_json: ${e instanceof Error ? e.message : String(e)}` };
-    }
-    return { ok: true, bytes, revised_prompt: item.revised_prompt };
-  }
-  if (item.url) {
-    let bytes: Buffer;
-    try {
-      bytes = await downloadImageBytes(item.url);
-    } catch (e) {
-      return { ok: false, error: `Falha ao baixar imagem da OpenAI: ${e instanceof Error ? e.message : String(e)}` };
-    }
-    return { ok: true, bytes, url: item.url, revised_prompt: item.revised_prompt };
-  }
-  return { ok: false, error: "Resposta da OpenAI sem url nem b64_json." };
+  return { ok: false, error: ultimoErro };
 }
 
 /** Baixa a imagem temporária da OpenAI e devolve os bytes. URL da OpenAI
