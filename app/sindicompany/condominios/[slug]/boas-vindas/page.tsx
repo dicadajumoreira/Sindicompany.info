@@ -86,14 +86,16 @@ export default async function RevistaBoasVindasPage({
   // = fundo claro) ao lado do logo do sindico no rodape de cada pagina.
   const ehBy = meta?.is_by_sindico === true;
   const byLogos = ehBy ? await listByLogoUrls().catch(() => [] as (string | null)[]) : [];
+  // Sempre LOGO 1 do By Sindicompany (versao p/ fundo escuro) — o rodape
+  // dos logos no canto inferior direito agora tem fundo escuro em todas
+  // as paginas.
   const byLogoDark = ehBy ? (byLogos[0] ?? byLogos[1] ?? null) : null;
-  const byLogoLight = ehBy ? (byLogos[1] ?? byLogos[0] ?? null) : null;
-  // Rodape com o logotipo do(a) sindico(a) no canto direito. Em paginas de
-  // fundo escuro, um leve fundo branco arredondado garante visibilidade.
-  // Quando o sindico e By Sindicompany, o logo dele aparece em DESTAQUE
-  // (maior) e o logo By Sindicompany vem ao lado, menor.
-  const footerLogos = (dark: boolean) => {
-    const byLogo = dark ? byLogoDark : byLogoLight;
+  // Rodape com o logotipo do(a) sindico(a) no canto inferior direito,
+  // sempre com fundo escuro (onix arredondado) pra dar legibilidade aos
+  // logos brancos. Quando o sindico e By Sindicompany, o logo dele
+  // aparece em DESTAQUE (maior) e o logo By Sindicompany vem ao lado.
+  const footerLogos = (_dark: boolean) => {
+    const byLogo = byLogoDark;
     if (!logoUrl && !byLogo) return null;
     const sindicoMaxH = ehBy ? "18mm" : "11mm";
     const sindicoMaxW = ehBy ? "60mm" : "42mm";
@@ -102,14 +104,16 @@ export default async function RevistaBoasVindasPage({
         style={{
           position: "absolute", bottom: "6mm", right: "8mm",
           display: "flex", alignItems: "center", gap: "3mm",
-          ...(dark ? { background: "rgba(255,255,255,.92)", borderRadius: "2mm", padding: "1.5mm 3mm" } : null),
+          background: "rgba(26,28,41,.92)",
+          borderRadius: "2mm",
+          padding: "2mm 3.5mm",
         }}
       >
         {logoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt="Logotipo do síndico" style={{ maxHeight: sindicoMaxH, maxWidth: sindicoMaxW, objectFit: "contain" }} />
+          <img src={logoUrl} alt="Logotipo do síndico" style={{ maxHeight: sindicoMaxH, maxWidth: sindicoMaxW, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
         )}
-        {byLogo && logoUrl && <span style={{ width: "1px", alignSelf: "stretch", background: dark ? "rgba(0,0,0,.15)" : "rgba(0,0,0,.12)", margin: "1mm 0" }} />}
+        {byLogo && logoUrl && <span style={{ width: "1px", alignSelf: "stretch", background: "rgba(255,255,255,.25)", margin: "1mm 0" }} />}
         {byLogo && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={byLogo} alt="By Sindicompany" style={{ maxHeight: "8mm", maxWidth: "26mm", objectFit: "contain" }} />
