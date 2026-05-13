@@ -139,15 +139,32 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
     illoBottomY - frameTop + mm4 - tituloEstAltura,
   );
 
-  // Rodape: lista de logos a mostrar (sindico [+ by] OU fallback Sindicompany).
+  // Rodape:
+  //  - Quando o sindico e By Sindicompany: layout "em destaque" -> logo do
+  //    sindico GRANDE e centralizado, com o logo By Sindicompany menor abaixo.
+  //  - Caso contrario: linha horizontal com o logo do sindico (ou Sindicompany
+  //    como fallback), centralizado.
+  const ehByDestaque = props.ehBy && (!!props.logoSindicoUrl || !!props.byLogoUrl);
+  const destaqueSindicoH = Math.round(d.footerLogoH * 2.1);
+  const destaqueGap = Math.round(mm4 * 0.7);
+  const destaqueStackH = ehByDestaque
+    ? (props.logoSindicoUrl ? destaqueSindicoH : 0)
+      + (props.logoSindicoUrl && props.byLogoUrl ? destaqueGap : 0)
+      + (props.byLogoUrl ? d.byLogoH : 0)
+    : 0;
+
   const footerImgs: { src: string; h: number; maxW: number }[] = [];
-  if (props.ehBy) {
-    if (props.logoSindicoUrl) footerImgs.push({ src: props.logoSindicoUrl, h: d.footerLogoH, maxW: w * 0.32 });
-    if (props.byLogoUrl) footerImgs.push({ src: props.byLogoUrl, h: d.byLogoH, maxW: w * 0.3 });
-    if (footerImgs.length === 0) footerImgs.push({ src: SINDICOMPANY_LOGO, h: d.footerLogoH, maxW: w * 0.42 });
-  } else {
-    footerImgs.push({ src: props.logoSindicoUrl || SINDICOMPANY_LOGO, h: d.footerLogoH, maxW: w * 0.42 });
+  if (!ehByDestaque) {
+    if (props.ehBy) {
+      // ehBy mas sem nenhum dos dois logos -> mostra Sindicompany default.
+      footerImgs.push({ src: SINDICOMPANY_LOGO, h: d.footerLogoH, maxW: w * 0.42 });
+    } else {
+      footerImgs.push({ src: props.logoSindicoUrl || SINDICOMPANY_LOGO, h: d.footerLogoH, maxW: w * 0.42 });
+    }
   }
+
+  // Reserva mais espaco embaixo quando o rodape e o stack em destaque.
+  const effectiveFrameBot = d.frameBot + (ehByDestaque ? Math.max(0, destaqueStackH - d.footerLogoH) : 0);
 
   return (
     <div
@@ -174,7 +191,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
       <div
         style={{
           position: "absolute",
-          top: frameTop, left: mm15, right: mm15, bottom: d.frameBot,
+          top: frameTop, left: mm15, right: mm15, bottom: effectiveFrameBot,
           borderLeft: `2px solid ${MINT}`,
           borderRight: `2px solid ${MINT}`,
           zIndex: 1,
@@ -210,7 +227,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
           top: frameTop + mm4,
           left: mm15 + mm4,
           right: contentRight,
-          bottom: d.frameBot + mm4 * 2,
+          bottom: effectiveFrameBot + mm4 * 2,
           display: "flex", flexDirection: "column", overflow: "hidden", zIndex: 2,
         }}
       >
@@ -223,16 +240,31 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         </div>
       </div>
 
-      {/* Rodape: logotipo(s) centralizado(s), sem linha */}
-      <div style={{ position: "absolute", bottom: mm15 * 0.6, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: d.footerGap, zIndex: 2 }}>
-        {footerImgs.map((it, i) => (
-          <span key={i} style={{ display: "flex", alignItems: "center", gap: d.footerGap }}>
-            {i > 0 && <span style={{ width: 1, height: it.h * 0.8, background: "rgba(0,0,0,.18)" }} />}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={it.src} alt="" crossOrigin="anonymous" style={{ maxHeight: it.h, maxWidth: it.maxW, objectFit: "contain" }} />
-          </span>
-        ))}
-      </div>
+      {/* Rodape:
+          - ehBy: stack vertical com sindico GRANDE em destaque + by sindicompany pequeno embaixo
+          - senao: linha horizontal com o(s) logo(s) centralizado(s) */}
+      {ehByDestaque ? (
+        <div style={{ position: "absolute", bottom: Math.round(mm15 * 0.5), left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: destaqueGap, zIndex: 2 }}>
+          {props.logoSindicoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={props.logoSindicoUrl} alt="" crossOrigin="anonymous" style={{ maxHeight: destaqueSindicoH, maxWidth: w * 0.6, objectFit: "contain", display: "block" }} />
+          )}
+          {props.byLogoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={props.byLogoUrl} alt="by sindicompany" crossOrigin="anonymous" style={{ maxHeight: d.byLogoH, maxWidth: w * 0.35, objectFit: "contain", display: "block" }} />
+          )}
+        </div>
+      ) : (
+        <div style={{ position: "absolute", bottom: mm15 * 0.6, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: d.footerGap, zIndex: 2 }}>
+          {footerImgs.map((it, i) => (
+            <span key={i} style={{ display: "flex", alignItems: "center", gap: d.footerGap }}>
+              {i > 0 && <span style={{ width: 1, height: it.h * 0.8, background: "rgba(0,0,0,.18)" }} />}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={it.src} alt="" crossOrigin="anonymous" style={{ maxHeight: it.h, maxWidth: it.maxW, objectFit: "contain" }} />
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
