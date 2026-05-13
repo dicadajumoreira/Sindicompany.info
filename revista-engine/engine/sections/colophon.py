@@ -54,6 +54,7 @@ class Colophon(Section):
         ano = inputs.get("ano_edicao", 0)
         sindico = (inputs.get("nome_sindico") or "").strip()
         cargo_sindico = (inputs.get("cargo_sindico") or "Síndico(a) Profissional").strip()
+        by_logo_url = (inputs.get("by_logo_url") or "").strip()
         label_sindico = (inputs.get("label_sindico") or "Síndico").strip()
         equipe_condo = list(inputs.get("equipe_condominio") or [])
         equipe_sc = list(inputs.get("equipe_sindicompany") or [])
@@ -166,7 +167,7 @@ class Colophon(Section):
     {fontes_html}
 
     <footer class="exp__footer">
-      <span class="exp__brand">Sindicompany ®</span>
+      {f'<img class="exp__brand-img" src="{_escape(by_logo_url)}" alt="by sindicompany" />' if by_logo_url else '<span class="exp__brand">Sindicompany ®</span>'}
       <span class="exp__legal">
         Revista produzida por equipe editorial dedicada, sob curadoria
         da {_escape(label_sindico.lower())} responsável e da gestão do condomínio.
@@ -323,7 +324,7 @@ class Colophon(Section):
     padding-top: 10px;
     display: flex;
     gap: 14px;
-    align-items: baseline;
+    align-items: center;
   }}
 
   .exp__brand {{
@@ -332,6 +333,14 @@ class Colophon(Section):
     font-weight: 600;
     color: var(--onix);
     flex-shrink: 0;
+  }}
+
+  .exp__brand-img {{
+    height: 28px;
+    width: auto;
+    flex-shrink: 0;
+    object-fit: contain;
+    display: block;
   }}
 
   .exp__legal {{

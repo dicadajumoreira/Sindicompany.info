@@ -482,6 +482,12 @@ def build_inputs_from_db(
     colophon_inputs["nome_condominio"] = condominio
     colophon_inputs["numero_edicao"] = int(revista["mes"])
     colophon_inputs["ano_edicao"] = int(revista["ano"])
+    # No rodape do expediente, mostra o logo "by sindicompany" (slot 2 dos
+    # Assets BySindicompany — versao p/ fundo claro) no lugar do texto
+    # "Sindicompany (R)".
+    _by_logo_rodape = _by_logo_url(2)
+    if _by_logo_rodape:
+        colophon_inputs["by_logo_url"] = _by_logo_rodape
     if cd.get("sindico_nome"):
         colophon_inputs["nome_sindico"] = cd["sindico_nome"]
         colophon_inputs["cargo_sindico"] = _cargo_sindico(condo)
