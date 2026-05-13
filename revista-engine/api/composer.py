@@ -562,10 +562,23 @@ def build_inputs_from_db(
     back_cover_inputs: dict[str, Any] = {
         "proxima_edicao_label": f"Próxima edição: {MESES[proximo_mes - 1].lower()} {proximo_ano}",
     }
-    # Contracapa tem fundo onix (escuro) -> LOGO 1 do By, se for By sindico.
-    _logo_contracapa = _logo_para_revista(revista, cd, fundo_escuro=True)
-    if _logo_contracapa:
-        back_cover_inputs["logo_url"] = _logo_contracapa
+    # Contracapa tem fundo onix (escuro).
+    #  - sindico By Sindicompany: o logotipo do sindico aparece em DESTAQUE
+    #    (grande, centralizado) e o logo "by sindicompany" vai no rodape
+    #    (menor, abaixo).
+    #  - caso contrario: o logo do sindico (cd['logo_url']) ocupa o centro.
+    if revista.get("is_by_sindico"):
+        _logo_sindico = (cd.get("logo_url") or "").strip()
+        if _logo_sindico:
+            back_cover_inputs["logo_url"] = _logo_sindico
+        # By Sindicompany logo (slot 1 = versao p/ fundo escuro).
+        _by = _by_logo_url(1)
+        if _by:
+            back_cover_inputs["by_logo_url"] = _by
+    else:
+        _logo_contracapa = _logo_para_revista(revista, cd, fundo_escuro=True)
+        if _logo_contracapa:
+            back_cover_inputs["logo_url"] = _logo_contracapa
 
     sequence: list[tuple[str, Any, dict[str, Any]]] = [
         ("S01 Capa",                   Cover(),                cover_inputs),

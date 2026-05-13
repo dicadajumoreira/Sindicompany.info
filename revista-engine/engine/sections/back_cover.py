@@ -54,8 +54,9 @@ class BackCover(Section):
     def _render(self, inputs: dict, theme, *, dims, scale: str) -> str:
         proxima = inputs.get("proxima_edicao_label", "").strip() if inputs else ""
         logo_url = (inputs.get("logo_url") or "").strip() if inputs else ""
+        by_logo_url = (inputs.get("by_logo_url") or "").strip() if inputs else ""
+        from html import escape as _esc
         if logo_url:
-            from html import escape as _esc
             logo_svg = (
                 f'<img src="{_esc(logo_url)}" alt="Logo" '
                 f'style="max-width:100%;height:auto;object-fit:contain;" />'
@@ -74,6 +75,7 @@ class BackCover(Section):
             top_pad = 220
             tagline_margin_top = 64
             handle_margin_bottom = 90
+            by_logo_max_width = 200
         else:  # mobile
             logo_max_width = 360
             tagline_size = 64
@@ -82,10 +84,15 @@ class BackCover(Section):
             top_pad = 160
             tagline_margin_top = 56
             handle_margin_bottom = 80
+            by_logo_max_width = 160
 
         proxima_block = (
             f'<div class="back-cover__proxima">{_escape(proxima)}</div>'
             if proxima else ""
+        )
+        by_logo_block = (
+            f'<div class="back-cover__by"><img src="{_esc(by_logo_url)}" alt="by sindicompany" /></div>'
+            if by_logo_url else ""
         )
 
         return f"""
@@ -94,6 +101,7 @@ class BackCover(Section):
     <div class="back-cover__logo">{logo_svg}</div>
   </div>
   <footer class="back-cover__footer">
+    {by_logo_block}
     {proxima_block}
   </footer>
 </section>
@@ -132,6 +140,21 @@ class BackCover(Section):
     display: block;
   }}
 
+  .back-cover__by {{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 8px;
+  }}
+
+  .back-cover__by img {{
+    max-width: {by_logo_max_width}px;
+    max-height: 56px;
+    object-fit: contain;
+    display: block;
+    opacity: 0.92;
+  }}
+
   .back-cover__tagline {{
     font-family: '{theme.fonte_titulos.family}', 'Liberation Serif', 'DejaVu Serif', Georgia, serif;
     font-size: {tagline_size}px;
@@ -146,8 +169,8 @@ class BackCover(Section):
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
+    align-items: center;
+    gap: 8px;
     margin-bottom: {handle_margin_bottom - 64}px;
   }}
 
