@@ -239,9 +239,9 @@ export default async function RevistaBoasVindasPage({
                 </p>
               )}
               <p style={{ margin: "0 0 4mm" }}>
-                A partir de agora, contamos com a estrutura da Sindicompany para
-                profissionalizar a gestão, e com vocês para construir uma
-                convivência melhor todos os dias.
+                A partir de agora, contamos com a sua participação para construir
+                uma convivência melhor todos os dias, com transparência e cuidado
+                com o nosso lar.
               </p>
               {comunidadeUrl && (
                 <p style={{ margin: "0 0 4mm" }}>
