@@ -6,12 +6,14 @@ import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { condoFromSlug, slugifyCondo } from "@/lib/sindicompany/condominios";
 import {
+  copiarEquipeParaTodosCondos,
   renameCondoMeta,
   upsertCondoMeta,
   uploadCondoFoto,
   uploadCondoLogo,
   type CondoMetaInput,
 } from "@/lib/sindicompany/condominios-db";
+import { CONDOMINIOS } from "@/lib/sindicompany/condominios";
 import type { Genero } from "@/lib/sindicompany/db";
 import { describeError } from "@/lib/sindicompany/errors";
 
@@ -263,4 +265,21 @@ export async function renomearCondominioAction(formData: FormData): Promise<void
   const novoSlug = slugifyCondo(novo);
   revalidatePath(`/sindicompany/condominios/${novoSlug}`);
   redirect(`/sindicompany/condominios/${novoSlug}?renamed=1`);
+}
+
+export async function copiarEquipeParaTodosAction(formData: FormData): Promise<void> {
+  await requireAuth();
+  const slug = getStr(formData, "slug");
+  const nomeOrigem = getStr(formData, "condo_nome") || condoFromSlug(slug) || "";
+  if (!nomeOrigem) backWithError(slug, "Nao consegui identificar o condominio.");
+  let resultado: { atualizados: number; criados: number; fonte: string };
+  try {
+    resultado = await copiarEquipeParaTodosCondos(nomeOrigem, CONDOMINIOS);
+  } catch (e) {
+    backWithError(slug, `Nao foi possivel copiar a equipe: ${describeError(e)}`);
+  }
+  revalidatePath("/sindicompany/condominios");
+  const total = resultado.atualizados + resultado.criados;
+  const msg = `Equipe copiada para ${total} condominio(s). Atualizados: ${resultado.atualizados}; criados: ${resultado.criados}.`;
+  redirect(`/sindicompany/condominios/${slug}?equipe_copiada=${encodeURIComponent(msg)}`);
 }

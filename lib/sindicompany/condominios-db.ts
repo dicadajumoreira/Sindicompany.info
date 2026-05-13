@@ -102,6 +102,62 @@ export async function listCondoMetas(): Promise<CondoMeta[]> {
 }
 
 /**
+ * Copia o `equipe_atendimento` de um condominio para TODOS os outros
+ * condominios:
+ *  - atualiza os metas existentes (sem mexer em outros campos);
+ *  - cria metas mínimas (so com nome + equipe) pros nomes da lista
+ *    estatica que ainda nao tem meta row.
+ *
+ * Retorna { atualizados, criados, fonte }.
+ */
+export async function copiarEquipeParaTodosCondos(
+  nomeOrigem: string,
+  nomesEstaticos: readonly string[],
+): Promise<{ atualizados: number; criados: number; fonte: string }> {
+  const supabase = createAdminClient();
+  const { data: meta, error: errSel } = await supabase
+    .from(TABLE)
+    .select("nome, equipe_atendimento")
+    .eq("nome", nomeOrigem)
+    .maybeSingle();
+  if (errSel) throw errSel;
+  if (!meta) {
+    throw new Error(`Condominio "${nomeOrigem}" nao tem cadastro.`);
+  }
+  const equipe = meta.equipe_atendimento ?? null;
+  if (!Array.isArray(equipe) || equipe.length === 0) {
+    throw new Error(`O condominio "${nomeOrigem}" nao tem equipe de atendimento cadastrada.`);
+  }
+
+  // 1) Atualiza todos os outros metas existentes (preservando os demais campos).
+  const { data: upd, error: errUpd } = await supabase
+    .from(TABLE)
+    .update({ equipe_atendimento: equipe })
+    .neq("nome", nomeOrigem)
+    .select("nome");
+  if (errUpd) throw errUpd;
+  const atualizados = upd?.length ?? 0;
+
+  // 2) Pra cada nome da lista estatica que ainda nao tem meta row, insere
+  //    um meta minimo so com nome + equipe.
+  const { data: existentes, error: errAll } = await supabase
+    .from(TABLE)
+    .select("nome");
+  if (errAll) throw errAll;
+  const existentesSet = new Set((existentes ?? []).map((r) => r.nome));
+  const faltantes = nomesEstaticos.filter((n) => !existentesSet.has(n));
+  let criados = 0;
+  if (faltantes.length > 0) {
+    const rows = faltantes.map((nome) => ({ nome, equipe_atendimento: equipe }));
+    const { error: errIns } = await supabase.from(TABLE).insert(rows);
+    if (errIns) throw errIns;
+    criados = faltantes.length;
+  }
+
+  return { atualizados, criados, fonte: nomeOrigem };
+}
+
+/**
  * Renomeia um condominio em todas as tabelas relevantes (condominios_meta,
  * revistas, comunicados). Cuidado: o nome e usado como chave logica em varias
  * referencias de texto livre. Falha se o novo nome ja existir em meta.

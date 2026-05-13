@@ -10,7 +10,11 @@ import {
   listCondoMetas,
   type CondoMeta,
 } from "@/lib/sindicompany/condominios-db";
-import { renomearCondominioAction, salvarCondoMetaAction } from "./actions";
+import {
+  copiarEquipeParaTodosAction,
+  renomearCondominioAction,
+  salvarCondoMetaAction,
+} from "./actions";
 
 /** Resolve o nome do condominio a partir do slug: tenta a lista
  *  canonica estatica; se nao achar, procura nos condominios criados
@@ -60,6 +64,7 @@ export default async function EditarCondoPage({
   const sp = await searchParams;
   const error = getStr(sp, "error");
   const renamed = getStr(sp, "renamed") === "1";
+  const equipeCopiada = getStr(sp, "equipe_copiada");
 
   const { meta, error: dbError } = await safeGetMeta(nome);
 
@@ -109,6 +114,11 @@ export default async function EditarCondoPage({
       {renamed && (
         <div className="mb-5 rounded-lg bg-mint-50 border border-mint-100 px-4 py-3 text-sm text-mint-700">
           Condomínio renomeado com sucesso.
+        </div>
+      )}
+      {equipeCopiada && (
+        <div className="mb-5 rounded-lg bg-mint-50 border border-mint-100 px-4 py-3 text-sm text-mint-700">
+          {equipeCopiada}
         </div>
       )}
 
@@ -645,6 +655,32 @@ export default async function EditarCondoPage({
           </Link>
         </div>
       </form>
+
+      {/* Copiar a equipe deste condominio para TODOS os outros condominios
+          cadastrados (e criar cadastro minimo pros da lista estatica que
+          ainda nao tem). Util quando a equipe operacional e a mesma. */}
+      {meta?.equipe_atendimento && meta.equipe_atendimento.length > 0 && (
+        <section className="mt-10 rounded-xl border border-onix-100 bg-white p-6">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-2">
+            Equipe de atendimento — replicar para todos
+          </h2>
+          <p className="text-sm text-g60 mb-4">
+            Copia a equipe de atendimento deste condomínio para <strong>todos os outros</strong>{" "}
+            condomínios. Para os que ainda não têm cadastro, cria um cadastro mínimo com a
+            equipe. Outros campos dos demais condomínios não são alterados.
+          </p>
+          <form action={copiarEquipeParaTodosAction}>
+            <input type="hidden" name="slug" value={slugifyCondo(nome)} />
+            <input type="hidden" name="condo_nome" value={nome} />
+            <button
+              type="submit"
+              className="inline-flex items-center px-4 py-2 rounded-lg bg-mint-600 text-white text-sm font-medium hover:bg-mint-700"
+            >
+              Replicar esta equipe para todos os condomínios
+            </button>
+          </form>
+        </section>
+      )}
 
       {/* Renomear condominio (acao separada). Atualiza meta + referencias em
           revistas e comunicados. Itens da lista estatica que tenham o mesmo
