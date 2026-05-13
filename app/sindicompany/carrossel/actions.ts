@@ -17,7 +17,6 @@ import { describeError } from "@/lib/sindicompany/errors";
 import { dispatchGenerateCarrossel } from "@/lib/sindicompany/engine";
 import {
   buildCarrosselPromptSafe,
-  downloadImageBytes,
   generateImage,
 } from "@/lib/sindicompany/openai-image";
 import {
@@ -386,15 +385,9 @@ export async function generateFotoCapaWithAI(input: {
     };
   }
 
-  let bytes: Buffer;
-  try {
-    bytes = await downloadImageBytes(result.url);
-  } catch (e) {
-    return {
-      ok: false,
-      error: e instanceof Error ? e.message : "Falha ao baixar a imagem gerada.",
-    };
-  }
+  // generateImage ja devolve os bytes prontos (decoded de b64_json no caso
+  // do gpt-image-1, ou baixados da URL temporaria no caso do dall-e-3).
+  let bytes: Buffer = result.bytes;
 
   // DALL-E 3 só entrega 1024x1024, 1024x1792 ou 1792x1024 — nenhum é
   // 4:5. Pedimos vertical (1024x1792) e cropamos pro centro 4:5

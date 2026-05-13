@@ -10,9 +10,12 @@ const OPENAI_API = "https://api.openai.com/v1/images/generations";
 
 export interface DalleResult {
   ok: true;
-  /** URL temporária da OpenAI (expira em ~1h) — precisa ser baixada e
-   *  re-uploadada pra storage estável. */
-  url: string;
+  /** Bytes da imagem ja decodificados (PNG). Sempre presente; pronto pra
+   *  upload no Storage sem precisar baixar de uma URL temporaria. */
+  bytes: Buffer;
+  /** URL temporaria — so e preenchida no modo legado dall-e-3 com
+   *  response_format=url. Preferir `bytes`. */
+  url?: string;
   /** Prompt revisado pela OpenAI (eles ajustam pra moderation/quality). */
   revised_prompt?: string;
 }
@@ -23,14 +26,49 @@ export interface DalleError {
 }
 
 interface DalleOptions {
-  /** "1024x1024" (quadrada), "1792x1024" (landscape) ou "1024x1792" (portrait/4:5).
-   *  Pra carrossel Instagram (4:5), use portrait. */
-  size?: "1024x1024" | "1792x1024" | "1024x1792";
-  /** "standard" ou "hd". HD custa o dobro mas dá detalhes melhores. */
-  quality?: "standard" | "hd";
-  /** "vivid" (dramático) ou "natural" (mais sóbrio). Para editorial Sindicompany,
-   *  "natural" funciona melhor (estilo fotojornalismo). */
+  /** "1024x1024" (quadrada), "1792x1024" / "1536x1024" (landscape) ou
+   *  "1024x1792" / "1024x1536" (portrait). O codigo normaliza pro modelo
+   *  ativo automaticamente. */
+  size?: "1024x1024" | "1792x1024" | "1024x1792" | "1536x1024" | "1024x1536" | "auto";
+  /** Qualidade. "standard"/"hd" sao do dall-e-3; "low"/"medium"/"high"/"auto"
+   *  sao do gpt-image-1. Mapeado automaticamente. */
+  quality?: "standard" | "hd" | "low" | "medium" | "high" | "auto";
+  /** Apenas dall-e-3. Ignorado por gpt-image-1. */
   style?: "vivid" | "natural";
+}
+
+/** Modelo padrao: gpt-image-1 (atual da OpenAI). Pra forcar dall-e-3,
+ *  defina OPENAI_IMAGE_MODEL=dall-e-3 na env. */
+function _imageModel(): string {
+  return (process.env.OPENAI_IMAGE_MODEL || "gpt-image-1").trim();
+}
+
+function _mapSizeForModel(size: string, model: string): string {
+  if (model.startsWith("dall-e")) {
+    // dall-e-3 aceita: 1024x1024, 1792x1024, 1024x1792.
+    if (size === "1536x1024") return "1792x1024";
+    if (size === "1024x1536") return "1024x1792";
+    if (size === "auto") return "1024x1024";
+    return size;
+  }
+  // gpt-image-1 aceita: 1024x1024, 1536x1024, 1024x1536, auto.
+  if (size === "1792x1024") return "1536x1024";
+  if (size === "1024x1792") return "1024x1536";
+  return size;
+}
+
+function _mapQualityForModel(q: string | undefined, model: string): string {
+  if (!q) return model.startsWith("dall-e") ? "hd" : "high";
+  if (model.startsWith("dall-e")) {
+    if (q === "high") return "hd";
+    if (q === "medium" || q === "low") return "standard";
+    if (q === "auto") return "hd";
+    return q;
+  }
+  // gpt-image-1
+  if (q === "hd") return "high";
+  if (q === "standard") return "medium";
+  return q;
 }
 
 export async function generateImage(
@@ -63,15 +101,22 @@ export async function generateImage(
   const projId = (process.env.OPENAI_PROJECT ?? "").trim();
   if (projId) headers["OpenAI-Project"] = projId;
 
-  const body = {
-    model: "dall-e-3",
+  const model = _imageModel();
+  const size = _mapSizeForModel(opts.size ?? "1024x1792", model);
+  const quality = _mapQualityForModel(opts.quality, model);
+  const body: Record<string, unknown> = {
+    model,
     prompt,
     n: 1,
-    size: opts.size ?? "1024x1792",
-    quality: opts.quality ?? "hd",
-    style: opts.style ?? "natural",
-    response_format: "url",
+    size,
+    quality,
   };
+  if (model.startsWith("dall-e")) {
+    // Parametros so de dall-e-3.
+    body.style = opts.style ?? "natural";
+    body.response_format = "url";
+  }
+  // gpt-image-1 sempre retorna b64_json; sem response_format.
 
   let res: Response;
   try {
@@ -112,7 +157,7 @@ export async function generateImage(
     };
   }
 
-  let json: { data?: Array<{ url?: string; revised_prompt?: string }> };
+  let json: { data?: Array<{ url?: string; b64_json?: string; revised_prompt?: string }> };
   try {
     json = await res.json();
   } catch {
@@ -120,10 +165,26 @@ export async function generateImage(
   }
 
   const item = json.data?.[0];
-  if (!item?.url) {
-    return { ok: false, error: "Resposta sem URL de imagem." };
+  if (!item) return { ok: false, error: "Resposta sem dados de imagem." };
+  if (item.b64_json) {
+    let bytes: Buffer;
+    try {
+      bytes = Buffer.from(item.b64_json, "base64");
+    } catch (e) {
+      return { ok: false, error: `Falha ao decodificar b64_json: ${e instanceof Error ? e.message : String(e)}` };
+    }
+    return { ok: true, bytes, revised_prompt: item.revised_prompt };
   }
-  return { ok: true, url: item.url, revised_prompt: item.revised_prompt };
+  if (item.url) {
+    let bytes: Buffer;
+    try {
+      bytes = await downloadImageBytes(item.url);
+    } catch (e) {
+      return { ok: false, error: `Falha ao baixar imagem da OpenAI: ${e instanceof Error ? e.message : String(e)}` };
+    }
+    return { ok: true, bytes, url: item.url, revised_prompt: item.revised_prompt };
+  }
+  return { ok: false, error: "Resposta da OpenAI sem url nem b64_json." };
 }
 
 /** Baixa a imagem temporária da OpenAI e devolve os bytes. URL da OpenAI

@@ -22,9 +22,38 @@ import requests
 from api.supabase_client import _client as _sb_client
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "dall-e-3")
+# Default: gpt-image-1 (modelo atual de imagem da OpenAI). Para forcar
+# dall-e-3, defina OPENAI_IMAGE_MODEL=dall-e-3.
+IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-1")
 
 BUCKET = "editoriais-fotos"
+
+
+def _is_dalle() -> bool:
+    return IMAGE_MODEL.startswith("dall-e")
+
+
+def _map_size(size: str) -> str:
+    """Normaliza o tamanho pro modelo ativo."""
+    if _is_dalle():
+        # dall-e-3: 1024x1024, 1792x1024 (landscape), 1024x1792 (portrait).
+        if size in ("1536x1024",):
+            return "1792x1024"
+        if size in ("1024x1536",):
+            return "1024x1792"
+        if size == "auto":
+            return "1024x1024"
+        return size
+    # gpt-image-1: 1024x1024, 1536x1024 (landscape), 1024x1536 (portrait), auto.
+    if size == "1792x1024":
+        return "1536x1024"
+    if size == "1024x1792":
+        return "1024x1536"
+    return size
+
+
+def _quality_arg() -> str:
+    return "hd" if _is_dalle() else "high"
 
 
 def _openai_client():
@@ -56,38 +85,56 @@ def _upload_supabase(bytes_: bytes, content_type: str = "image/png") -> str | No
 
 
 def _gerar_imagem(prompt: str, size: str = "1792x1024") -> str | None:
-    """Gera imagem via DALL-E e devolve URL estável (no Supabase).
+    """Gera imagem via OpenAI e devolve URL estável (no Supabase).
     Retorna None se algo falhar."""
     cli = _openai_client()
     if cli is None:
         print("[image_gen] OPENAI_API_KEY ausente", flush=True)
         return None
 
-    print(f"[image_gen] gerando '{prompt[:60]}...' ({size})", flush=True)
+    size_norm = _map_size(size)
+    quality = _quality_arg()
+    print(f"[image_gen] modelo={IMAGE_MODEL} size={size_norm} q={quality} prompt='{prompt[:60]}...'", flush=True)
     try:
         resp = cli.images.generate(
             model=IMAGE_MODEL,
             prompt=prompt,
-            size=size,  # type: ignore[arg-type]
-            quality="hd",
+            size=size_norm,  # type: ignore[arg-type]
+            quality=quality,  # type: ignore[arg-type]
             n=1,
         )
-        url = resp.data[0].url if resp.data else None
-        if not url:
-            print("[image_gen] resposta sem URL", flush=True)
+        if not resp.data:
+            print("[image_gen] resposta sem data", flush=True)
             return None
+        item = resp.data[0]
+        # gpt-image-1 retorna b64_json; dall-e-3 retorna url (com response_format default).
+        b64 = getattr(item, "b64_json", None)
+        url = getattr(item, "url", None)
     except Exception as e:  # noqa: BLE001
-        print(f"[image_gen] DALL-E falhou: {type(e).__name__}: {e}", flush=True)
+        print(f"[image_gen] OpenAI falhou: {type(e).__name__}: {e}", flush=True)
         return None
 
-    # Baixa e re-upload pra ter URL estável
-    try:
-        r = requests.get(url, timeout=60)
-        r.raise_for_status()
-        return _upload_supabase(r.content)
-    except Exception as e:  # noqa: BLE001
-        print(f"[image_gen] download/upload falhou: {type(e).__name__}: {e}", flush=True)
-        return None
+    if b64:
+        import base64
+        try:
+            content = base64.b64decode(b64)
+        except Exception as e:  # noqa: BLE001
+            print(f"[image_gen] decode b64 falhou: {type(e).__name__}: {e}", flush=True)
+            return None
+        return _upload_supabase(content)
+
+    if url:
+        # Modo legado dall-e-3: baixa e re-upload pra ter URL estavel.
+        try:
+            r = requests.get(url, timeout=60)
+            r.raise_for_status()
+            return _upload_supabase(r.content)
+        except Exception as e:  # noqa: BLE001
+            print(f"[image_gen] download/upload falhou: {type(e).__name__}: {e}", flush=True)
+            return None
+
+    print("[image_gen] resposta sem b64_json nem url", flush=True)
+    return None
 
 
 def gerar_foto_materia_capa(titulo: str, subtitulo: str) -> str | None:
