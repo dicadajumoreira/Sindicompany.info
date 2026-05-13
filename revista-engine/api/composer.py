@@ -214,12 +214,7 @@ def build_inputs_from_db(
         cover_inputs["tema_materia"] = ed.get("materia_capa_titulo", "")
     if ed.get("materia_capa_subtitulo"):
         cover_inputs["subtitulo"] = ed["materia_capa_subtitulo"]
-    # A foto da capa e a foto do(a) sindico(a) cadastrada no condominio
-    # (campo sindico_foto_path em condominios_meta). Cai pra foto do
-    # editorial mensal apenas se o sindico nao tiver foto.
-    if sindico_foto_url:
-        cover_inputs["foto_capa"] = sindico_foto_url
-    elif ed.get("foto_capa_url"):
+    if ed.get("foto_capa_url"):
         cover_inputs["foto_capa"] = ed["foto_capa_url"]
     cover_inputs["chamadas"] = _build_chamadas(revista, editorial, condo)
     # Capa tem fundo escuro (foto + overlay) -> LOGO 1 do By, se for By sindico.
