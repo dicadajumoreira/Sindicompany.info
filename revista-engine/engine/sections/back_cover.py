@@ -61,6 +61,15 @@ class BackCover(Section):
                 f'<img src="{_esc(logo_url)}" alt="Logo" '
                 f'style="max-width:100%;height:auto;object-fit:contain;" />'
             )
+        elif by_logo_url:
+            # Sem logo do sindico cadastrado mas e By Sindicompany: usa o
+            # logo "by sindicompany" como destaque (em vez do Sindicompany generico).
+            logo_svg = (
+                f'<img src="{_esc(by_logo_url)}" alt="by sindicompany" '
+                f'style="max-width:100%;height:auto;object-fit:contain;" />'
+            )
+            # Se o by ja virou destaque, nao repete embaixo.
+            by_logo_url = ""
         else:
             logo_svg = theme.logo_svg("white")
 

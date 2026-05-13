@@ -32,6 +32,7 @@ export interface Revista {
   gestor_foto_url: string | null;
   gestor_titulo: string | null;
   is_by_sindico: boolean;
+  foto_capa_clara: boolean;
   // Conteúdo do condomínio
   drive_manutencao_url: string | null;
   manutencao_zip_url: string | null;
@@ -71,6 +72,7 @@ export interface RevistaInput {
   gestor_foto_url?: string;
   gestor_titulo?: string;
   is_by_sindico?: boolean;
+  foto_capa_clara?: boolean;
   drive_manutencao_url?: string;
   manutencao_zip_url?: string;
   manutencao_capa_url?: string;

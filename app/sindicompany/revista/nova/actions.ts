@@ -119,6 +119,8 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
   const eventos_zip_url =
     getStr(formData, "eventos_zip_url_uploaded") || undefined;
 
+  const foto_capa_clara = getBool(formData, "foto_capa_clara");
+
   const notas_editor = getStr(formData, "notas_editor");
   const carta_sindico_texto = getStr(formData, "carta_sindico_texto");
   const carta_gestor_texto = getStr(formData, "carta_gestor_texto");
@@ -156,6 +158,7 @@ export async function novaRevistaAction(formData: FormData): Promise<void> {
     gestor_foto_url,
     gestor_titulo,
     is_by_sindico: !!meta.is_by_sindico,
+    foto_capa_clara,
     drive_manutencao_url: drive_manutencao_url || undefined,
     manutencao_zip_url: manutencao_zip_url || undefined,
     manutencao_capa_url: manutencao_capa_url || undefined,

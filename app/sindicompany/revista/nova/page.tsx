@@ -422,6 +422,17 @@ export default async function NovaEdicaoPage({
             </label>
           </Field>
 
+          <Field
+            label="Foto da capa tem fundo claro?"
+            hint="Marque se a foto de capa for clara (predominantemente clara). Em condomínios By Sindicompany, o logo em destaque na capa usa o LOGO 2 (versão para fundo claro) quando marcado; senão usa o LOGO 1 (versão para fundo escuro)."
+          >
+            <label className="flex items-center gap-2 text-sm mt-1">
+              <input type="checkbox" name="foto_capa_clara" value="on"
+                     defaultChecked={v("foto_capa_clara") === "on"} />
+              Fundo claro
+            </label>
+          </Field>
+
           <Field label="Fotos dos eventos (arquivo .zip)"
                  hint="ZIP com 1 subpasta por evento. Cada subpasta vira uma página exclusiva. Upload direto pro Storage.">
             <DirectUploadField
