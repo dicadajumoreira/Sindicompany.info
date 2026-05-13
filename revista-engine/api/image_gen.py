@@ -22,9 +22,10 @@ import requests
 from api.supabase_client import _client as _sb_client
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-# Default: gpt-image-1 (modelo atual de imagem da OpenAI). Para forcar
-# dall-e-3, defina OPENAI_IMAGE_MODEL=dall-e-3.
-IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-1")
+# Default: dall-e-3 (estavel, disponivel sem verificacao de organizacao).
+# Para usar gpt-image-1 (modelo mais novo, exige verificacao), defina
+# OPENAI_IMAGE_MODEL=gpt-image-1.
+IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "dall-e-3")
 
 BUCKET = "editoriais-fotos"
 
@@ -93,10 +94,13 @@ def _gerar_imagem(prompt: str, size: str = "1792x1024") -> str | None:
         print("[image_gen] OPENAI_API_KEY ausente", flush=True)
         return None
 
-    # Lista de modelos a tentar: o primario (env) + o fallback (dall-e-3).
+    # Lista de modelos a tentar: o primario (env) + o outro como fallback.
+    # Cobre contas com acesso so a um deles (gpt-image-1 exige verificacao
+    # de organizacao; dall-e-3 funciona em qualquer conta com creditos).
+    alt = "gpt-image-1" if IMAGE_MODEL == "dall-e-3" else "dall-e-3"
     candidatos = [IMAGE_MODEL]
-    if IMAGE_MODEL != "dall-e-3":
-        candidatos.append("dall-e-3")
+    if alt != IMAGE_MODEL:
+        candidatos.append(alt)
 
     for modelo in candidatos:
         is_dalle = modelo.startswith("dall-e")

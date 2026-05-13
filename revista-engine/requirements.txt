@@ -5,8 +5,9 @@ Pillow>=10.0
 # Supabase (DB + Storage) — usado pelo api/generate.py
 supabase>=2.5.0
 
-# Geração de texto (cartas personalizadas)
-openai>=1.50.0
+# Geração de texto (cartas) + imagens (DALL-E 3 / gpt-image-1).
+# >=1.70 garante suporte ao gpt-image-1 (lançado 2025).
+openai>=1.70.0
 
 # Drive integration (frente futura)
 gdown>=5.0.0

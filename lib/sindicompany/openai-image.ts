@@ -37,10 +37,11 @@ interface DalleOptions {
   style?: "vivid" | "natural";
 }
 
-/** Modelo padrao: gpt-image-1 (atual da OpenAI). Pra forcar dall-e-3,
- *  defina OPENAI_IMAGE_MODEL=dall-e-3 na env. */
+/** Modelo padrao: dall-e-3 (estavel e disponivel pra contas sem
+ *  verificacao de organizacao). Pra usar gpt-image-1 (mais moderno mas
+ *  exige verificacao), defina OPENAI_IMAGE_MODEL=gpt-image-1 na env. */
 function _imageModel(): string {
-  return (process.env.OPENAI_IMAGE_MODEL || "gpt-image-1").trim();
+  return (process.env.OPENAI_IMAGE_MODEL || "dall-e-3").trim();
 }
 
 function _mapSizeForModel(size: string, model: string): string {
@@ -101,10 +102,11 @@ export async function generateImage(
   const projId = (process.env.OPENAI_PROJECT ?? "").trim();
   if (projId) headers["OpenAI-Project"] = projId;
 
-  // Tenta o modelo configurado e, em caso de falha (ex.: conta sem acesso
-  // a gpt-image-1), cai pra dall-e-3.
+  // Tenta o modelo configurado e, em caso de falha, tenta o outro
+  // (dall-e-3 <-> gpt-image-1). Cobre contas com acesso so a um deles.
   const primario = _imageModel();
-  const candidatos = primario === "dall-e-3" ? ["dall-e-3"] : [primario, "dall-e-3"];
+  const alt = primario === "dall-e-3" ? "gpt-image-1" : "dall-e-3";
+  const candidatos = Array.from(new Set([primario, alt]));
 
   let ultimoErro = "OpenAI falhou em todos os modelos disponíveis.";
 
