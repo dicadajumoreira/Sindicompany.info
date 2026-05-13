@@ -54,26 +54,31 @@ export function PrintButton({ baseName }: PrintButtonProps) {
       const fileName = `${file || "revista-boas-vindas"}.pdf`;
 
       const blob = pdf.output("blob");
+      const url = URL.createObjectURL(blob);
 
+      // Tenta o download via <a download>. Funciona em desktop e em iOS
+      // Safari 13+. Em iOS antigo o atributo download e ignorado e o
+      // browser navega pro blob URL — tambem ok, mostra o PDF inline e
+      // o usuario usa o "Compartilhar" do sistema.
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // Fallback explicito pra iOS Safari, que as vezes nao reage ao
+      // .click() programatico em <a download> e nem mostra o PDF nem
+      // baixa. Se a aba continuar viva 600ms depois (sinal que nao
+      // baixou nem navegou), forca a navegacao pro blob URL.
       if (isMobile) {
-        // Em mobile NAO abrimos nova aba (suspende a aba origem e trava
-        // a geracao). Navega a propria aba pro blob URL: iOS Safari e
-        // Android Chrome renderizam o PDF inline e o usuario usa
-        // "Compartilhar" / "Salvar em arquivos" do sistema.
-        const url = URL.createObjectURL(blob);
-        // Pequeno delay pra a UI atualizar o "concluido" antes da nav.
         setProgresso("Abrindo PDF…");
-        window.location.href = url;
-        // Nao revoga aqui: a navegacao em si vai limpar a aba.
+        setTimeout(() => {
+          // Se a navegacao ja saiu, esse codigo nao executa.
+          window.location.href = url;
+        }, 600);
       } else {
-        // Desktop: download tradicional (pdf.save() usa <a download>).
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
       }
     } catch (e) {
