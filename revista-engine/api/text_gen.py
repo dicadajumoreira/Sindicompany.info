@@ -332,8 +332,10 @@ def clean_text(text: str) -> str:
     # — / – / – etc → ", " (mais natural que apagar)
     out = DASH_RX.sub(", ", out)
 
-    # Espaço antes de pontuação (típico de pós-processamento bagunçado)
-    out = re.sub(r"\s+([,;:.!?])", r"\1", out)
+    # Espaço antes de pontuação (típico de pós-processamento bagunçado).
+    # Usa [ \t]+ (nao \s+) pra preservar quebras de linha do autor — sao
+    # renderizadas como <br> nas cartas e em outros corpos de texto.
+    out = re.sub(r"[ \t]+([,;:.!?])", r"\1", out)
 
     # Espaços duplicados
     out = re.sub(r"[ \t]+", " ", out)

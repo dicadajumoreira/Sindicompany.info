@@ -270,6 +270,9 @@ class Letter(Section):
   .letter__p {{
     margin-bottom: {corpo_size}px;
     text-indent: 0;
+    /* Preserva quebras de linha dentro do paragrafo (digitadas pelo
+       autor) — sem isso, single newlines somem na renderizacao. */
+    white-space: pre-line;
   }}
 
   /* Primeiro parágrafo levemente maior pra destaque editorial */
@@ -322,7 +325,10 @@ def _strip_inline_citations(text: str) -> str:
     out = _RE_PAREN_URL.sub("", out)
     out = _RE_BARE_URL.sub("", out)
     out = re.sub(r"[ \t]{2,}", " ", out)
-    out = re.sub(r"\s+([.,;:!?])", r"\1", out)
+    # IMPORTANTE: usar [ \t]+ (nao \s+) pra nao colapsar newlines proximos
+    # de pontuacao — quebras de linha dentro do paragrafo precisam ser
+    # preservadas pra serem renderizadas via white-space: pre-line.
+    out = re.sub(r"[ \t]+([.,;:!?])", r"\1", out)
     return out.strip()
 
 
