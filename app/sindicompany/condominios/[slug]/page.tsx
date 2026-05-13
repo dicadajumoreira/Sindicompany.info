@@ -10,7 +10,7 @@ import {
   listCondoMetas,
   type CondoMeta,
 } from "@/lib/sindicompany/condominios-db";
-import { salvarCondoMetaAction } from "./actions";
+import { renomearCondominioAction, salvarCondoMetaAction } from "./actions";
 
 /** Resolve o nome do condominio a partir do slug: tenta a lista
  *  canonica estatica; se nao achar, procura nos condominios criados
@@ -59,6 +59,7 @@ export default async function EditarCondoPage({
 
   const sp = await searchParams;
   const error = getStr(sp, "error");
+  const renamed = getStr(sp, "renamed") === "1";
 
   const { meta, error: dbError } = await safeGetMeta(nome);
 
@@ -103,6 +104,11 @@ export default async function EditarCondoPage({
       {(error || dbError) && (
         <div className="mb-5 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-900">
           {error || dbError}
+        </div>
+      )}
+      {renamed && (
+        <div className="mb-5 rounded-lg bg-mint-50 border border-mint-100 px-4 py-3 text-sm text-mint-700">
+          Condomínio renomeado com sucesso.
         </div>
       )}
 
@@ -639,6 +645,40 @@ export default async function EditarCondoPage({
           </Link>
         </div>
       </form>
+
+      {/* Renomear condominio (acao separada). Atualiza meta + referencias em
+          revistas e comunicados. Itens da lista estatica que tenham o mesmo
+          nome continuam aparecendo na lista, sem cadastro. */}
+      <section className="mt-10 rounded-xl border border-onix-100 bg-white p-6">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700 mb-2">
+          Renomear condomínio
+        </h2>
+        <p className="text-sm text-g60 mb-4">
+          Use este campo para corrigir o nome do condomínio. A alteração é
+          aplicada no cadastro e em todas as revistas e comunicados que
+          referenciam este nome.
+        </p>
+        <form action={renomearCondominioAction} className="flex flex-wrap items-end gap-3">
+          <input type="hidden" name="slug" value={slugifyCondo(nome)} />
+          <input type="hidden" name="condo_nome_atual" value={nome} />
+          <div className="flex-1 min-w-[240px]">
+            <label className="block text-xs font-medium text-onix-900 mb-1">Novo nome</label>
+            <input
+              name="condo_nome_novo"
+              defaultValue={nome}
+              required
+              maxLength={140}
+              className="w-full rounded-lg border border-onix-200 px-3 py-2 text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-onix-900 text-white text-sm font-medium hover:bg-onix-800"
+          >
+            Renomear
+          </button>
+        </form>
+      </section>
     </main>
   );
 }

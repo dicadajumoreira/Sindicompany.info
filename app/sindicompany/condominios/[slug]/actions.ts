@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { condoFromSlug, slugifyCondo } from "@/lib/sindicompany/condominios";
 import {
+  renameCondoMeta,
   upsertCondoMeta,
   uploadCondoFoto,
   uploadCondoLogo,
@@ -240,4 +241,26 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   revalidatePath("/sindicompany/condominios");
   revalidatePath(`/sindicompany/condominios/${slugifyCondo(nome)}`);
   redirect(`/sindicompany/condominios?saved=${slug}`);
+}
+
+export async function renomearCondominioAction(formData: FormData): Promise<void> {
+  await requireAuth();
+  const slug = getStr(formData, "slug");
+  const atual = getStr(formData, "condo_nome_atual") || condoFromSlug(slug) || "";
+  const novo = getStr(formData, "condo_nome_novo");
+  if (!atual) backWithError(slug, "Nao consegui identificar o nome atual do condominio.");
+  if (!novo) backWithError(slug, "Informe o novo nome do condominio.");
+  if (atual === novo) {
+    redirect(`/sindicompany/condominios/${slug}`);
+  }
+  try {
+    await renameCondoMeta(atual, novo);
+  } catch (e) {
+    backWithError(slug, `Nao foi possivel renomear: ${describeError(e)}`);
+  }
+  revalidatePath("/sindicompany/condominios");
+  revalidatePath(`/sindicompany/condominios/${slug}`);
+  const novoSlug = slugifyCondo(novo);
+  revalidatePath(`/sindicompany/condominios/${novoSlug}`);
+  redirect(`/sindicompany/condominios/${novoSlug}?renamed=1`);
 }

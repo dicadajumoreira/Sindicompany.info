@@ -101,6 +101,48 @@ export async function listCondoMetas(): Promise<CondoMeta[]> {
   return (data ?? []) as CondoMeta[];
 }
 
+/**
+ * Renomeia um condominio em todas as tabelas relevantes (condominios_meta,
+ * revistas, comunicados). Cuidado: o nome e usado como chave logica em varias
+ * referencias de texto livre. Falha se o novo nome ja existir em meta.
+ */
+export async function renameCondoMeta(
+  nomeAtual: string,
+  novoNome: string,
+): Promise<void> {
+  const supabase = createAdminClient();
+  const atual = nomeAtual.trim();
+  const novo = novoNome.trim();
+  if (!atual || !novo) throw new Error("Nome atual e novo nome sao obrigatorios.");
+  if (atual === novo) return;
+
+  // Existe meta com o novo nome ja? Se sim, recusa pra nao misturar dados.
+  const { data: existente, error: errSel } = await supabase
+    .from(TABLE).select("nome").eq("nome", novo).maybeSingle();
+  if (errSel) throw errSel;
+  if (existente) {
+    throw new Error(`Ja existe um condominio cadastrado como "${novo}".`);
+  }
+
+  // Atualiza meta. Se a linha nao existir (condo so na lista estatica), insere.
+  const { data: metaAtual, error: errSelAtual } = await supabase
+    .from(TABLE).select("nome").eq("nome", atual).maybeSingle();
+  if (errSelAtual) throw errSelAtual;
+  if (metaAtual) {
+    const { error: errUpd } = await supabase
+      .from(TABLE).update({ nome: novo }).eq("nome", atual);
+    if (errUpd) throw errUpd;
+  } else {
+    const { error: errIns } = await supabase
+      .from(TABLE).insert({ nome: novo });
+    if (errIns) throw errIns;
+  }
+
+  // Atualiza referencias em revistas e comunicados (texto livre).
+  await supabase.from("revistas").update({ condominio: novo }).eq("condominio", atual);
+  await supabase.from("comunicados").update({ condominio: novo }).eq("condominio", atual);
+}
+
 export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta> {
   const supabase = createAdminClient();
   const temGestor = !!(input.gestor_nome && input.gestor_nome.trim());
