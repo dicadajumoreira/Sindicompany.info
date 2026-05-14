@@ -99,10 +99,10 @@ class BackCover(Section):
             f'<div class="back-cover__proxima">{_escape(proxima)}</div>'
             if proxima else ""
         )
-        by_logo_block = (
-            f'<div class="back-cover__by"><img src="{_esc(by_logo_url)}" alt="by sindicompany" /></div>'
-            if by_logo_url else ""
-        )
+        # Logo "by sindicompany" no rodape removido a pedido. Mantido o
+        # parametro de input pra retrocompatibilidade do composer.
+        by_logo_block = ""
+        _ = by_logo_url  # silencia "var usada so na branch acima"
 
         return f"""
 <section class="page back-cover" data-format="{scale}">

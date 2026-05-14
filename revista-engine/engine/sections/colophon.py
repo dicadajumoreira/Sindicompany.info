@@ -167,7 +167,6 @@ class Colophon(Section):
     {fontes_html}
 
     <footer class="exp__footer">
-      {f'<img class="exp__brand-img" src="{_escape(by_logo_url)}" alt="by sindicompany" />' if by_logo_url else '<span class="exp__brand">Sindicompany ®</span>'}
       <span class="exp__legal">
         Revista produzida por equipe editorial dedicada, sob curadoria
         da {_escape(label_sindico.lower())} responsável e da gestão do condomínio.
