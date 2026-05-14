@@ -7,7 +7,6 @@ import {
   getCondoFotoPublicUrl,
   getCondoMeta,
   gestorTitulo,
-  listByLogoUrls,
   listCondoMetas,
   listPatternUrls,
 } from "@/lib/sindicompany/condominios-db";
@@ -79,46 +78,6 @@ export default async function RevistaBoasVindasPage({
         aria-hidden="true"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity, pointerEvents: "none" }}
       />
-    );
-  };
-
-  // Sindico By Sindicompany: usa o logo By (slot 1 = fundo escuro, slot 2
-  // = fundo claro) ao lado do logo do sindico no rodape de cada pagina.
-  const ehBy = meta?.is_by_sindico === true;
-  const byLogos = ehBy ? await listByLogoUrls().catch(() => [] as (string | null)[]) : [];
-  // Sempre LOGO 1 do By Sindicompany (versao p/ fundo escuro) — o rodape
-  // dos logos no canto inferior direito agora tem fundo escuro em todas
-  // as paginas.
-  const byLogoDark = ehBy ? (byLogos[0] ?? byLogos[1] ?? null) : null;
-  // Rodape com o logotipo do(a) sindico(a) no canto inferior direito,
-  // sempre com fundo escuro (onix arredondado) pra dar legibilidade aos
-  // logos brancos. Quando o sindico e By Sindicompany, o logo dele
-  // aparece em DESTAQUE (maior) e o logo By Sindicompany vem ao lado.
-  const footerLogos = (_dark: boolean) => {
-    const byLogo = byLogoDark;
-    if (!logoUrl && !byLogo) return null;
-    const sindicoMaxH = ehBy ? "18mm" : "11mm";
-    const sindicoMaxW = ehBy ? "60mm" : "42mm";
-    return (
-      <div
-        style={{
-          position: "absolute", bottom: "6mm", right: "8mm",
-          display: "flex", alignItems: "center", gap: "3mm",
-          background: "rgba(26,28,41,.92)",
-          borderRadius: "2mm",
-          padding: "2mm 3.5mm",
-        }}
-      >
-        {logoUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt="Logotipo do síndico" style={{ maxHeight: sindicoMaxH, maxWidth: sindicoMaxW, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
-        )}
-        {byLogo && logoUrl && <span style={{ width: "1px", alignSelf: "stretch", background: "rgba(255,255,255,.25)", margin: "1mm 0" }} />}
-        {byLogo && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={byLogo} alt="By Sindicompany" style={{ maxHeight: "8mm", maxWidth: "26mm", objectFit: "contain" }} />
-        )}
-      </div>
     );
   };
 
@@ -198,7 +157,6 @@ export default async function RevistaBoasVindasPage({
             <div style={{ position: "absolute", bottom: "9mm", left: "8mm", textAlign: "left", color: "rgba(255,255,255,.7)", fontSize: "9pt", letterSpacing: ".1em" }}>
               Revista de Boas-Vindas
             </div>
-            {footerLogos(true)}
           </div>
         </div>
 
@@ -323,7 +281,6 @@ export default async function RevistaBoasVindasPage({
               );
             })()}
           </div>
-          {footerLogos(false)}
           </div>
         </div>
 
@@ -392,7 +349,6 @@ export default async function RevistaBoasVindasPage({
           <div style={{ position: "absolute", bottom: "9mm", left: "8mm", textAlign: "left", color: "#9ca3af", fontSize: "9pt" }}>
             Sindicompany · gestão condominial
           </div>
-          {footerLogos(false)}
           </div>
         </div>
 
@@ -452,7 +408,6 @@ export default async function RevistaBoasVindasPage({
               Sindicompany · gestão condominial profissional
             </div>
           </div>
-          {footerLogos(true)}
           </div>
         </div>
       </div>
