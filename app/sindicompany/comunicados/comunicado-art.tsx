@@ -166,6 +166,35 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
   // Reserva mais espaco embaixo quando o rodape e o stack em destaque.
   const effectiveFrameBot = d.frameBot + (ehByDestaque ? Math.max(0, destaqueStackH - d.footerLogoH) : 0);
 
+  // Auto-fit: depois de renderizar, mede se o conteudo (titulo + texto)
+  // extrapola a area dentro da moldura. Se sim, "sobe a moldura" (reduz
+  // frameBot pra aumentar a area de conteudo) e, se ainda nao couber,
+  // encolhe progressivamente o tamanho da fonte do corpo ate caber.
+  // Re-inicia toda vez que o conteudo de input mudar.
+  const contentBoxRef = useRef<HTMLDivElement>(null);
+  const [bodyScale, setBodyScale] = useState(1);
+  const [frameBotShift, setFrameBotShift] = useState(0);
+  useEffect(() => {
+    setBodyScale(1);
+    setFrameBotShift(0);
+  }, [props.corpo, props.titulo, props.subtitulo, props.variant]);
+  useEffect(() => {
+    const el = contentBoxRef.current;
+    if (!el) return;
+    const overflowing = el.scrollHeight > el.clientHeight + 1;
+    if (!overflowing) return;
+    if (frameBotShift < effectiveFrameBot * 0.55) {
+      setFrameBotShift(Math.min(effectiveFrameBot * 0.55, frameBotShift + mm4));
+      return;
+    }
+    if (bodyScale > 0.7) {
+      setBodyScale((s) => Math.max(0.7, s - 0.04));
+    }
+  }, [bodyScale, frameBotShift, effectiveFrameBot, mm4, props.corpo, props.titulo, props.subtitulo, temIlustracao, illoH]);
+
+  const fittedBody = d.body * bodyScale;
+  const fittedFrameBot = Math.max(0, effectiveFrameBot - frameBotShift);
+
   return (
     <div
       id={props.nodeId}
@@ -222,12 +251,13 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
 
       {/* Conteudo */}
       <div
+        ref={contentBoxRef}
         style={{
           position: "absolute",
           top: frameTop + mm4,
           left: mm15 + mm4,
           right: contentRight,
-          bottom: effectiveFrameBot + mm4 * 2,
+          bottom: fittedFrameBot + mm4 * 2,
           display: "flex", flexDirection: "column", overflow: "hidden", zIndex: 2,
         }}
       >
@@ -235,7 +265,7 @@ export function ComunicadoArt(props: ComunicadoArtProps) {
         {props.subtitulo && (
           <div style={{ color: MINT_DARK, fontWeight: 700, fontSize: d.sub, lineHeight: 1.15, marginTop: mm4 * 0.5, marginRight: tituloMarginRight }}>{props.subtitulo}</div>
         )}
-        <div style={{ marginTop: bodyMarginTop, fontSize: d.body, lineHeight: 1.55, color: INK, textAlign: "justify", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+        <div style={{ marginTop: bodyMarginTop, fontSize: fittedBody, lineHeight: 1.55, color: INK, textAlign: "justify", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
           {corpo ? corpo : <span style={{ color: "#9ca3af" }}>(sem texto)</span>}
         </div>
       </div>
