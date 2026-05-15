@@ -58,9 +58,16 @@ class Colophon(Section):
         label_sindico = (inputs.get("label_sindico") or "Síndico").strip()
         equipe_condo = list(inputs.get("equipe_condominio") or [])
         equipe_sc = list(inputs.get("equipe_sindicompany") or [])
+        equipe_sc_titulo = (inputs.get("equipe_sc_titulo") or "Equipe Sindicompany").strip()
         extras = list(inputs.get("creditos_extras") or [])
         editor = (inputs.get("editor_responsavel") or "").strip()
         contato = (inputs.get("contato") or "").strip()
+
+        # Filtro de seguranca: nunca incluir "Diego Leite" em nenhuma lista
+        # (equipe ou fontes), independente do que vier do composer/DB.
+        def _sem_diego(lst):
+            return [n for n in lst if "diego leite" not in str(n).lower()]
+        equipe_condo = _sem_diego(equipe_condo)
 
         # Separa fontes (vão pro rodapé inline) dos demais blocos.
         fontes_lista: list[str] = []
@@ -71,9 +78,9 @@ class Colophon(Section):
             if not (t and ns):
                 continue
             if t.lower().startswith("fonte"):
-                fontes_lista = [str(n) for n in ns]
+                fontes_lista = _sem_diego([str(n) for n in ns])
             else:
-                outros_extras.append((t, ns))
+                outros_extras.append((t, _sem_diego(ns)))
 
         # Equipe Sindicompany: usa default se vazio
         if not equipe_sc:
@@ -151,7 +158,7 @@ class Colophon(Section):
           <div class="exp-block__sindico">{_escape(sindico_value)}</div>
         </div>
         <div class="exp-block">
-          <div class="exp-block__titulo">Equipe Sindicompany</div>
+          <div class="exp-block__titulo">{_escape(equipe_sc_titulo)}</div>
           <ul class="exp-block__list">{equipe_sc_html}</ul>
         </div>
       </div>
@@ -167,6 +174,7 @@ class Colophon(Section):
     {fontes_html}
 
     <footer class="exp__footer">
+      {f'<img class="exp__brand-img" src="{_escape(by_logo_url)}" alt="by sindicompany" />' if by_logo_url else ''}
       <span class="exp__legal">
         Revista produzida por equipe editorial dedicada, sob curadoria
         da {_escape(label_sindico.lower())} responsável e da gestão do condomínio.
