@@ -330,21 +330,11 @@ def build_inputs_from_db(
         "dicas": dicas_ai.get("dicas", TIPS_DEFAULT["dicas"]),
     }
 
-    # ---- S06 Curiosidades — geradas por mês
-    curi_ai = gerar_curiosidades(mes_int, ano_int)
-    industry_inputs = {
-        "mes_referencia": mes_ano,
-        "intro": curi_ai.get("intro", INDUSTRY_DEFAULT["intro"]),
-        "curiosidades": curi_ai.get("curiosidades", INDUSTRY_DEFAULT["curiosidades"]),
-    }
-
-    # ---- S07 Novidades — geradas por mês
-    nov_ai = gerar_novidades(mes_int, ano_int)
-    news_inputs = {
-        "mes_referencia": mes_ano,
-        "intro": nov_ai.get("intro", NEWS_DEFAULT["intro"]),
-        "noticias": nov_ai.get("noticias", NEWS_DEFAULT["noticias"]),
-    }
+    # S06 Curiosidades e S07 Novidades removidas a pedido — ja nao
+    # entram na sequencia da revista, entao tambem nao geramos os
+    # textos via IA (economiza ~10s por edicao).
+    industry_inputs: dict[str, Any] = {}
+    news_inputs: dict[str, Any] = {"noticias": []}
 
     # ---- S08 Manutenções: baixa Drive e popula manutencoes
     maint_inputs = dict(MAINT_DEFAULT)
@@ -645,8 +635,7 @@ def build_inputs_from_db(
         ("S03 Agenda Cultural",        CulturalAgenda(),       agenda_inputs),
         ("S04 Matéria de Capa",        CoverStory(),           cover_story_inputs),
         ("S05 Dicas Práticas",         Tips(),                 tips_inputs),
-        ("S06 Curiosidades",           IndustryFacts(),        industry_inputs),
-        ("S07 Novidades e Legislação", News(),                 news_inputs),
+        # S06 Curiosidades do Setor e S07 Novidades e Legislacao removidas a pedido.
         ("S08 Manutenções",            OurCondoMaintenance(),  maint_inputs),
     ])
     # Inclui a seção de eventos sempre que tem_eventos=true. Mesmo
