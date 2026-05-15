@@ -840,15 +840,31 @@ def gerar_dica_receita(titulo: str, intro: str = "") -> str:
 
 
 def gerar_curiosidades(mes: int, ano: int) -> dict[str, Any]:
-    """4 curiosidades do setor condominial pro mês."""
+    """4 curiosidades do setor condominial pro mês, baseadas em pesquisa
+    em revistas, jornais, portais e blogs."""
     mes_nome = MESES_PT[mes - 1]
     prompt = (
-        f"Gere 4 curiosidades sobre o mercado/setor condominial brasileiro pra {mes_nome} de {ano}. "
-        f"Cada uma com um número/dado concreto e um contexto curto. Conteúdo de quem entende "
-        f"de gestão condominial. Evite informações inventadas: use apenas fatos plausíveis e "
-        f"comuns no setor (inadimplência média, número de condôminos, gastos com energia, etc). "
-        f"Para cada curiosidade, atribua uma fonte plausível (ex: 'Sindicato da Habitação', "
-        f"'pesquisa setorial 2024').\n\n"
+        f"Pesquise NA WEB 4 curiosidades REAIS sobre o mercado/setor "
+        f"condominial brasileiro publicadas em ate ~6 meses antes de {mes_nome} "
+        f"de {ano}. Use SOMENTE fatos REAIS com fonte verificavel.\n\n"
+        f"FONTES OBRIGATORIAS (pesquise nesses veiculos): SindicoNet, "
+        f"Direcional Condominios, Revista Direcional, AABIC, ABADI, "
+        f"Secovi-SP, Sindicato da Habitacao, Folha de Sao Paulo (caderno "
+        f"Cotidiano/Imoveis), Estadao (Economia/Imoveis), Valor Economico, "
+        f"InfoMoney, UOL Economia, G1, Estadao Conteudo. Pode complementar "
+        f"com blogs especializados em condominios (Condominio Eficaz, "
+        f"Condominio Inteligente, Universo Condominial) e portais juridicos "
+        f"se for tese ou jurisprudencia (Migalhas, ConJur, JusBrasil).\n\n"
+        f"Cada curiosidade deve trazer um numero/dado concreto + contexto "
+        f"curto + a fonte real (nome do veiculo + URL ou ano da publicacao). "
+        f"Priorize dados que tem impacto na vida do morador: inadimplencia, "
+        f"taxa condominial media, gastos com energia/agua, seguranca, "
+        f"tecnologia, sustentabilidade, conflitos comuns, decisoes judiciais.\n\n"
+        f"REGRA CRITICA: 'fato', 'contexto' e 'fonte' devem conter SOMENTE "
+        f"prosa limpa. Sem URLs no meio do texto, sem markdown links "
+        f"[texto](url), sem citacoes inline. O nome do veiculo + ano "
+        f"vai APENAS no campo 'fonte' (ex: 'SindicoNet, 2025' ou "
+        f"'Pesquisa Secovi-SP, 2024').\n\n"
         f'JSON: {{ "intro": "...", "curiosidades": [{{"fato":"...","contexto":"...","fonte":"..."}} x 4] }}'
     )
     fallback = {
@@ -857,7 +873,8 @@ def gerar_curiosidades(mes: int, ano: int) -> dict[str, Any]:
             {"fato": "Setor", "contexto": "Curiosidade do setor condominial.", "fonte": "Pesquisa setorial"} for _ in range(4)
         ],
     }
-    data = _gerar_json(prompt, fallback, expected_keys=["curiosidades"])
+    # Web search ligado: garante que os dados venham de fontes reais.
+    data = _gerar_json(prompt, fallback, expected_keys=["curiosidades"], use_web_search=True)
     return _aplicar_clean_recursivo(data)
 
 
