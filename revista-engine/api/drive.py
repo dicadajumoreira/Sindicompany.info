@@ -317,6 +317,85 @@ _PT_ACCENT_FIXES: dict[str, str] = {
     "camera": "câmera", "cameras": "câmeras",
     "portao": "portão", "portoes": "portões",
     "alarme": "alarme",
+    # Adicoes de palavras frequentes que estavam vindo sem acento
+    "infiltracao": "infiltração", "infiltracoes": "infiltrações",
+    "conservacao": "conservação",
+    "preservacao": "preservação",
+    "pavimentacao": "pavimentação",
+    "drenagem": "drenagem",
+    "esgoto": "esgoto",
+    "aquecimento": "aquecimento",
+    "ventilacao": "ventilação",
+    "exaustao": "exaustão",
+    "fumaca": "fumaça",
+    "incendio": "incêndio", "incendios": "incêndios",
+    "deteccao": "detecção",
+    "extintor": "extintor", "extintores": "extintores",
+    "mangueira": "mangueira", "mangueiras": "mangueiras",
+    "elevadores": "elevadores",
+    "energia": "energia",
+    "transformador": "transformador",
+    "subestacao": "subestação",
+    "padrao": "padrão", "padroes": "padrões",
+    "automatica": "automática", "automaticas": "automáticas",
+    "automatico": "automático", "automaticos": "automáticos",
+    "esquadria": "esquadria", "esquadrias": "esquadrias",
+    "vidracaria": "vidraçaria",
+    "ar": "ar", "ar-condicionado": "ar-condicionado", "condicionado": "condicionado",
+    "vacuo": "vácuo",
+    "compressao": "compressão",
+    "supervisao": "supervisão",
+    "manuteçao": "manutenção", "manutenao": "manutenção",
+    "operacao": "operação", "operacoes": "operações",
+    "informacao": "informação", "informacoes": "informações",
+    "comunicacao": "comunicação", "comunicacoes": "comunicações",
+    "documentacao": "documentação",
+    "documentos": "documentos",
+    "organizacao": "organização",
+    "regulamento": "regulamento",
+    "regulamentacao": "regulamentação",
+    "convencao": "convenção",
+    "registros": "registros",
+    "ata": "ata", "atas": "atas",
+    "anexo": "anexo", "anexos": "anexos",
+    "fotos": "fotos", "video": "vídeo", "videos": "vídeos",
+    "atendimento": "atendimento",
+    "comum": "comum", "comuns": "comuns",
+    "lazer": "lazer",
+    "salao_gourmet": "salão gourmet",
+    "brinquedoteca": "brinquedoteca",
+    "espaco": "espaço", "espacos": "espaços",
+    "pet": "pet",
+    "patio": "pátio", "patios": "pátios",
+    "circulacao": "circulação", "circulacoes": "circulações",
+    "saida": "saída", "saidas": "saídas",
+    "balcao": "balcão", "balcoes": "balcões",
+    "vestiario": "vestiário", "vestiarios": "vestiários",
+    "lavanderia": "lavanderia",
+    "deposito": "depósito", "depositos": "depósitos",
+    "casa-de-maquinas": "casa de máquinas",
+    "limpeza-geral": "limpeza geral",
+    "dedetizacao": "dedetização",
+    "desratizacao": "desratização",
+    "desinsetizacao": "desinsetização",
+    "controle": "controle",
+    "pragas": "pragas",
+    "vistorias": "vistorias",
+    "sao": "são", "sao-joao": "são João",
+    # Eventos / datas
+    "noite": "noite", "noites": "noites",
+    "matine": "matinê",
+    "encontro": "encontro", "encontros": "encontros",
+    "treinamento": "treinamento", "treinamentos": "treinamentos",
+    "reciclagem": "reciclagem",
+    "campanha": "campanha", "campanhas": "campanhas",
+    "doacao": "doação", "doacoes": "doações",
+    "arrecadacao": "arrecadação",
+    "aniversariante": "aniversariante", "aniversariantes": "aniversariantes",
+    "decoracao": "decoração", "decoracoes": "decorações",
+    "almoco": "almoço",
+    "cafe": "café",
+    "natalina": "natalina",
 }
 
 # Palavras de ligação que ficam minúsculas no meio do título (Title Case pt-BR)
@@ -436,12 +515,25 @@ def baixar_pastas_manutencao_zip(zip_url: str, dest: Path) -> list[dict[str, Any
     extract_dir.mkdir(exist_ok=True)
     try:
         with zipfile.ZipFile(zip_path) as zf:
+            # ZIPs criados no Windows costumam NAO setar o flag UTF-8 (bit 11 do
+            # general purpose). Nesse caso o Python decodifica os nomes como
+            # cp437, o que estraga acentos ('Manutenção' vira 'ManutenþÒo').
+            # Corrigimos re-codificando cp437 -> utf-8 antes de extrair.
+            for info in zf.infolist():
+                if not (info.flag_bits & 0x800):
+                    try:
+                        info.filename = info.filename.encode("cp437").decode("utf-8")
+                    except (UnicodeEncodeError, UnicodeDecodeError):
+                        try:
+                            info.filename = info.filename.encode("cp437").decode("latin-1")
+                        except (UnicodeEncodeError, UnicodeDecodeError):
+                            pass
             # Filtra entries: ignora arquivos de macOS (__MACOSX, .DS_Store)
             members = [
-                m for m in zf.namelist()
-                if not m.startswith("__MACOSX/")
-                and not m.endswith("/.DS_Store")
-                and not m.endswith("/Thumbs.db")
+                info.filename for info in zf.infolist()
+                if not info.filename.startswith("__MACOSX/")
+                and not info.filename.endswith("/.DS_Store")
+                and not info.filename.endswith("/Thumbs.db")
             ]
             zf.extractall(extract_dir, members=members)
         print(f"[zip] extraídos {len(members)} membros em {extract_dir}", flush=True)
