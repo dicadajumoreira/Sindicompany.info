@@ -491,17 +491,18 @@ def build_inputs_from_db(
     colophon_inputs["nome_condominio"] = condominio
     colophon_inputs["numero_edicao"] = int(revista["mes"])
     colophon_inputs["ano_edicao"] = int(revista["ano"])
-    # Quando o sindico do condo e By Sindicompany, o expediente vira o
-    # branding By Sindicompany: logo + texto institucional, editor "Equipe
-    # Editorial By Sindicompany", titulo "Equipe By Sindicompany" e contato
-    # revista@bysindicompany.com.br.
-    if revista.get("is_by_sindico"):
-        _by_logo_rodape = _by_logo_url(2)
-        if _by_logo_rodape:
-            colophon_inputs["by_logo_url"] = _by_logo_rodape
-        colophon_inputs["editor_responsavel"] = "Equipe Editorial By Sindicompany"
-        colophon_inputs["contato"] = "revista@bysindicompany.com.br"
-        colophon_inputs["equipe_sc_titulo"] = "Equipe By Sindicompany"
+    # Expediente vira branding By Sindicompany pra todas as revistas:
+    #  - logo "by sindicompany" (slot 2 dos Assets BySindicompany — versao p/
+    #    fundo claro) antes do texto institucional no rodape;
+    #  - editor "Equipe Editorial By Sindicompany";
+    #  - titulo do bloco "Equipe Editorial By Sindicompany";
+    #  - contato revista@sindicompany.com.br.
+    _by_logo_rodape = _by_logo_url(2)
+    if _by_logo_rodape:
+        colophon_inputs["by_logo_url"] = _by_logo_rodape
+    colophon_inputs["editor_responsavel"] = "Equipe Editorial By Sindicompany"
+    colophon_inputs["contato"] = "revista@sindicompany.com.br"
+    colophon_inputs["equipe_sc_titulo"] = "Equipe Editorial By Sindicompany"
     if cd.get("sindico_nome"):
         colophon_inputs["nome_sindico"] = cd["sindico_nome"]
         colophon_inputs["cargo_sindico"] = _cargo_sindico(condo)
