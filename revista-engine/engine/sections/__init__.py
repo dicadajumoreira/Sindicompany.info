@@ -17,6 +17,7 @@ from .our_condo_events import OurCondoEvents
 from .our_condo_maintenance import OurCondoMaintenance
 from .our_numbers import OurNumbers
 from .recipe import Recipe
+from .team_support import TeamSupport
 from .tips import Tips
 from .warnings import Warnings
 
@@ -41,6 +42,7 @@ __all__ = [
     "OurCondoMaintenance",
     "OurNumbers",
     "Recipe",
+    "TeamSupport",
     "Tips",
     "Warnings",
 ]

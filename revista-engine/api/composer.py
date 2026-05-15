@@ -95,7 +95,8 @@ from engine.theme import load_theme
 from engine.sections import (
     BackCover, Colophon, CommunityInvite, Cover, CoverStory, CulturalAgenda,
     EditorNote, Horoscope, IndustryFacts, Letter, LifestyleArticle, News,
-    OurCondoEvents, OurCondoMaintenance, OurNumbers, Recipe, Tips, Warnings,
+    OurCondoEvents, OurCondoMaintenance, OurNumbers, Recipe, TeamSupport,
+    Tips, Warnings,
 )
 from scripts.preview_colophon import DEFAULT_INPUTS as COLOPHON_DEFAULT       # type: ignore
 from scripts.preview_cover import DEFAULT_INPUTS as COVER_DEFAULT             # type: ignore
@@ -579,6 +580,37 @@ def build_inputs_from_db(
                 if _url_base else _qr_path
             )
 
+    # ---- S14C Equipe de Atendimento (so se ha comunidade cadastrada e
+    # ha equipe global no banco).
+    team_support_inputs: dict[str, Any] | None = None
+    if _comunidade_url:
+        try:
+            from api.supabase_client import _client as _sb_client_eq
+            sb = _sb_client_eq()
+            res = sb.table("equipe_atendimento_global").select("*").order("ordem").order("created_at").execute()
+            rows = list(res.data or [])
+        except Exception as e:  # noqa: BLE001
+            print(f"[composer] equipe_atendimento_global falhou: {type(e).__name__}: {e}", flush=True)
+            rows = []
+        if rows:
+            _url_base = os.environ.get("SUPABASE_URL", "")
+            membros = []
+            for r in rows:
+                foto = (r.get("foto_path") or "").strip()
+                if foto and _url_base:
+                    foto_url = f"{_url_base}/storage/v1/object/public/condominios-fotos/{foto}"
+                else:
+                    foto_url = foto or ""
+                membros.append({
+                    "nome": (r.get("nome") or "").strip(),
+                    "cargo": (r.get("cargo") or "").strip(),
+                    "foto_url": foto_url,
+                })
+            team_support_inputs = {
+                "condominio": condominio,
+                "membros": membros,
+            }
+
     # ---- S15 Contracapa
     proximo_mes = (int(revista["mes"]) % 12) + 1
     proximo_ano = int(revista["ano"]) if int(revista["mes"]) < 12 else int(revista["ano"]) + 1
@@ -647,6 +679,8 @@ def build_inputs_from_db(
     ])
     if community_invite_inputs is not None:
         sequence.append(("S14B Comunidade do Condomínio", CommunityInvite(), community_invite_inputs))
+    if team_support_inputs is not None:
+        sequence.append(("S14C Equipe de Atendimento", TeamSupport(), team_support_inputs))
     sequence.append(("S15 Contracapa", BackCover(), back_cover_inputs))
     # Pass final de revisão pt-BR: clean_text em todas as strings dos
     # inputs (corrige acentos comuns, normaliza pontuação). Pula campos

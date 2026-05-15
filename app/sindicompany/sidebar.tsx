@@ -32,7 +32,12 @@ const NAV_ITEMS: NavItem[] = [
       { label: "@bysindicompany", href: "/sindicompany/carrossel/novo?brand=bysindicompany" },
     ],
   },
-  { label: "Condomínios", href: "/sindicompany/condominios", emoji: "🏢" },
+  { label: "Condomínios", href: "/sindicompany/condominios", emoji: "🏢",
+    children: [
+      { label: "Lista de condomínios", href: "/sindicompany/condominios" },
+      { label: "Equipe de Atendimento", href: "/sindicompany/equipe-atendimento" },
+    ],
+  },
   {
     label: "Assets Sindicompany",
     emoji: "🎨",
