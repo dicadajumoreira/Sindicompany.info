@@ -518,19 +518,29 @@ def baixar_pastas_manutencao_zip(zip_url: str, dest: Path) -> list[dict[str, Any
             # ZIPs criados no Windows costumam NAO setar o flag UTF-8 (bit 11 do
             # general purpose). Nesse caso o Python decodifica os nomes como
             # cp437, o que estraga acentos ('Manutenção' vira 'ManutenþÒo').
-            # Corrigimos re-codificando cp437 -> utf-8 antes de extrair.
+            # Corrigimos re-codificando cp437 -> utf-8 antes de extrair, e
+            # tambem reconstruimos o dicionario NameToInfo (Python usa ele
+            # pra resolver members; se nao atualizar, o extractall falha
+            # silenciosamente em members renomeados).
             for info in zf.infolist():
                 if not (info.flag_bits & 0x800):
+                    novo = info.filename
                     try:
-                        info.filename = info.filename.encode("cp437").decode("utf-8")
+                        novo = info.filename.encode("cp437").decode("utf-8")
                     except (UnicodeEncodeError, UnicodeDecodeError):
                         try:
-                            info.filename = info.filename.encode("cp437").decode("latin-1")
+                            novo = info.filename.encode("cp437").decode("latin-1")
                         except (UnicodeEncodeError, UnicodeDecodeError):
-                            pass
-            # Filtra entries: ignora arquivos de macOS (__MACOSX, .DS_Store)
+                            novo = info.filename
+                    info.filename = novo
+            # Reconstroi o NameToInfo apos mutar os filenames.
+            zf.NameToInfo = {info.filename: info for info in zf.infolist()}
+
+            # Filtra entries: ignora arquivos de macOS (__MACOSX, .DS_Store).
+            # Passamos os PROPRIOS ZipInfo (nao strings) pra evitar lookup
+            # por nome — mais robusto depois das mutacoes acima.
             members = [
-                info.filename for info in zf.infolist()
+                info for info in zf.infolist()
                 if not info.filename.startswith("__MACOSX/")
                 and not info.filename.endswith("/.DS_Store")
                 and not info.filename.endswith("/Thumbs.db")
