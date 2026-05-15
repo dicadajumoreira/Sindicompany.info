@@ -255,23 +255,11 @@ html, body {{
   box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }}
 
-/* Logo Sindicompany no canto inferior direito de cada página interna.
-   Capa e contracapa têm o logo como elemento visual principal e ficam
-   de fora (assim como a capa do caderno de manutenção). */
+/* Logo Sindicompany no canto inferior direito de cada pagina interna:
+   REMOVIDO a pedido. Capa, contracapa e abertura do caderno ja nao
+   tinham; agora as paginas internas tambem nao tem. */
 .page:not(.cover-page):not(.back-cover):not(.maint-cover-page)::after {{
-  content: "";
-  position: absolute;
-  right: 18px;
-  bottom: 14px;
-  width: 80px;
-  height: 18px;
-  background-image: url("data:image/svg+xml;utf8,{footer_logo_data_uri}");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: right bottom;
-  opacity: 0.85;
-  pointer-events: none;
-  z-index: 100;
+  content: none;
 }}
 
 /* Padrões geométricos sutis no fundo de TODAS as páginas (opacity ~6%).
