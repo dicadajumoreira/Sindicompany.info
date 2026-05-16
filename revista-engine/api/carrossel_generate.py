@@ -216,6 +216,37 @@ _ICON_CACHE: str | None = None
 _ICONS_LIST_CACHE: list[str] | None = None
 _ICON_SLOT_CACHE: dict[int, str] = {}
 _LOGO_SLOT_CACHE: dict[int, str] = {}
+_CONSVICTA_FONTS_CSS_CACHE: str | None = None
+
+
+def _consvicta_fonts_css() -> str:
+    """CSS @font-face com as 3 famílias Consvicta embutidas em base64
+    (Cormorant Garamond 300/400/500 + italics, Outfit 200-600, Bebas
+    Neue 400). Arquivo em api/assets/fonts/consvicta/. Cache por
+    processo. String vazia se nao encontrar — engine cai pros
+    fallbacks system (Georgia/system-ui/Impact)."""
+    global _CONSVICTA_FONTS_CSS_CACHE
+    if _CONSVICTA_FONTS_CSS_CACHE is not None:
+        return _CONSVICTA_FONTS_CSS_CACHE
+    here = os.path.dirname(os.path.abspath(__file__))
+    css_path = os.path.join(
+        here, "assets", "fonts", "consvicta", "consvicta-fonts-inline.css"
+    )
+    try:
+        with open(css_path, "r", encoding="utf-8") as f:
+            _CONSVICTA_FONTS_CSS_CACHE = f.read()
+        print(
+            f"[carrossel] consvicta-fonts-inline.css carregado "
+            f"({len(_CONSVICTA_FONTS_CSS_CACHE)//1024} KB)",
+            flush=True,
+        )
+    except Exception as e:  # noqa: BLE001
+        print(
+            f"[carrossel] consvicta-fonts-inline.css nao encontrado: {e}",
+            flush=True,
+        )
+        _CONSVICTA_FONTS_CSS_CACHE = ""
+    return _CONSVICTA_FONTS_CSS_CACHE
 
 
 def _logo_slot_data_url(slot: int) -> str:
@@ -420,12 +451,16 @@ PALETTE = {
 #  - white    -> Branco Puro
 #  - gray_5   -> Off-White
 PALETTE_CONSVICTA = {
-    "onix": "#0A0A0A",
-    "mint": "#81D8D0",
-    "sand": "#B08D57",
-    "lavender": "#C9A96E",
-    "white": "#FFFFFF",
-    "gray_5": "#F5F5F2",
+    # Cores reais do site consvicta.com.br (extraídas dos HTML).
+    # Onix do site e WARM (#1A1714), nao puro preto — combina melhor
+    # com o ouro envelhecido e o off-white. Tiffany e ouro batem o
+    # brand book.
+    "onix": "#1A1714",        # Warm Onix (site)
+    "mint": "#81D8D0",        # Tiffany / Pantone 1837 Blue (signature)
+    "sand": "#B08D57",        # Ouro Envelhecido
+    "lavender": "#C9A96E",    # Ouro Claro (variante)
+    "white": "#FDFCF9",       # Paper (off-white quente)
+    "gray_5": "#F5F5F2",      # Off-White (textura suave)
 }
 
 
@@ -823,9 +858,23 @@ def _slide_html(
     """Monta o HTML de um único slide pronto pra renderizar."""
     p = _palette()
     handle = _handle()
+    is_consvicta = _BRAND == "consvictabr"
     epilogue_url = (
         "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;800;900&display=swap"
     )
+    # Consvicta usa tipografia propria (Cormorant Garamond + Outfit +
+    # Bebas Neue), embutida via base64 — sem dependencia de Google
+    # Fonts no render. Demais marcas seguem com Epilogue (Google Fonts).
+    if is_consvicta:
+        head_fonts = f"<style>{_consvicta_fonts_css()}</style>"
+        font_display = "'Cormorant Garamond', Georgia, serif"
+        font_body = "'Outfit', system-ui, sans-serif"
+        font_numeric = "'Bebas Neue', Impact, sans-serif"
+    else:
+        head_fonts = f'<link href="{epilogue_url}" rel="stylesheet">'
+        font_display = "'Epilogue', sans-serif"
+        font_body = "'Epilogue', sans-serif"
+        font_numeric = "'Epilogue', sans-serif"
     # Logo 5 sempre no topo de TODOS os slides (capa + internos + CTA)
     # Logo no topo de TODOS os slides. @sindicompanybr usa o slot 5;
     # @bysindicompany usa o slot 1 (LOGO 1 do bucket __by-logos).
@@ -858,18 +907,37 @@ def _slide_html(
         icon_img = (
             f'<img class="brand-icon" src="{icon_url}" alt="" />' if icon_url else ""
         )
+        # Watermark do logo Consvicta atras de tudo (slot 2 do
+        # bucket __consvicta-logos — slot 1 ja eh o logo do topo).
+        # Se nao houver logo no slot 2, fica sem watermark.
+        watermark_url = _logo_slot_data_url(2) if is_consvicta else ""
+        watermark_div = (
+            f'<div class="logo-watermark"></div>' if watermark_url else ""
+        )
         return f"""
 <!doctype html><html><head><meta charset="utf-8">
-<link href="{epilogue_url}" rel="stylesheet">
+{head_fonts}
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
   body {{
-    font-family: 'Epilogue', sans-serif;
+    font-family: {font_body};
     background: {p["onix"]};
     color: {p["white"]};
     overflow: hidden;
     position: relative;
+  }}
+  .logo-watermark {{
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2200px; height: 2200px;
+    background-image: url('{watermark_url}');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 1;
   }}
   .hero-img {{
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -919,7 +987,7 @@ def _slide_html(
     border: 4px solid rgba(255,255,255,0.65);
     background: transparent;
     color: {p["white"]};
-    font-family: 'Epilogue', sans-serif;
+    font-family: {font_numeric if is_consvicta else font_body};
     font-weight: 700;
     font-size: 64px;
     letter-spacing: 0.30em;
@@ -936,29 +1004,34 @@ def _slide_html(
     border-radius: 3px;
   }}
   .capa-titulo {{
-    font-weight: 900;
-    font-size: 257px;
-    line-height: 0.95;
-    letter-spacing: -0.025em;
+    font-family: {font_display};
+    font-weight: {500 if is_consvicta else 900};
+    font-size: {300 if is_consvicta else 257}px;
+    line-height: {1.0 if is_consvicta else 0.95};
+    letter-spacing: -0.015em;
     color: {p["white"]};
     text-wrap: balance;
+    font-style: {('italic' if is_consvicta else 'normal')};
   }}
   .capa-body {{
-    font-weight: 600;
+    font-family: {font_body};
+    font-weight: {400 if is_consvicta else 600};
     font-size: 142px;
     line-height: 1.25;
     color: {p["sand"]};
     margin-top: 48px;
     max-width: 24ch;
+    letter-spacing: {('0.005em' if is_consvicta else 'normal')};
   }}
   .handle {{
     position: absolute;
     bottom: 80px; left: 180px;
-    font-family: 'Epilogue', sans-serif;
+    font-family: {font_body};
     font-size: 80px;
-    font-weight: 600;
+    font-weight: {500 if is_consvicta else 600};
     color: {p["mint"]};
-    letter-spacing: 0.08em;
+    letter-spacing: {('0.20em' if is_consvicta else '0.08em')};
+    text-transform: {('lowercase' if is_consvicta else 'none')};
   }}
   .brand-icon {{
     /* +100% sobre o tamanho anterior (220 -> 440) pra reforcar a marca. */
@@ -980,6 +1053,7 @@ def _slide_html(
 <body>
   {bg}
   <div class="vignette"></div>
+  {watermark_div}
   <div class="overlay"></div>
   <div class="content">
     <span class="badge">{_h(_formato_label(formato))}</span>
@@ -1091,18 +1165,42 @@ def _slide_html(
     # Numero editorial vai no lado OPOSTO pra equilibrar a massa visual.
     icon_bleed_side_oposto = "left" if slide_idx % 2 == 0 else "right"
 
+    # Watermark do logo Consvicta atras de tudo (mesmo padrao da capa).
+    watermark_url_internal = _logo_slot_data_url(2) if is_consvicta else ""
+    watermark_div_internal = (
+        f'<div class="logo-watermark"></div>' if watermark_url_internal else ""
+    )
+    # Slides em fundo claro: watermark em onix; slides em fundo escuro
+    # (CTA): watermark em mint. Opacidade ajusta na CSS.
+    watermark_filter = (
+        "brightness(0)" if is_cta else "brightness(0) invert(0)"
+    )
+
     return f"""
 <!doctype html><html><head><meta charset="utf-8">
-<link href="{epilogue_url}" rel="stylesheet">
+{head_fonts}
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
   body {{
-    font-family: 'Epilogue', sans-serif;
+    font-family: {font_body};
     background: {bg_color};
     color: {fg_color};
     overflow: hidden;
     position: relative;
+  }}
+  .logo-watermark {{
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2400px; height: 2400px;
+    background-image: url('{watermark_url_internal}');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: {0.05 if is_cta else 0.05};
+    filter: {watermark_filter};
+    pointer-events: none;
+    z-index: 1;
   }}
   .pattern-bg {{
     /* Pattern da marca em 10% como textura de fundo nos slides internos.
@@ -1131,17 +1229,19 @@ def _slide_html(
     /* Numero gigante do slide como elemento editorial — opacidade
        baixa pra nao competir com texto principal. Usa o accent pra
        reforco de marca. Posicionado oposto ao Fundo Carrossel
-       (pares: esquerda; impares: direita) pra equilibrar massa. */
+       (pares: esquerda; impares: direita) pra equilibrar massa.
+       Consvicta usa Bebas Neue (condensada) — visual editorial
+       premium, mais alta e estreita. */
     position: absolute;
     bottom: 200px;
     {icon_bleed_side_oposto}: 180px;
-    font-family: 'Epilogue', sans-serif;
-    font-size: 720px;
-    font-weight: 900;
+    font-family: {font_numeric};
+    font-size: {880 if is_consvicta else 720}px;
+    font-weight: {400 if is_consvicta else 900};
     line-height: 0.85;
     color: {accent};
-    opacity: 0.10;
-    letter-spacing: -0.04em;
+    opacity: {0.14 if is_consvicta else 0.10};
+    letter-spacing: {('0.02em' if is_consvicta else '-0.04em')};
     pointer-events: none;
   }}
   .content {{
@@ -1155,10 +1255,10 @@ def _slide_html(
     display: inline-block;
     background: {accent};
     color: {accent_text};
-    font-family: 'Epilogue', sans-serif;
-    font-weight: 800;
+    font-family: {font_numeric if is_consvicta else font_body};
+    font-weight: {400 if is_consvicta else 800};
     font-size: {badge_font}px;
-    letter-spacing: 0.18em;
+    letter-spacing: {('0.30em' if is_consvicta else '0.18em')};
     text-transform: uppercase;
     padding: 22px 40px;
     border-radius: 10px;
@@ -1173,27 +1273,32 @@ def _slide_html(
     border-radius: 3px;
   }}
   .slide-titulo {{
-    font-weight: 800;
-    font-size: {titulo_font}px;
-    line-height: 0.95;
-    letter-spacing: -0.025em;
+    font-family: {font_display};
+    font-weight: {500 if is_consvicta else 800};
+    font-size: {(titulo_font + 30) if is_consvicta else titulo_font}px;
+    line-height: {1.02 if is_consvicta else 0.95};
+    letter-spacing: -0.015em;
     color: {fg_color};
     margin-bottom: 56px;
     text-wrap: balance;
     max-width: 18ch;
+    font-style: {('italic' if is_consvicta else 'normal')};
   }}
   .slide-body {{
-    font-weight: 500;
+    font-family: {font_body};
+    font-weight: {400 if is_consvicta else 500};
     font-size: {body_font}px;
-    line-height: 1.35;
+    line-height: {1.4 if is_consvicta else 1.35};
     color: {fg_color};
     opacity: 0.88;
     max-width: 22ch;
+    letter-spacing: {('0.005em' if is_consvicta else 'normal')};
   }}
   /* Para palavras destacadas dentro do body — 55-70 display
      (mid 62 -> 176 css). Use <span class="destaque">…</span>. */
   .destaque {{
-    font-weight: 800;
+    font-family: {font_numeric if is_consvicta else font_body};
+    font-weight: {400 if is_consvicta else 800};
     font-size: 176px;
     line-height: 1.1;
     color: {accent};
@@ -1201,11 +1306,12 @@ def _slide_html(
   .handle {{
     position: absolute;
     bottom: 120px; left: 180px;
-    font-family: 'Epilogue', sans-serif;
+    font-family: {font_body};
     font-size: {handle_font}px;
-    font-weight: 600;
+    font-weight: {500 if is_consvicta else 600};
     color: {accent};
-    letter-spacing: 0.08em;
+    letter-spacing: {('0.20em' if is_consvicta else '0.08em')};
+    text-transform: {('lowercase' if is_consvicta else 'none')};
   }}
   .brand-icon {{
     /* Icone da marca no canto inferior direito de cada slide.
@@ -1263,6 +1369,7 @@ def _slide_html(
 </style></head>
 <body>
   {pattern_div}
+  {watermark_div_internal}
   {slide_foto_div}
   {icon_bg_div}
   <div class="frame-corner"></div>
