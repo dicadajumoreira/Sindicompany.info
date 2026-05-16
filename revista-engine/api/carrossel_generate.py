@@ -1088,13 +1088,14 @@ def _slide_html(
     object-fit: contain;
   }}
   .logo-top {{
-    /* Logo 5 da marca no topo de TODOS os slides, alinhado a
-       esquerda (mesmo padding horizontal de .handle e .content). */
+    /* Logo da marca no topo de TODOS os slides. Consvicta usa SVG
+       preto; capa tem hero img escura → inverte pra branco. */
     position: absolute;
     top: 100px; left: 180px;
     width: 700px; max-height: 220px;
     object-fit: contain;
     z-index: 5;
+    filter: {('brightness(0) invert(1)' if is_consvicta else 'none')};
   }}
 </style></head>
 <body>
@@ -1221,10 +1222,12 @@ def _slide_html(
     watermark_div_internal = (
         f'<div class="logo-watermark"></div>' if watermark_url_internal else ""
     )
-    # Slides em fundo claro: watermark em onix; slides em fundo escuro
-    # (CTA): watermark em mint. Opacidade ajusta na CSS.
-    watermark_filter = (
-        "brightness(0)" if is_cta else "brightness(0) invert(0)"
+    # Logo SVG vem em preto. Em slide CLARO (internos mint/sand/etc.)
+    # deixa preto. Em slide ESCURO (CTA onix), inverte pra branco
+    # via filter CSS. Vale tanto pro .logo-top quanto pro
+    # .logo-watermark.
+    logo_filter = (
+        "brightness(0) invert(1)" if is_cta else "brightness(0)"
     )
 
     return f"""
@@ -1248,8 +1251,8 @@ def _slide_html(
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    opacity: {0.05 if is_cta else 0.05};
-    filter: {watermark_filter};
+    opacity: {0.07 if is_cta else 0.06};
+    filter: {logo_filter};
     pointer-events: none;
     z-index: 1;
   }}
@@ -1373,13 +1376,14 @@ def _slide_html(
     object-fit: contain;
   }}
   .logo-top {{
-    /* Logo 5 da marca no topo de TODOS os slides, alinhado a
-       esquerda (mesmo padding horizontal de .handle e .content). */
+    /* Logo da marca no topo de TODOS os slides. SVG preto da Consvicta
+       inverte pra branco em slides escuros (CTA). */
     position: absolute;
     top: 100px; left: 180px;
     width: 700px; max-height: 220px;
     object-fit: contain;
     z-index: 5;
+    filter: {(logo_filter if is_consvicta else 'none')};
   }}
   .slide-foto {{
     /* Foto opcional por slide (sobrescreve cor de fundo + pattern).
