@@ -1144,13 +1144,11 @@ def _slide_html(
         icon_img = (
             f'<img class="brand-icon" src="{icon_url}" alt="" />' if icon_url else ""
         )
-        # Watermark do logo Consvicta atras de tudo (slot 2 do
-        # bucket __consvicta-logos — slot 1 ja eh o logo do topo).
-        # Se nao houver logo no slot 2, fica sem watermark.
-        watermark_url = _logo_slot_data_url(2) if is_consvicta else ""
-        watermark_div = (
-            f'<div class="logo-watermark"></div>' if watermark_url else ""
-        )
+        # Watermark do logo Consvicta — REMOVIDO por decisao de design
+        # (limpa o fundo dos carrosseis @consvictabr). Mantem variavel
+        # vazia pra nao quebrar o CSS template.
+        watermark_url = ""
+        watermark_div = ""
         # Pattern + Fundo Carrossel na CAPA pra Consvicta — sempre
         # aplicados pra enriquecer visualmente. Outras marcas nao
         # tem pattern na capa (comportamento legado).
@@ -1517,10 +1515,10 @@ def _slide_html(
     icon_bleed_side_oposto = "left" if slide_idx % 2 == 0 else "right"
 
     # Watermark do logo Consvicta atras de tudo (mesmo padrao da capa).
-    watermark_url_internal = _logo_slot_data_url(2) if is_consvicta else ""
-    watermark_div_internal = (
-        f'<div class="logo-watermark"></div>' if watermark_url_internal else ""
-    )
+    # Watermark do logo nos slides internos/CTA — REMOVIDO por
+    # decisao de design pra Consvicta (limpa o fundo).
+    watermark_url_internal = ""
+    watermark_div_internal = ""
     # Logo SVG vem em preto. Em slide CLARO (internos mint/sand/etc.)
     # deixa preto. Em slide ESCURO (CTA onix), inverte pra branco
     # via filter CSS. Vale tanto pro .logo-top quanto pro
@@ -1774,7 +1772,7 @@ def _slide_html(
   {slide_foto_div}
   {icon_bg_div}
   <div class="frame-corner"></div>
-  <div class="bignum">{slide_idx:02d}</div>
+  {('' if is_consvicta else f'<div class="bignum">{slide_idx:02d}</div>')}
   <div class="content">
     <span class="badge">{_h(badge_label)}</span>
     <div class="accent-line"></div>
