@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  CONSVICTA_LIBRARY_FUNDOS,
   CONSVICTA_LIBRARY_ICONS,
   CONSVICTA_LIBRARY_PATTERNS,
 } from "./library-manifest";
@@ -151,6 +152,21 @@ export async function uploadEmbeddedConsvictaAssets(): Promise<UploadResult> {
     await upload(
       path.join(patternsRoot, file),
       `__consvicta-patterns/pattern-${slot}.svg`,
+    );
+  }
+
+  // Fundos — 20 SVGs decorativos (tiffany glow, grafite linhas, grids,
+  // diagonais, gold vertical, circulos concentricos, cantos
+  // decorativos, etc). Engine le de __consvicta-icon-carrossel/
+  // icon-{slot}.X via _icon_for_slide pra usar como background grande
+  // (.icon-bg) de cada slide.
+  const fundosRoot = "public/consvicta-library/fundos";
+  for (let i = 0; i < CONSVICTA_LIBRARY_FUNDOS.length; i++) {
+    const slot = i + 1;
+    const file = CONSVICTA_LIBRARY_FUNDOS[i];
+    await upload(
+      path.join(fundosRoot, file),
+      `__consvicta-icon-carrossel/icon-${slot}.svg`,
     );
   }
 

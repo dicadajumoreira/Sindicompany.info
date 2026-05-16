@@ -22,6 +22,7 @@ import { ByAssetSlot } from "../by-assets-slot";
 import { DashboardShell } from "../shell";
 import { UploadLibraryButton } from "./upload-library-button";
 import {
+  CONSVICTA_LIBRARY_FUNDOS,
   CONSVICTA_LIBRARY_ICONS,
   CONSVICTA_LIBRARY_LOGOS,
   CONSVICTA_LIBRARY_PATTERNS,
@@ -34,6 +35,7 @@ import {
 function readEmbeddedLibrary(): {
   logos: string[];
   patterns: string[];
+  fundos: string[];
   iconsByCategory: Array<{ category: string; files: string[] }>;
 } {
   const byCat = new Map<string, string[]>();
@@ -49,6 +51,7 @@ function readEmbeddedLibrary(): {
   return {
     logos: [...CONSVICTA_LIBRARY_LOGOS].sort(),
     patterns: [...CONSVICTA_LIBRARY_PATTERNS].sort(),
+    fundos: [...CONSVICTA_LIBRARY_FUNDOS].sort(),
     iconsByCategory,
   };
 }
@@ -182,6 +185,32 @@ export default async function ConsvictaAssetsPage() {
                       />
                       <code className="block px-2 py-1.5 text-[10px] text-g60 break-all">
                         {f.replace("pattern-", "").replace(".svg", "")}
+                      </code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {library.fundos.length > 0 && (
+              <div className="mb-5">
+                <h3 className="text-xs uppercase tracking-wider text-onix-700 font-semibold mb-2">
+                  Fundos ({library.fundos.length})
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {library.fundos.map((f) => (
+                    <div
+                      key={f}
+                      className="rounded border border-onix-100 bg-white overflow-hidden"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`/consvicta-library/fundos/${f}`}
+                        alt={f}
+                        className="w-full aspect-square object-cover block"
+                      />
+                      <code className="block px-2 py-1.5 text-[10px] text-g60 break-all">
+                        {f.replace("fundo-", "").replace(".svg", "")}
                       </code>
                     </div>
                   ))}

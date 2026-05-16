@@ -107,3 +107,26 @@ export const CONSVICTA_LIBRARY_PATTERNS: ReadonlyArray<string> = [
   'pattern-12-hero-texture-dark.svg',
   'pattern-13-dots-frame.svg',
 ];
+
+export const CONSVICTA_LIBRARY_FUNDOS: ReadonlyArray<string> = [
+  'fundo-01-tiffany-glow.svg',
+  'fundo-02-grafite-linhas.svg',
+  'fundo-03-grid-tiffany.svg',
+  'fundo-04-diagonal-dark.svg',
+  'fundo-05-gold-vertical.svg',
+  'fundo-06-offwhite-elegante.svg',
+  'fundo-07-tiffany-dark.svg',
+  'fundo-08-circulos-concentricos.svg',
+  'fundo-09-cantos-decorativos.svg',
+  'fundo-10-split-vertical.svg',
+  'fundo-11-pontilhado.svg',
+  'fundo-12-gradiente-diagonal.svg',
+  'fundo-13-triangulo-gold.svg',
+  'fundo-14-moldura-interna.svg',
+  'fundo-15-linhas-diagonais.svg',
+  'fundo-16-glow-corner.svg',
+  'fundo-17-linhas-verticais.svg',
+  'fundo-18-quadrados-concentricos.svg',
+  'fundo-19-gold-edge.svg',
+  'fundo-20-symbol-watermark.svg',
+];
