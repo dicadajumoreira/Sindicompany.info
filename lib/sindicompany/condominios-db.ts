@@ -516,6 +516,41 @@ export function listByLogoUrls() {
   return _listSlotUrls("__by-logos", "logo", LOGO_MAX_SLOTS);
 }
 
+// =============================================================================
+// Assets Consvicta — buckets __consvicta-patterns / __consvicta-icons /
+// __consvicta-icon-carrossel / __consvicta-logos. Conectados aos
+// carrosseis da marca 'consvictabr' (a engine usa o prefixo __consvicta-
+// quando o carrossel.brand for consvictabr).
+// =============================================================================
+
+export function createConsvictaPatternUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__consvicta-patterns", "pattern", slot, ext);
+}
+export function listConsvictaPatternUrls() {
+  return _listSlotUrls("__consvicta-patterns", "pattern", PATTERN_MAX_SLOTS);
+}
+
+export function createConsvictaIconUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__consvicta-icons", "icon", slot, ext);
+}
+export function listConsvictaIconUrls() {
+  return _listSlotUrls("__consvicta-icons", "icon", ICON_MAX_SLOTS);
+}
+
+export function createConsvictaIconCarrosselUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__consvicta-icon-carrossel", "icon", slot, ext);
+}
+export function listConsvictaIconCarrosselUrls() {
+  return _listSlotUrls("__consvicta-icon-carrossel", "icon", ICON_CARROSSEL_MAX_SLOTS);
+}
+
+export function createConsvictaLogoUploadIntent(slot: number, ext: string) {
+  return _createSlotUploadIntent("__consvicta-logos", "logo", slot, ext);
+}
+export function listConsvictaLogoUrls() {
+  return _listSlotUrls("__consvicta-logos", "logo", LOGO_MAX_SLOTS);
+}
+
 /** Copia todos os arquivos dos buckets de assets do @sindicompanybr
  *  (__patterns, __icons, __icon-carrossel, __logos) pros equivalentes
  *  do @bysindicompany (__by-*). Sobrescreve o que ja existir no destino.

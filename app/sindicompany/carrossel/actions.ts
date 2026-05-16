@@ -102,13 +102,19 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
   await requireAuth();
 
   const brandRaw = getStr(formData, "brand");
-  const brand: "sindicompanybr" | "bysindicompany" =
-    brandRaw === "bysindicompany" ? "bysindicompany" : "sindicompanybr";
+  const brand: "sindicompanybr" | "bysindicompany" | "consvictabr" =
+    brandRaw === "bysindicompany"
+      ? "bysindicompany"
+      : brandRaw === "consvictabr"
+        ? "consvictabr"
+        : "sindicompanybr";
   const objetivoRaw = getStr(formData, "objetivo");
   const objetivosValidos =
     brand === "bysindicompany"
       ? ["comentarios", "salvamentos", "clientes", "autoridade"]
-      : ["comentarios", "salvamentos", "clientes", "educar"];
+      : brand === "consvictabr"
+        ? ["comentarios", "salvamentos", "clientes", "autoridade"]
+        : ["comentarios", "salvamentos", "clientes", "educar"];
   const objetivo = objetivosValidos.includes(objetivoRaw) ? objetivoRaw : "";
   const titulo = getStr(formData, "titulo");
   const temaSelecionado = getStr(formData, "tema");

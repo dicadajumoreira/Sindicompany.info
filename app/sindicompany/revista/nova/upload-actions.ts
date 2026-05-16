@@ -9,6 +9,10 @@ import {
   createByIconUploadIntent,
   createByLogoUploadIntent,
   createByPatternUploadIntent,
+  createConsvictaIconCarrosselUploadIntent,
+  createConsvictaIconUploadIntent,
+  createConsvictaLogoUploadIntent,
+  createConsvictaPatternUploadIntent,
   createEventosZipUploadIntent,
   createIconCarrosselUploadIntent,
   createIconUploadIntent,
@@ -273,6 +277,30 @@ export async function getByIconCarrosselUploadIntent(slot: number, ext: string) 
 export async function getByLogoUploadIntent(slot: number, ext: string) {
   return _slotIntent(
     ext, slot, LOGO_MAX_SLOTS, "Logo (By)", createByLogoUploadIntent,
+  );
+}
+
+// --- Assets Consvicta ---
+
+export async function getConsvictaPatternUploadIntent(slot: number, ext: string) {
+  return _slotIntent(
+    ext, slot, PATTERN_MAX_SLOTS, "Pattern (Consvicta)", createConsvictaPatternUploadIntent,
+  );
+}
+export async function getConsvictaIconUploadIntent(slot: number, ext: string) {
+  return _slotIntent(
+    ext, slot, ICON_MAX_SLOTS, "Icon (Consvicta)", createConsvictaIconUploadIntent,
+  );
+}
+export async function getConsvictaIconCarrosselUploadIntent(slot: number, ext: string) {
+  return _slotIntent(
+    ext, slot, ICON_CARROSSEL_MAX_SLOTS, "Fundo Carrossel (Consvicta)",
+    createConsvictaIconCarrosselUploadIntent,
+  );
+}
+export async function getConsvictaLogoUploadIntent(slot: number, ext: string) {
+  return _slotIntent(
+    ext, slot, LOGO_MAX_SLOTS, "Logo (Consvicta)", createConsvictaLogoUploadIntent,
   );
 }
 

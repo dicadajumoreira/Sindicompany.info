@@ -40,13 +40,22 @@ _BRAND = "sindicompanybr"
 
 def _asset_prefix() -> str:
     """Prefixo dos buckets de assets conforme a marca:
-    - sindicompanybr -> '__'   (ex: __patterns/, __icons/)
-    - bysindicompany -> '__by-' (ex: __by-patterns/, __by-icons/)"""
-    return "__by-" if _BRAND == "bysindicompany" else "__"
+    - sindicompanybr -> '__'           (ex: __patterns/, __icons/)
+    - bysindicompany -> '__by-'        (ex: __by-patterns/, __by-icons/)
+    - consvictabr    -> '__consvicta-' (ex: __consvicta-patterns/, ...)"""
+    if _BRAND == "bysindicompany":
+        return "__by-"
+    if _BRAND == "consvictabr":
+        return "__consvicta-"
+    return "__"
 
 
 def _handle() -> str:
-    return "@bysindicompany" if _BRAND == "bysindicompany" else "@sindicompanybr"
+    if _BRAND == "bysindicompany":
+        return "@bysindicompany"
+    if _BRAND == "consvictabr":
+        return "@consvictabr"
+    return "@sindicompanybr"
 
 
 _PATTERNS_CACHE: list[str] | None = None  # data URLs prontos pra uso
@@ -555,6 +564,7 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
     )
     casa = chr(0x1F3E1)
     is_by = _BRAND == "bysindicompany"
+    is_consvicta = _BRAND == "consvictabr"
     obj_map_sindico = {
         "comentarios": "OBJETIVO: GERAR COMENTARIOS. CTA SEMPRE binario (SIM/NAO, "
         "CONCORDO/DISCORDO, MORADOR CERTO/SINDICO CERTO). Tema com dois lados "
@@ -595,23 +605,31 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
     }
     obj_map = obj_map_by if is_by else obj_map_sindico
     objetivo_bloco = (f"\n{obj_map[objetivo]}\n" if objetivo in obj_map else "")
-    persona = (
-        "Voce e redator do @bysindicompany — marca da Sindicompany pra SINDICOS "
-        "PROFISSIONAIS, aspirantes a sindicatura e sindicos em crescimento. NAO "
-        "fala com o morador. Tom aspiracional, provocativo, estrategico, "
-        "empresarial. Vende estrutura, pertencimento, crescimento, posicionamento, "
-        "autoridade, escala, networking, suporte. Fale como mentor que ja chegou."
-        if is_by
-        else "Voce e redator do @sindicompanybr (Sindicompany — sindicos "
-        "profissionais SP/RJ). VOCE FALA COM O MORADOR COMUM, nao com o sindico. "
-        "Escreve como pessoa inteligente corrigindo um amigo, NUNCA como empresa "
-        "instruindo cliente."
-    )
-    assinatura = (
-        "By Sindicompany. Sindicatura no proximo nivel."
-        if is_by
-        else f"Por mais lares. {casa}"
-    )
+    if is_by:
+        persona = (
+            "Voce e redator do @bysindicompany — marca da Sindicompany pra SINDICOS "
+            "PROFISSIONAIS, aspirantes a sindicatura e sindicos em crescimento. NAO "
+            "fala com o morador. Tom aspiracional, provocativo, estrategico, "
+            "empresarial. Vende estrutura, pertencimento, crescimento, posicionamento, "
+            "autoridade, escala, networking, suporte. Fale como mentor que ja chegou."
+        )
+        assinatura = "By Sindicompany. Sindicatura no proximo nivel."
+    elif is_consvicta:
+        persona = (
+            "Voce e redator do @consvictabr (Consvicta). Tom claro, atual, proximo "
+            "de quem le, sem maquiar. Frases curtas e diretas. Voz propria; comece "
+            "dentro da cabeca do leitor. Sem gerundio decorativo, sem clichês "
+            "corporativos, sem cliche motivacional."
+        )
+        assinatura = "Consvicta."
+    else:
+        persona = (
+            "Voce e redator do @sindicompanybr (Sindicompany — sindicos "
+            "profissionais SP/RJ). VOCE FALA COM O MORADOR COMUM, nao com o sindico. "
+            "Escreve como pessoa inteligente corrigindo um amigo, NUNCA como empresa "
+            "instruindo cliente."
+        )
+        assinatura = f"Por mais lares. {casa}"
     contexto = (
         "- Contexto: bastidores e realidade da SINDICATURA PROFISSIONAL — gestao, "
         "lideranca, mercado, carreira, estrutura. Quando falar de condominio, e "
@@ -753,7 +771,15 @@ def _slide_html(
     # Logo 5 sempre no topo de TODOS os slides (capa + internos + CTA)
     # Logo no topo de TODOS os slides. @sindicompanybr usa o slot 5;
     # @bysindicompany usa o slot 1 (LOGO 1 do bucket __by-logos).
-    logo_top_slot = 1 if _BRAND == "bysindicompany" else 5
+    # @bysindicompany usa LOGO 1 do bucket __by-logos no topo;
+    # @consvictabr usa LOGO 1 do bucket __consvicta-logos; @sindicompanybr
+    # usa o slot 5 do bucket __logos (logo principal Sindicompany).
+    if _BRAND == "bysindicompany":
+        logo_top_slot = 1
+    elif _BRAND == "consvictabr":
+        logo_top_slot = 1
+    else:
+        logo_top_slot = 5
     logo_top_url = _logo_slot_data_url(logo_top_slot)
     logo_top_img = (
         f'<img class="logo-top" src="{logo_top_url}" alt="" />'
@@ -1242,7 +1268,12 @@ def gerar_carrossel(carrossel_id: str) -> int:
         # Define a marca ANTES de qualquer lookup de asset (buckets,
         # handle, logo). Default sindicompanybr pra registros legacy.
         b = (carrossel.get("brand") or "sindicompanybr").strip().lower()
-        _BRAND = "bysindicompany" if b == "bysindicompany" else "sindicompanybr"
+        if b == "bysindicompany":
+            _BRAND = "bysindicompany"
+        elif b == "consvictabr":
+            _BRAND = "consvictabr"
+        else:
+            _BRAND = "sindicompanybr"
         print(f"[carrossel] brand={_BRAND}", flush=True)
 
         _update_carrossel(carrossel_id, {"status": "em_producao", "erro_mensagem": None})

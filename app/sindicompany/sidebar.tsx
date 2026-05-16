@@ -30,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { label: "@sindicompanybr", href: "/sindicompany/carrossel/novo?brand=sindicompanybr" },
       { label: "@bysindicompany", href: "/sindicompany/carrossel/novo?brand=bysindicompany" },
+      { label: "@consvictabr", href: "/sindicompany/carrossel/novo?brand=consvictabr" },
     ],
   },
   { label: "Condomínios", href: "/sindicompany/condominios", emoji: "🏢",
@@ -52,6 +53,11 @@ const NAV_ITEMS: NavItem[] = [
     label: "Assets BySindicompany",
     emoji: "🪄",
     children: [{ label: "Patterns · Icons · Fundo · Logos", href: "/sindicompany/by-assets" }],
+  },
+  {
+    label: "Assets Consvicta",
+    emoji: "🌿",
+    children: [{ label: "Patterns · Icons · Fundo · Logos", href: "/sindicompany/consvicta-assets" }],
   },
 ];
 

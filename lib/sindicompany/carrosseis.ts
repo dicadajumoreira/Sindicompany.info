@@ -13,11 +13,12 @@ export interface CarrosselCopy {
   legenda: string;
 }
 
-export type CarrosselBrand = "sindicompanybr" | "bysindicompany";
+export type CarrosselBrand = "sindicompanybr" | "bysindicompany" | "consvictabr";
 
 export const CARROSSEL_BRANDS: { id: CarrosselBrand; handle: string; label: string }[] = [
   { id: "sindicompanybr", handle: "@sindicompanybr", label: "Sindicompany" },
   { id: "bysindicompany", handle: "@bysindicompany", label: "BySindicompany" },
+  { id: "consvictabr", handle: "@consvictabr", label: "Consvicta" },
 ];
 
 export interface Carrossel {

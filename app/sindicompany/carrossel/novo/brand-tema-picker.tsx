@@ -8,6 +8,7 @@ const inputCls =
 interface Props {
   temasSindico: string[];
   temasBy: string[];
+  temasConsvicta: string[];
   defaultBrand: string;
   defaultObjetivo: string;
   defaultTema: string;
@@ -60,38 +61,56 @@ const OBJETIVOS_BY = [
   },
 ];
 
+const OBJETIVOS_CONSVICTA = [
+  { id: "comentarios", label: "Gerar comentários (debate)", hint: "Dois lados defensáveis. CTA binário." },
+  { id: "salvamentos", label: "Gerar salvamentos (utilidade)", hint: "Conteúdo útil que se guarda. CTA 'Salva esse post'." },
+  { id: "clientes", label: "Atrair clientes", hint: "Mostra dor + resultado. CTA leve." },
+  { id: "autoridade", label: "Posicionar autoridade", hint: "Visão de marca, manifesto, tendência. CTA institucional." },
+];
+
 /** Combina o seletor de MARCA + OBJETIVO + TEMA. A lista de temas
  *  muda conforme a marca; o objetivo (Passo 0) só aparece pro
  *  @sindicompanybr e define tom, gancho, CTA, formato e critério de
  *  sucesso do carrossel. */
+function _temasFor(brand: string, temasSindico: string[], temasBy: string[], temasConsvicta: string[]): string[] {
+  if (brand === "bysindicompany") return temasBy;
+  if (brand === "consvictabr") return temasConsvicta;
+  return temasSindico;
+}
+function _objetivosFor(brand: string) {
+  if (brand === "bysindicompany") return OBJETIVOS_BY;
+  if (brand === "consvictabr") return OBJETIVOS_CONSVICTA;
+  return OBJETIVOS_SINDICO;
+}
+
 export function BrandTemaPicker({
   temasSindico,
   temasBy,
+  temasConsvicta,
   defaultBrand,
   defaultObjetivo,
   defaultTema,
   defaultTemaOutro,
 }: Props) {
   const [brand, setBrand] = useState(
-    defaultBrand === "bysindicompany" ? "bysindicompany" : "sindicompanybr",
+    defaultBrand === "bysindicompany" || defaultBrand === "consvictabr"
+      ? defaultBrand
+      : "sindicompanybr",
   );
   const [objetivo, setObjetivo] = useState(defaultObjetivo);
-  const temas = brand === "bysindicompany" ? temasBy : temasSindico;
+  const temas = _temasFor(brand, temasSindico, temasBy, temasConsvicta);
   const [tema, setTema] = useState(
     temas.includes(defaultTema) ? defaultTema : "",
   );
   const isOutro = tema === "Outro" || tema === "Outros";
   const isSindico = brand === "sindicompanybr";
-  const objetivos = isSindico ? OBJETIVOS_SINDICO : OBJETIVOS_BY;
+  const objetivos = _objetivosFor(brand);
 
   function onBrandChange(b: string) {
     setBrand(b);
-    const novaLista = b === "bysindicompany" ? temasBy : temasSindico;
+    const novaLista = _temasFor(b, temasSindico, temasBy, temasConsvicta);
     if (!novaLista.includes(tema)) setTema("");
-    // 'educar' so existe pro sindicompanybr; 'autoridade' so pro by.
-    const objIds = (b === "bysindicompany" ? OBJETIVOS_BY : OBJETIVOS_SINDICO).map(
-      (o) => o.id,
-    );
+    const objIds = _objetivosFor(b).map((o) => o.id);
     if (!objIds.includes(objetivo)) setObjetivo("");
   }
 
@@ -103,10 +122,11 @@ export function BrandTemaPicker({
           Pra qual Instagram este carrossel é. Cada marca tem público,
           objetivo e linguagem próprios.
         </p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {[
             { id: "sindicompanybr", label: "@sindicompanybr", hint: "Morador" },
             { id: "bysindicompany", label: "@bysindicompany", hint: "Síndico profissional" },
+            { id: "consvictabr", label: "@consvictabr", hint: "Consvicta" },
           ].map((b) => (
             <label
               key={b.id}

@@ -263,6 +263,17 @@ const TEMAS_BY = [
   "Outros",
 ];
 
+// Temas pro @consvictabr — placeholder; ajuste conforme a marca evoluir.
+const TEMAS_CONSVICTA = [
+  "Manifesto da marca",
+  "Bastidores Consvicta",
+  "Tendência do mercado",
+  "Visão de futuro",
+  "Provocação editorial",
+  "Curadoria",
+  "Outros",
+];
+
 const FORMATOS = [
   { id: "historia_real", label: "História real", hint: "O que mais engaja e salva" },
   { id: "lista", label: "Lista", hint: "5–7 itens numerados" },
@@ -328,6 +339,7 @@ export default async function NovoCarrosselPage({
           <BrandTemaPicker
             temasSindico={TEMAS}
             temasBy={TEMAS_BY}
+            temasConsvicta={TEMAS_CONSVICTA}
             defaultBrand={v("brand") || "sindicompanybr"}
             defaultObjetivo={v("objetivo")}
             defaultTema={v("tema")}

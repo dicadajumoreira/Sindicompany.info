@@ -153,10 +153,24 @@ const SYSTEM_BYSINDICOMPANY =
   "mecânico. Use apenas aspas retas (\"). Sempre termine cada post " +
   "(legenda) com 'By Sindicompany. Sindicatura no próximo nível.'";
 
+const SYSTEM_CONSVICTABR =
+  "Você é redator do Instagram @consvictabr (Consvicta). Escreve com " +
+  "naturalidade e voz própria, em português brasileiro com TODOS os acentos " +
+  "corretos. Tom alinhado à marca Consvicta: claro, atual, próximo de quem " +
+  "lê, sem maquiar. Frases curtas e diretas; comece dentro da cabeça do " +
+  "leitor; varie ritmos. " +
+  "PROIBIDO: gerúndio decorativo (evitando, garantindo, proporcionando, " +
+  "destacando), linguagem corporativa vazia (soluções integradas, sinergia, " +
+  "excelência, transformação digital), clichês motivacionais, frases de " +
+  "introdução (é importante ressaltar, vale destacar, nesse contexto), " +
+  "travessão (—), aspas curvas (“ ”), emoji decorativo, negrito mecânico. " +
+  "Use apenas aspas retas (\"). Sempre termine cada post (legenda) com " +
+  "'Consvicta.'";
+
 function _systemPrompt(brand: string): string {
-  return brand === "bysindicompany"
-    ? SYSTEM_BYSINDICOMPANY
-    : SYSTEM_SINDICOMPANYBR;
+  if (brand === "bysindicompany") return SYSTEM_BYSINDICOMPANY;
+  if (brand === "consvictabr") return SYSTEM_CONSVICTABR;
+  return SYSTEM_SINDICOMPANYBR;
 }
 
 async function chat(
