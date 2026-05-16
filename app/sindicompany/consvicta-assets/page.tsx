@@ -22,6 +22,7 @@ import {
 } from "../revista/nova/upload-actions";
 import { ByAssetSlot } from "../by-assets-slot";
 import { DashboardShell } from "../shell";
+import { UploadLibraryButton } from "./upload-library-button";
 
 /** Lê a biblioteca embutida (public/consvicta-library): logos e ícones que
  *  o engine carrega direto do filesystem — não passa pelo Supabase. Filenames
@@ -116,8 +117,8 @@ export default async function ConsvictaAssetsPage() {
 
         {(library.logos.length > 0 ||
           library.iconsByCategory.length > 0) && (
-          <section className="rounded-lg border border-mint-200 bg-mint-50/50 p-5">
-            <div className="flex items-start gap-3 mb-4">
+          <section className="rounded-lg border border-mint-200 bg-mint-50/50 p-5 space-y-4">
+            <div className="flex items-start gap-3">
               <span className="text-2xl leading-none">📚</span>
               <div>
                 <h2 className="text-sm font-semibold text-onix-900 mb-1">
@@ -132,6 +133,8 @@ export default async function ConsvictaAssetsPage() {
                 </p>
               </div>
             </div>
+
+            <UploadLibraryButton />
 
             {library.logos.length > 0 && (
               <div className="mb-5">
