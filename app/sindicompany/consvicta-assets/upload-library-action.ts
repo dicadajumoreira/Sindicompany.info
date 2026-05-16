@@ -120,13 +120,21 @@ export async function uploadEmbeddedConsvictaAssets(): Promise<UploadResult> {
     await upload(src, `__consvicta-logos/logo-${slot}.svg`);
   }
 
-  // Icons — usa manifest hardcoded em vez de readdir
-  const iconFiles = new Set(CONSVICTA_LIBRARY_ICONS);
+  // Icons — todos os 86 da biblioteca embutida. Slots 1-20 sao
+  // curados (slot 2 = capa default, slot 6 = CTA default, etc).
+  // Slots 21-86 recebem o restante em ordem alfabetica do manifest.
+  // Engine usa smart-picker semantico que indexa por keyword no
+  // titulo+body, entao a ordem dos slots nao afeta o render — mas
+  // tem todos os 86 disponiveis caso queira override manual.
   const iconsRoot = "public/consvicta-library/icons";
+  const iconsAll = [...CONSVICTA_LIBRARY_ICONS].sort();
+  const curatedSet = new Set(ICON_MAP.map((m) => `${m.name}.svg`));
+  const remainingIcons = iconsAll.filter((f) => !curatedSet.has(f));
 
+  // Slots 1-20: curados (mesma ordem do ICON_MAP)
   for (const { slot, name } of ICON_MAP) {
     const file = `${name}.svg`;
-    if (!iconFiles.has(file)) {
+    if (!iconsAll.includes(file)) {
       failed += 1;
       details.push({
         path: `__consvicta-icons/icon-${slot}.svg`,
@@ -137,6 +145,14 @@ export async function uploadEmbeddedConsvictaAssets(): Promise<UploadResult> {
     }
     await upload(
       path.join(iconsRoot, file),
+      `__consvicta-icons/icon-${slot}.svg`,
+    );
+  }
+  // Slots 21+: resto da biblioteca em ordem
+  for (let i = 0; i < remainingIcons.length; i++) {
+    const slot = ICON_MAP.length + 1 + i; // 21, 22, ...
+    await upload(
+      path.join(iconsRoot, remainingIcons[i]),
       `__consvicta-icons/icon-${slot}.svg`,
     );
   }

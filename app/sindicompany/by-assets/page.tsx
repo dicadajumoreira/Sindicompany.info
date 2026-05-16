@@ -18,9 +18,10 @@ import {
   getByLogoUploadIntent,
   getByPatternUploadIntent,
 } from "../revista/nova/upload-actions";
-import { ByAssetSlot } from "../by-assets-slot";
+import { AssetSlotGrid } from "../asset-slot-grid";
 import { CopiarAssetsButton } from "./copiar-assets-button";
 import { DashboardShell } from "../shell";
+import { NoLibraryNote } from "../no-library-note";
 
 export default async function ByAssetsPage() {
   const store = await cookies();
@@ -81,40 +82,34 @@ export default async function ByAssetsPage() {
           <CopiarAssetsButton />
         </header>
 
+        <NoLibraryNote brand="BySindicompany" />
+
         <section>
           <h2 className="text-sm font-semibold text-onix-900 mb-1">Patterns</h2>
           <p className="text-xs text-g60 mb-4">
-            Texturas de fundo dos slides (10% opacity). Até 20.
+            Texturas de fundo dos slides (10% opacity). {patterns.length} slot
+            {patterns.length === 1 ? "" : "s"}.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {Array.from({ length: PATTERN_MAX_SLOTS }, (_, i) => i + 1).map((s) => (
-              <ByAssetSlot
-                key={s}
-                slot={s}
-                label="Pattern"
-                initialUrl={patterns[s - 1]}
-                uploadIntent={getByPatternUploadIntent}
-              />
-            ))}
-          </div>
+          <AssetSlotGrid
+            storageKey="by.patterns"
+            label="Pattern"
+            initialUrls={patterns}
+            uploadIntent={getByPatternUploadIntent}
+          />
         </section>
 
         <section>
           <h2 className="text-sm font-semibold text-onix-900 mb-1">Icons</h2>
           <p className="text-xs text-g60 mb-4">
-            Biblioteca de ícones (slot 2 = capa, slot 6 = CTA). Até 20.
+            Biblioteca de ícones (slot 2 = capa, slot 6 = CTA). {icons.length}{" "}
+            slot{icons.length === 1 ? "" : "s"}.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {Array.from({ length: ICON_MAX_SLOTS }, (_, i) => i + 1).map((s) => (
-              <ByAssetSlot
-                key={s}
-                slot={s}
-                label="Icon"
-                initialUrl={icons[s - 1]}
-                uploadIntent={getByIconUploadIntent}
-              />
-            ))}
-          </div>
+          <AssetSlotGrid
+            storageKey="by.icons"
+            label="Icon"
+            initialUrls={icons}
+            uploadIntent={getByIconUploadIntent}
+          />
         </section>
 
         <section>
@@ -122,43 +117,32 @@ export default async function ByAssetsPage() {
             Fundo Carrossel
           </h2>
           <p className="text-xs text-g60 mb-4">
-            Imagens de fundo dos slides: slot 1 → slide 2, slot 2 → slide 3, …
-            Até 20.
+            Imagens de fundo dos slides: slot 1 → slide 2, slot 2 → slide 3, ….{" "}
+            {fundos.length} slot{fundos.length === 1 ? "" : "s"}.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {Array.from(
-              { length: ICON_CARROSSEL_MAX_SLOTS },
-              (_, i) => i + 1,
-            ).map((s) => (
-              <ByAssetSlot
-                key={s}
-                slot={s}
-                label="Fundo"
-                hint={`Slide ${s + 1}`}
-                initialUrl={fundos[s - 1]}
-                uploadIntent={getByIconCarrosselUploadIntent}
-              />
-            ))}
-          </div>
+          <AssetSlotGrid
+            storageKey="by.fundos"
+            label="Fundo"
+            hint={(slot) => `Slide ${slot + 1}`}
+            initialUrls={fundos}
+            uploadIntent={getByIconCarrosselUploadIntent}
+          />
         </section>
 
         <section>
           <h2 className="text-sm font-semibold text-onix-900 mb-1">Logotipos</h2>
           <p className="text-xs text-g60 mb-4">
-            Variantes do logo BySindicompany (slot 5 = topo dos slides). Até 10.
+            Variantes do logo BySindicompany (slot 5 = topo dos slides).{" "}
+            {logos.length} slot{logos.length === 1 ? "" : "s"}.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: LOGO_MAX_SLOTS }, (_, i) => i + 1).map((s) => (
-              <ByAssetSlot
-                key={s}
-                slot={s}
-                label="Logo"
-                aspect="wide"
-                initialUrl={logos[s - 1]}
-                uploadIntent={getByLogoUploadIntent}
-              />
-            ))}
-          </div>
+          <AssetSlotGrid
+            storageKey="by.logos"
+            label="Logo"
+            aspect="wide"
+            initialUrls={logos}
+            uploadIntent={getByLogoUploadIntent}
+            gridClassName="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+          />
         </section>
       </main>
     </DashboardShell>

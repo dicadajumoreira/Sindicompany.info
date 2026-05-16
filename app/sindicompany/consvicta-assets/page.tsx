@@ -18,7 +18,7 @@ import {
   getConsvictaLogoUploadIntent,
   getConsvictaPatternUploadIntent,
 } from "../revista/nova/upload-actions";
-import { ByAssetSlot } from "../by-assets-slot";
+import { AssetSlotGrid } from "../asset-slot-grid";
 import { DashboardShell } from "../shell";
 import { UploadLibraryButton } from "./upload-library-button";
 import {
@@ -247,37 +247,31 @@ export default async function ConsvictaAssetsPage() {
         <section>
           <h2 className="text-sm font-semibold text-onix-900 mb-1">Patterns</h2>
           <p className="text-xs text-g60 mb-4">
-            Texturas de fundo dos slides (10% opacity). Até 20.
+            Texturas de fundo dos slides (40% opacity).{" "}
+            {patterns.length} slot{patterns.length === 1 ? "" : "s"} ·
+            biblioteca embutida tem {CONSVICTA_LIBRARY_PATTERNS.length}.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {Array.from({ length: PATTERN_MAX_SLOTS }, (_, i) => i + 1).map((s) => (
-              <ByAssetSlot
-                key={s}
-                slot={s}
-                label="Pattern"
-                initialUrl={patterns[s - 1]}
-                uploadIntent={getConsvictaPatternUploadIntent}
-              />
-            ))}
-          </div>
+          <AssetSlotGrid
+            storageKey="consvicta.patterns"
+            label="Pattern"
+            initialUrls={patterns}
+            uploadIntent={getConsvictaPatternUploadIntent}
+          />
         </section>
 
         <section>
           <h2 className="text-sm font-semibold text-onix-900 mb-1">Icons</h2>
           <p className="text-xs text-g60 mb-4">
-            Biblioteca de ícones (slot 2 = capa, slot 6 = CTA). Até 20.
+            Biblioteca de ícones (slot 2 = capa, slot 6 = CTA).{" "}
+            {icons.length} slot{icons.length === 1 ? "" : "s"} ·
+            biblioteca embutida tem {CONSVICTA_LIBRARY_ICONS.length}.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {Array.from({ length: ICON_MAX_SLOTS }, (_, i) => i + 1).map((s) => (
-              <ByAssetSlot
-                key={s}
-                slot={s}
-                label="Icon"
-                initialUrl={icons[s - 1]}
-                uploadIntent={getConsvictaIconUploadIntent}
-              />
-            ))}
-          </div>
+          <AssetSlotGrid
+            storageKey="consvicta.icons"
+            label="Icon"
+            initialUrls={icons}
+            uploadIntent={getConsvictaIconUploadIntent}
+          />
         </section>
 
         <section>
@@ -285,43 +279,34 @@ export default async function ConsvictaAssetsPage() {
             Fundo Carrossel
           </h2>
           <p className="text-xs text-g60 mb-4">
-            Imagens de fundo dos slides: slot 1 → slide 2, slot 2 → slide 3, …
-            Até 20.
+            Imagens de fundo dos slides: slot 1 → slide 1 (capa), slot 2 →
+            slide 2, …. {fundos.length} slot{fundos.length === 1 ? "" : "s"} ·
+            biblioteca embutida tem {CONSVICTA_LIBRARY_FUNDOS.length}.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {Array.from(
-              { length: ICON_CARROSSEL_MAX_SLOTS },
-              (_, i) => i + 1,
-            ).map((s) => (
-              <ByAssetSlot
-                key={s}
-                slot={s}
-                label="Fundo"
-                hint={`Slide ${s + 1}`}
-                initialUrl={fundos[s - 1]}
-                uploadIntent={getConsvictaIconCarrosselUploadIntent}
-              />
-            ))}
-          </div>
+          <AssetSlotGrid
+            storageKey="consvicta.fundos"
+            label="Fundo"
+            hint={(slot) => `Slide ${slot}`}
+            initialUrls={fundos}
+            uploadIntent={getConsvictaIconCarrosselUploadIntent}
+          />
         </section>
 
         <section>
           <h2 className="text-sm font-semibold text-onix-900 mb-1">Logotipos</h2>
           <p className="text-xs text-g60 mb-4">
-            Variantes do logo Consvicta (slot 1 = topo dos slides). Até 10.
+            Variantes do logo Consvicta (slot 1 = topo dos slides, slot 2 =
+            watermark). {logos.length} slot{logos.length === 1 ? "" : "s"} ·
+            biblioteca embutida tem {CONSVICTA_LIBRARY_LOGOS.length}.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: LOGO_MAX_SLOTS }, (_, i) => i + 1).map((s) => (
-              <ByAssetSlot
-                key={s}
-                slot={s}
-                label="Logo"
-                aspect="wide"
-                initialUrl={logos[s - 1]}
-                uploadIntent={getConsvictaLogoUploadIntent}
-              />
-            ))}
-          </div>
+          <AssetSlotGrid
+            storageKey="consvicta.logos"
+            label="Logo"
+            aspect="wide"
+            initialUrls={logos}
+            uploadIntent={getConsvictaLogoUploadIntent}
+            gridClassName="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+          />
         </section>
       </main>
     </DashboardShell>
