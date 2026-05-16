@@ -43,10 +43,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Assets Sindicompany",
     emoji: "🎨",
     children: [
-      { label: "Patterns", href: "/sindicompany/patterns" },
-      { label: "Icons", href: "/sindicompany/icons" },
-      { label: "Fundo Carrossel", href: "/sindicompany/icon-carrossel" },
-      { label: "Logotipos", href: "/sindicompany/logos" },
+      { label: "Patterns · Icons · Fundo · Logos", href: "/sindicompany/assets" },
     ],
   },
   {
