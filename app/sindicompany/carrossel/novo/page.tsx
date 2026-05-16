@@ -263,21 +263,26 @@ const TEMAS_BY = [
   "Outros",
 ];
 
-// Temas pro @consvictabr — administradora/sindicatura profissional premium.
-// Proposta inicial coerente com a hipotese da marca (convicção, solidez,
-// método). Ajuste conforme o briefing real for chegando.
+// Temas pro @consvictabr — Gestão Condominial Boutique (SP & RJ, desde 2019).
+// Reflete os pilares do brand book: boutique vs plataforma, balancete
+// personalizado, plano de contas customizado, prédio tratado como único,
+// 20+ anos de experiência, decisão informada.
 const TEMAS_CONSVICTA = [
-  "Gestão com convicção (manifesto)",
-  "Bastidores da administração premium",
-  "Método Consvicta",
-  "Decisões difíceis do dia a dia",
+  "Gestão Boutique vs. plataforma de gestão",
+  "Balancete personalizado — por que importa",
+  "Plano de contas customizado por prédio",
+  "Cada condomínio tem seu jeito de funcionar",
+  "Bastidores da administração boutique",
+  "Decisões difíceis do dia a dia do síndico",
   "Saúde financeira do condomínio",
-  "Reputação do prédio e valorização do imóvel",
+  "Reputação do prédio e valor do imóvel",
   "Conselho consultivo: o que importa",
   "Conformidade e legislação",
   "Sustentabilidade na gestão",
-  "Tecnologia operacional",
-  "Mercado imobiliário vertical",
+  "Tecnologia que serve a gestão (não substitui)",
+  "Atendimento humano em prédios de alto padrão",
+  "Mercado imobiliário vertical SP & RJ",
+  "20 anos de mercado condominial",
   "Outros",
 ];
 

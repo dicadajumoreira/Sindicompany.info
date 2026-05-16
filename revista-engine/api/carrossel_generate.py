@@ -411,6 +411,28 @@ PALETTE = {
     "gray_5": "#F4F4F5",
 }
 
+# Paleta oficial Consvicta (Brand Book). Mapeia para as mesmas chaves
+# que o template usa, pra trocar sem mudar o HTML dos slides:
+#  - onix     -> Preto Profundo
+#  - mint     -> Tiffany / Pantone 1837 Blue (cor signature da marca)
+#  - sand     -> Ouro Envelhecido
+#  - lavender -> Ouro Claro
+#  - white    -> Branco Puro
+#  - gray_5   -> Off-White
+PALETTE_CONSVICTA = {
+    "onix": "#0A0A0A",
+    "mint": "#81D8D0",
+    "sand": "#B08D57",
+    "lavender": "#C9A96E",
+    "white": "#FFFFFF",
+    "gray_5": "#F5F5F2",
+}
+
+
+def _palette() -> dict[str, str]:
+    """Paleta ativa conforme a marca."""
+    return PALETTE_CONSVICTA if _BRAND == "consvictabr" else PALETTE
+
 
 # =============================================================================
 # Supabase helpers
@@ -763,7 +785,7 @@ def _slide_html(
     is_capa: bool = False,
 ) -> str:
     """Monta o HTML de um único slide pronto pra renderizar."""
-    p = PALETTE
+    p = _palette()
     handle = _handle()
     epilogue_url = (
         "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;800;900&display=swap"
