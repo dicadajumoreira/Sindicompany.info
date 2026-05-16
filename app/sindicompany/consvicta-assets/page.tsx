@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import {
   ICON_CARROSSEL_MAX_SLOTS,
@@ -20,6 +22,38 @@ import {
 } from "../revista/nova/upload-actions";
 import { ByAssetSlot } from "../by-assets-slot";
 import { DashboardShell } from "../shell";
+
+/** Lê a biblioteca embutida (public/consvicta-library): logos e ícones que
+ *  o engine carrega direto do filesystem — não passa pelo Supabase. Filenames
+ *  em icons/ são namespaceados por categoria (Geral_NN-nome.svg, Aplicativo_*,
+ *  Diferenciais_*, Equipe_Multidisciplinar_*, Facilities_*). */
+async function readEmbeddedLibrary(): Promise<{
+  logos: string[];
+  iconsByCategory: Array<{ category: string; files: string[] }>;
+}> {
+  const root = path.join(process.cwd(), "public", "consvicta-library");
+  try {
+    const logoFiles = (
+      await fs.readdir(path.join(root, "logos")).catch(() => [] as string[])
+    ).filter((f) => f.endsWith(".svg"));
+    const iconFiles = (
+      await fs.readdir(path.join(root, "icons")).catch(() => [] as string[])
+    ).filter((f) => f.endsWith(".svg"));
+    const byCat = new Map<string, string[]>();
+    for (const f of iconFiles) {
+      const idx = f.indexOf("_");
+      const cat = idx > 0 ? f.slice(0, idx) : "Outros";
+      if (!byCat.has(cat)) byCat.set(cat, []);
+      byCat.get(cat)!.push(f);
+    }
+    const iconsByCategory = Array.from(byCat.entries())
+      .map(([category, files]) => ({ category, files: files.sort() }))
+      .sort((a, b) => a.category.localeCompare(b.category));
+    return { logos: logoFiles.sort(), iconsByCategory };
+  } catch {
+    return { logos: [], iconsByCategory: [] };
+  }
+}
 
 export default async function ConsvictaAssetsPage() {
   const store = await cookies();
@@ -53,6 +87,8 @@ export default async function ConsvictaAssetsPage() {
     Array(LOGO_MAX_SLOTS).fill(null) as (string | null)[],
   );
 
+  const library = await readEmbeddedLibrary();
+
   return (
     <DashboardShell>
       <main className="max-w-5xl mx-auto px-6 py-12 space-y-12">
@@ -77,6 +113,77 @@ export default async function ConsvictaAssetsPage() {
             Consvicta. JPG, PNG, WebP e SVG. Máx 10MB cada.
           </p>
         </header>
+
+        {(library.logos.length > 0 ||
+          library.iconsByCategory.length > 0) && (
+          <section className="rounded-lg border border-mint-200 bg-mint-50/50 p-5">
+            <div className="flex items-start gap-3 mb-4">
+              <span className="text-2xl leading-none">📚</span>
+              <div>
+                <h2 className="text-sm font-semibold text-onix-900 mb-1">
+                  Biblioteca embutida (sistema)
+                </h2>
+                <p className="text-xs text-g60 max-w-2xl">
+                  Assets oficiais da Consvicta carregados pelo engine direto
+                  do código (não dependem dos slots abaixo). Logos servem
+                  como referência para upload nos slots; ícones são
+                  selecionados automaticamente pelo smart-picker conforme
+                  o título/body de cada slide.
+                </p>
+              </div>
+            </div>
+
+            {library.logos.length > 0 && (
+              <div className="mb-5">
+                <h3 className="text-xs uppercase tracking-wider text-onix-700 font-semibold mb-2">
+                  Logotipos ({library.logos.length})
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {library.logos.map((f) => (
+                    <div
+                      key={f}
+                      className="rounded border border-onix-100 bg-white p-3 flex flex-col items-center gap-2"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`/consvicta-library/logos/${f}`}
+                        alt={f}
+                        className="h-10 w-auto"
+                      />
+                      <code className="text-[10px] text-g60 break-all">
+                        {f}
+                      </code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {library.iconsByCategory.map(({ category, files }) => (
+              <div key={category} className="mb-4 last:mb-0">
+                <h3 className="text-xs uppercase tracking-wider text-onix-700 font-semibold mb-2">
+                  {category.replace(/_/g, " ")} ({files.length})
+                </h3>
+                <div className="grid grid-cols-6 sm:grid-cols-8 lg:grid-cols-12 gap-2">
+                  {files.map((f) => (
+                    <div
+                      key={f}
+                      title={f}
+                      className="rounded border border-onix-100 bg-white p-2 aspect-square flex items-center justify-center"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`/consvicta-library/icons/${f}`}
+                        alt={f}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
 
         <section>
           <h2 className="text-sm font-semibold text-onix-900 mb-1">Patterns</h2>
