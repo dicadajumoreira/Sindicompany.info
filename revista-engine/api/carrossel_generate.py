@@ -1740,7 +1740,13 @@ def _h_with_data(s: str, enabled: bool) -> str:
 
 
 def _render_slide_png(html: str) -> bytes:
-    """Renderiza HTML em PNG 3072×3839 via Playwright sync."""
+    """Renderiza HTML em PNG 3072×3839 via Playwright sync.
+
+    Importante: aguarda document.fonts.ready ANTES de screenshot pra
+    garantir que as fontes inline base64 (Consvicta usa Cormorant
+    Garamond + Outfit + Bebas Neue embutidas) ja foram parseadas e
+    aplicadas ao layout. Sem isso, o screenshot pode pegar fallback
+    (Times/Arial) e ignorar as fontes da marca."""
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
@@ -1752,6 +1758,21 @@ def _render_slide_png(html: str) -> bytes:
             )
             page = ctx.new_page()
             page.set_content(html, wait_until="networkidle")
+            # Aguarda TODAS as fontes (incluindo as inline base64) ficarem
+            # prontas pro layout. document.fonts.ready resolve quando o
+            # FontFaceSet termina de carregar todas as font-face
+            # declaracoes. Sem esse await, o screenshot pode capturar
+            # o frame ANTES das fontes da marca serem aplicadas.
+            try:
+                page.wait_for_function(
+                    "document.fonts && document.fonts.status === 'loaded'",
+                    timeout=15000,
+                )
+            except Exception:  # noqa: BLE001
+                # Se o assert falhar (caso raro de bug do navegador),
+                # segue com o screenshot — melhor render parcial do
+                # que falha total.
+                pass
             png = page.screenshot(
                 full_page=False,
                 type="png",
@@ -1814,6 +1835,94 @@ _BRAND_HUMANIZER_RULES: dict[str, dict[str, str]] = {
         ),
     },
 }
+
+
+# Regex-based brand leak filter. Por marca, define os termos
+# proibidos e o que colocar no lugar. Os termos sao matched com word
+# boundaries pra nao mutilar palavras parciais. Case-insensitive.
+# Aplicado APOS o humanizer como ultima linha de defesa.
+_BRAND_LEAK_FILTERS: dict[str, list[tuple[str, str]]] = {
+    "consvictabr": [
+        # ORDEM IMPORTA — patterns mais especificos PRIMEIRO senao
+        # regex mais ampla come o prefixo (e.g. \bSindicompany matches
+        # 'sindicompany' dentro de '#sindicompany').
+        # Hashtags (1o pra preservar lowercase)
+        (r"#bysindicompany\b", "#consvicta"),
+        (r"#sindicompany\b", "#consvicta"),
+        # Handles
+        (r"@bysindicompany\b", "@consvictabr"),
+        (r"@sindicompanybr\b", "@consvictabr"),
+        # Nomes compostos antes dos simples
+        (r"\bBy Sindicompany\b", "Consvicta"),
+        (r"\bby sindicompany\b", "Consvicta"),
+        (r"\bSindicompany\b", "Consvicta"),
+        (r"\bsindicompany\b", "Consvicta"),
+        # Tagline errada (variantes com/sem emoji)
+        (r"\s*Por mais lares\.?\s*🏡?", ""),
+        (r"\s*por mais lares\.?\s*🏡?", ""),
+    ],
+    "bysindicompany": [
+        (r"#consvicta\b", "#bysindicompany"),
+        (r"@consvictabr\b", "@bysindicompany"),
+        (r"\bConsvicta\b", "By Sindicompany"),
+        (r"\bconsvicta\b", "By Sindicompany"),
+    ],
+    "sindicompanybr": [
+        (r"#consvicta\b", "#sindicompany"),
+        (r"@consvictabr\b", "@sindicompanybr"),
+        (r"\bConsvicta\b", "Sindicompany"),
+        (r"\bconsvicta\b", "Sindicompany"),
+    ],
+}
+
+
+def _sanitize_brand_leak(
+    slides: list[dict[str, Any]], legenda: str, brand: str
+) -> tuple[list[dict[str, Any]], str]:
+    """Substitui mencoes proibidas pelas equivalentes da marca atual.
+    Roda DEPOIS do humanizer como ultima linha de defesa contra leak.
+    Tambem normaliza espacos duplicados e pontuacao orfã que possa
+    sobrar das substituicoes."""
+    filters = _BRAND_LEAK_FILTERS.get(brand) or []
+    if not filters:
+        return slides, legenda
+
+    def _clean(text: str) -> str:
+        if not text:
+            return text
+        out = text
+        for pattern, repl in filters:
+            out = re.sub(pattern, repl, out, flags=re.IGNORECASE)
+        # Limpa artefatos: espaços duplos, virgula+espaço solto antes
+        # de ponto, virgulas duplas etc.
+        out = re.sub(r"\s{2,}", " ", out)
+        out = re.sub(r",\s*\.", ".", out)
+        out = re.sub(r",\s*,", ",", out)
+        out = re.sub(r"\s+([,.!?;:])", r"\1", out)
+        return out.strip()
+
+    leaked = 0
+    for s in slides:
+        new_titulo = _clean(str(s.get("titulo") or ""))
+        new_body = _clean(str(s.get("body") or ""))
+        if new_titulo != str(s.get("titulo") or ""):
+            leaked += 1
+        if new_body != str(s.get("body") or ""):
+            leaked += 1
+        s["titulo"] = new_titulo
+        s["body"] = new_body
+
+    new_legenda = _clean(legenda)
+    if new_legenda != legenda:
+        leaked += 1
+    if leaked:
+        print(
+            f"[carrossel] sanitizer ({brand}) corrigiu {leaked} leak(s) de "
+            f"marca apos o humanizer",
+            flush=True,
+        )
+
+    return slides, new_legenda
 
 
 def _humanizer_pass(
@@ -1971,6 +2080,13 @@ def _humanizer_pass(
     new_legenda = data.get("legenda")
     if isinstance(new_legenda, str) and new_legenda.strip():
         legenda = _apply_accent_dict(new_legenda)
+
+    # Etapa 3 — Hard sanitizer: filtra mencoes proibidas. Mesmo com o
+    # SYSTEM_HUMANIZER + ANTI-LEAK no prompt, o modelo as vezes
+    # escorrega e deixa "Sindicompany" ou tagline errada num slide.
+    # Esse pass faz substituicao deterministica conforme as regras
+    # de marca — ultima linha de defesa antes do render.
+    slides, legenda = _sanitize_brand_leak(slides, legenda, brand)
 
     print(
         f"[carrossel] humanizer ({brand}) aplicado em {len(slides)} slides + "
