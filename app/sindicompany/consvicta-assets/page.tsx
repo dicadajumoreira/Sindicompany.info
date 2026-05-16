@@ -109,6 +109,12 @@ export default async function ConsvictaAssetsPage() {
           </p>
         </header>
 
+        {/* Botao "Subir biblioteca" SEMPRE visivel — independente da
+            biblioteca embutida ter carregado, do tamanho da tela, ou
+            de qualquer estado. Comeca aqui pra ser a primeira acao
+            visivel da pagina. */}
+        <UploadLibraryButton />
+
         {(library.logos.length > 0 ||
           library.iconsByCategory.length > 0) && (
           <section className="rounded-lg border border-mint-200 bg-mint-50/50 p-5 space-y-4">
@@ -127,8 +133,6 @@ export default async function ConsvictaAssetsPage() {
                 </p>
               </div>
             </div>
-
-            <UploadLibraryButton />
 
             {library.logos.length > 0 && (
               <div className="mb-5">
