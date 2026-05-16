@@ -135,13 +135,35 @@ def _patterns_shuffled() -> list[str]:
     return base
 
 
-def _pattern_for_slide(slide_idx: int) -> str:
+def _pattern_for_slide(slide_idx: int, *, is_cta: bool = False, is_capa: bool = False) -> str:
     """Devolve uma data URL ciclando entre patterns aleatorizados pelo
     indice do slide, ou string vazia se nenhum pattern existir.
 
     Whitelist por slide: certos slides so podem usar patterns
     especificos (curadoria da marca). Pra esses, sorteia um do
-    whitelist. Pra os demais, usa o shuffle global."""
+    whitelist. Pra os demais, usa o shuffle global.
+
+    Consvicta: curadoria por tom de fundo do slide. Capa+CTA sao
+    escuros (onix) -> patterns dark (slots 2/4/6/9/12/13). Slides
+    internos cycling entre tons claros -> patterns light (slots
+    1/3/5/7/8/10/11)."""
+    if _BRAND == "consvictabr":
+        # Slides escuros (capa onix-gradient ou CTA onix) -> patterns dark
+        dark_slots = [2, 4, 6, 9, 12, 13]
+        # Slides claros (mint/sand/lavender/white/gray_5) -> patterns light
+        light_slots = [1, 3, 5, 7, 8, 10, 11]
+        target = dark_slots if (is_cta or is_capa) else light_slots
+        shuffled = list(target)
+        random.shuffle(shuffled)
+        for slot in shuffled:
+            url = _pattern_slot_data_url(slot)
+            if url:
+                return url
+        # Bucket vazio? cai no shuffle global (que tambem vai vir
+        # vazio se nada foi uploaded, devolvendo "")
+        pats = _patterns_shuffled()
+        return pats[(slide_idx - 1) % len(pats)] if pats else ""
+
     allowed = _SLIDE_PATTERN_WHITELIST.get(slide_idx)
     if allowed:
         # Embaralha os slots permitidos e devolve o primeiro que
@@ -611,8 +633,24 @@ def _icons_all_data_urls() -> list[str]:
 
 def _icon_for_slide(slide_idx: int) -> str:
     """Mapeia: slot 1 -> slide 2, slot 2 -> slide 3, etc.
-    Capa (slide_idx 1) NAO recebe Fundo Carrossel — retorna vazio."""
+    Capa (slide_idx 1) NAO recebe Fundo Carrossel — retorna vazio.
+
+    Excecao Consvicta: capa E todos os slides recebem fundo. Se o
+    bucket __consvicta-icon-carrossel/ estiver vazio, usa o logo
+    simbolo (slot 2 de __consvicta-logos) como fallback decorativo
+    pra preencher visualmente o slide (a opacity baixa do .icon-bg
+    suaviza o efeito)."""
     icons = _icons_all_data_urls()
+    if _BRAND == "consvictabr":
+        # Capa tambem recebe — diferente das outras marcas
+        if icons:
+            # slot 1 -> slide 1 (capa), slot 2 -> slide 2, etc
+            return icons[(slide_idx - 1) % len(icons)]
+        # Fallback: usa o logo simbolo (sempre presente apos upload)
+        # como elemento de fundo. Funciona como brand reinforcement.
+        sym = _logo_slot_data_url(2)
+        return sym or ""
+    # Outras marcas: comportamento original (capa sem fundo)
     if not icons or slide_idx < 2:
         return ""
     return icons[(slide_idx - 2) % len(icons)]
@@ -1113,6 +1151,19 @@ def _slide_html(
         watermark_div = (
             f'<div class="logo-watermark"></div>' if watermark_url else ""
         )
+        # Pattern + Fundo Carrossel na CAPA pra Consvicta — sempre
+        # aplicados pra enriquecer visualmente. Outras marcas nao
+        # tem pattern na capa (comportamento legado).
+        capa_pattern_url = (
+            _pattern_for_slide(1, is_capa=True) if is_consvicta else ""
+        )
+        capa_pattern_div = (
+            '<div class="pattern-bg-capa"></div>' if capa_pattern_url else ""
+        )
+        capa_fundo_url = _icon_for_slide(1) if is_consvicta else ""
+        capa_fundo_div = (
+            '<div class="icon-bg-capa"></div>' if capa_fundo_url else ""
+        )
         return f"""
 <!doctype html><html><head><meta charset="utf-8">
 {head_fonts}
@@ -1135,6 +1186,33 @@ def _slide_html(
     background-position: center;
     background-size: contain;
     opacity: 0.06;
+    pointer-events: none;
+    z-index: 1;
+  }}
+  .pattern-bg-capa {{
+    /* Pattern dark da Consvicta cobrindo a capa toda, 12% opacity.
+       Senta entre o hero-img e o overlay pro texto continuar legivel. */
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url('{capa_pattern_url}');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 1;
+  }}
+  .icon-bg-capa {{
+    /* Fundo Carrossel da capa Consvicta (slot 1 ou fallback logo
+       simbolo) — grande, baixa opacidade, rente a borda esquerda
+       inferior (mirror do bottom-right do icone). */
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 2400px; height: 2400px;
+    background-image: url('{capa_fundo_url}');
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    background-size: contain;
+    opacity: 0.12;
     pointer-events: none;
     z-index: 1;
   }}
@@ -1299,6 +1377,8 @@ def _slide_html(
 <body>
   {bg}
   <div class="vignette"></div>
+  {capa_pattern_div}
+  {capa_fundo_div}
   {watermark_div}
   <div class="overlay"></div>
   <div class="content">
@@ -1360,10 +1440,14 @@ def _slide_html(
 
     # Pattern de fundo:
     # - Slides internos: pattern ciclando, tile 800x800, 10% opacity
-    # - CTA (ultimo): Pattern 1 fixo, mesma regra (tile 800x800, 10%)
+    # - CTA (ultimo): Consvicta usa picker dark; outras marcas fixam
+    #   Pattern 1 (legado). Mesma regra tile/opacity.
     if is_cta:
-        pats = _patterns_data_urls()
-        pattern_url = pats[0] if pats else ""
+        if is_consvicta:
+            pattern_url = _pattern_for_slide(slide_idx, is_cta=True)
+        else:
+            pats = _patterns_data_urls()
+            pattern_url = pats[0] if pats else ""
     else:
         pattern_url = _pattern_for_slide(slide_idx)
     pattern_div = '<div class="pattern-bg"></div>' if pattern_url else ""
@@ -1385,9 +1469,14 @@ def _slide_html(
         pagination_font = 77
         badge_font = 80
 
-    # Fundo Carrossel: usado como icon-bg grande nos slides internos.
-    # CTA NAO recebe — fica so com onix + pattern.
-    icon_url_internal = "" if is_cta else _icon_for_slide(slide_idx)
+    # Fundo Carrossel: usado como icon-bg grande nos slides.
+    # Consvicta: TODO slide (incluindo CTA) recebe pra enriquecer
+    # visualmente — _icon_for_slide tem fallback pro logo simbolo.
+    # Outras marcas: CTA segue sem fundo (legado).
+    if is_consvicta or not is_cta:
+        icon_url_internal = _icon_for_slide(slide_idx)
+    else:
+        icon_url_internal = ""
     icon_bg_div = (
         '<div class="icon-bg"></div>' if icon_url_internal else ""
     )
