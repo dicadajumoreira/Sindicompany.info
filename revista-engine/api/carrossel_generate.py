@@ -631,26 +631,106 @@ def _icons_all_data_urls() -> list[str]:
     return out
 
 
-def _icon_for_slide(slide_idx: int) -> str:
+# Slots dos 20 fundos no bucket __consvicta-icon-carrossel/ separados
+# por tom dominante do SVG. Light = fundo predominantemente claro
+# (cream/off-white), funciona em slides claros (mint/sand/lavender/
+# white/gray_5). Dark = fundo predominantemente escuro (ink/grafite/
+# gradient escuro), funciona em capa + CTA (onix). Tons mistos vao
+# pro pool DARK por seguranca (10 split, 15 linhas dark, etc).
+_CONSVICTA_FUNDO_LIGHT_SLOTS = [6, 14, 19]  # offwhite-elegante, moldura-interna, gold-edge
+_CONSVICTA_FUNDO_DARK_SLOTS = [
+    1, 2, 3, 4, 5, 7, 8, 9, 11, 12, 13, 15, 16, 17, 18, 20
+]
+
+
+def _consvicta_fundo_for_slide(slide_idx: int, *, is_cta: bool, is_capa: bool) -> str:
+    """Pega um fundo curado pelo tom do slide. Roda apos garantir que
+    o bucket __consvicta-icon-carrossel/ tem assets uploaded. Se algum
+    slot estiver vazio, pula pra o proximo do pool. Sem assets, volta
+    "" e o caller cai no fallback (logo simbolo)."""
+    # Slide tom: capa+CTA escuros (onix), internos claros
+    is_dark = is_cta or is_capa
+    pool = _CONSVICTA_FUNDO_DARK_SLOTS if is_dark else _CONSVICTA_FUNDO_LIGHT_SLOTS
+    # Cycla pelo pool por slide_idx pra cada slide ter um fundo diferente
+    # (mod sobre o tamanho do pool, nao do total de 20)
+    if not pool:
+        return ""
+    # Tenta o slot ideal primeiro, depois fallback pros vizinhos
+    start = (slide_idx - 1) % len(pool)
+    for offset in range(len(pool)):
+        slot = pool[(start + offset) % len(pool)]
+        url = _consvicta_fundo_slot_data_url(slot)
+        if url:
+            return url
+    return ""
+
+
+_CONSVICTA_FUNDO_SLOT_CACHE: dict[int, str] = {}
+
+
+def _consvicta_fundo_slot_data_url(slot: int) -> str:
+    """Baixa o fundo do bucket __consvicta-icon-carrossel/icon-{slot}.X
+    e cacheia por slot. String vazia se nao houver."""
+    if slot in _CONSVICTA_FUNDO_SLOT_CACHE:
+        return _CONSVICTA_FUNDO_SLOT_CACHE[slot]
+    base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    if not base:
+        _CONSVICTA_FUNDO_SLOT_CACHE[slot] = ""
+        return ""
+    for ext in ("svg", "png", "webp", "jpg", "jpeg"):
+        url = (
+            f"{base}/storage/v1/object/public/"
+            f"condominios-fotos/__consvicta-icon-carrossel/icon-{slot}.{ext}"
+        )
+        try:
+            req = urllib.request.Request(
+                url, headers={"User-Agent": "carrossel-engine/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status != 200:
+                    continue
+                content = resp.read()
+                ctype = (
+                    resp.headers.get("Content-Type", "image/svg+xml")
+                    .split(";")[0]
+                    .strip()
+                )
+            b64 = base64.b64encode(content).decode("ascii")
+            url_str = f"data:{ctype};base64,{b64}"
+            _CONSVICTA_FUNDO_SLOT_CACHE[slot] = url_str
+            return url_str
+        except urllib.error.HTTPError:
+            continue
+        except Exception:  # noqa: BLE001
+            break
+    _CONSVICTA_FUNDO_SLOT_CACHE[slot] = ""
+    return ""
+
+
+def _icon_for_slide(slide_idx: int, *, is_cta: bool = False, is_capa: bool = False) -> str:
     """Mapeia: slot 1 -> slide 2, slot 2 -> slide 3, etc.
     Capa (slide_idx 1) NAO recebe Fundo Carrossel — retorna vazio.
 
-    Excecao Consvicta: capa E todos os slides recebem fundo. Se o
+    Excecao Consvicta: capa E todos os slides recebem fundo curado
+    pelo tom (light pra internos claros, dark pra capa+CTA). Se o
     bucket __consvicta-icon-carrossel/ estiver vazio, usa o logo
     simbolo (slot 2 de __consvicta-logos) como fallback decorativo
     pra preencher visualmente o slide (a opacity baixa do .icon-bg
     suaviza o efeito)."""
-    icons = _icons_all_data_urls()
     if _BRAND == "consvictabr":
-        # Capa tambem recebe — diferente das outras marcas
-        if icons:
-            # slot 1 -> slide 1 (capa), slot 2 -> slide 2, etc
-            return icons[(slide_idx - 1) % len(icons)]
-        # Fallback: usa o logo simbolo (sempre presente apos upload)
-        # como elemento de fundo. Funciona como brand reinforcement.
+        # Picker curado por tom (light/dark) — vai DIRETO no slot
+        # certo do bucket em vez de pegar da lista geral. Ja faz
+        # cycling dentro do pool do tom certo.
+        url = _consvicta_fundo_for_slide(
+            slide_idx, is_cta=is_cta, is_capa=is_capa
+        )
+        if url:
+            return url
+        # Bucket vazio? Fallback: logo simbolo como brand reinforcement
         sym = _logo_slot_data_url(2)
         return sym or ""
     # Outras marcas: comportamento original (capa sem fundo)
+    icons = _icons_all_data_urls()
     if not icons or slide_idx < 2:
         return ""
     return icons[(slide_idx - 2) % len(icons)]
@@ -1158,7 +1238,9 @@ def _slide_html(
         capa_pattern_div = (
             '<div class="pattern-bg-capa"></div>' if capa_pattern_url else ""
         )
-        capa_fundo_url = _icon_for_slide(1) if is_consvicta else ""
+        capa_fundo_url = (
+            _icon_for_slide(1, is_capa=True) if is_consvicta else ""
+        )
         capa_fundo_div = (
             '<div class="icon-bg-capa"></div>' if capa_fundo_url else ""
         )
@@ -1470,8 +1552,13 @@ def _slide_html(
     # Fundo Carrossel: usado como icon-bg grande nos slides.
     # Consvicta: TODO slide (incluindo CTA) recebe pra enriquecer
     # visualmente — _icon_for_slide tem fallback pro logo simbolo.
-    # Outras marcas: CTA segue sem fundo (legado).
-    if is_consvicta or not is_cta:
+    # Picker curado por tom do slide (light/dark). Outras marcas:
+    # CTA segue sem fundo (legado).
+    if is_consvicta:
+        icon_url_internal = _icon_for_slide(
+            slide_idx, is_cta=is_cta, is_capa=False
+        )
+    elif not is_cta:
         icon_url_internal = _icon_for_slide(slide_idx)
     else:
         icon_url_internal = ""
