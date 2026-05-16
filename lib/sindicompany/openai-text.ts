@@ -81,7 +81,7 @@ const FORMATO_INSTRUCOES: Record<string, string> = {
     `  último: o modelo/script copiável + CTA "Salva esse post. Você vai precisar.".`,
   opiniao:
     `FORMATO: OPINIÃO FORTE (posição clara da MARCA sobre tema polêmico).\n` +
-    `- A opinião é da Sindicompany, não de personagem fictício.\n` +
+    `- A opinião é da MARCA (perfil da conta), não de personagem fictício.\n` +
     `- Precisa de ARGUMENTO: 2-3 razões concretas que sustentam a posição.\n` +
     `- ANTECIPE o contra-argumento num slide ("eu sei que você discorda, mas...") + responda.\n` +
     `- NUNCA atacar pessoas — a opinião é sobre prática/sistema, nunca sobre síndicos/moradores/gestoras específicas.\n` +
@@ -286,6 +286,40 @@ const OBJETIVO_INSTRUCOES: Record<string, string> = {
     `- Sucesso: "não sabia disso", "meu condomínio faz errado", compartilhamentos, salvamentos, marcações de vizinhos.`,
 };
 
+// PASSO 0 — objetivo do carrossel (@consvictabr). Consvicta e marca
+// boutique de gestao condominial (SP & RJ, desde 2019). Publico:
+// sindico profissional / conselho / proprietario de prediol alto
+// padrao. Tom: premium, proximo, tecnico-mas-humano. Vende experiencia
+// boutique e personalizacao real. NUNCA mencionar Sindicompany ou By
+// Sindicompany — sao marcas distintas e concorrentes do ponto de
+// vista do conteudo.
+const OBJETIVO_INSTRUCOES_CONSVICTA: Record<string, string> = {
+  comentarios:
+    `OBJETIVO: GERAR COMENTÁRIOS (DEBATE QUALIFICADO).\n` +
+    `- Provoca síndicos profissionais, conselheiros e proprietários atentos a comentar com opinião. Sucesso = debate qualificado, não alcance.\n` +
+    `- CTA binário com lados defensáveis: "PERSONALIZADO ou PADRÃO", "BOUTIQUE ou PLATAFORMA", "TÉCNICO ou COMERCIAL", "TRANSPARÊNCIA ou EFICIÊNCIA", "COBRARIA ou RELEVARIA".\n` +
+    `- Temas: gestão padronizada × atendimento sob medida, balancete genérico × personalizado, plataforma × pessoa, custo barato × valor entregue, decisão rápida × decisão informada.\n` +
+    `- NUNCA polêmica vazia ou ataque pessoal. Debate é sobre PRÁTICA de mercado.`,
+  salvamentos:
+    `OBJETIVO: GERAR SALVAMENTOS (REFERÊNCIA TÉCNICA).\n` +
+    `- O post precisa ser tão útil que vire material de consulta. Sensação: "vou usar isso na próxima assembleia/decisão". Sucesso = salvamentos, envios em grupo, citação em reunião de conselho.\n` +
+    `- Linguagem técnica mas humana — sem juridiquês decorativo. Ancore: lei, artigo, número, jurisprudência, prática de mercado.\n` +
+    `- Temas: balancete vs prestação de contas, prestação personalizada × padrão, plano de contas customizado, fundo de reserva, leitura de DRE de condomínio, indicadores de gestão, sinais de gestão amadora.\n` +
+    `- CTA "Salva esse post.", "Leva pra próxima reunião do conselho.", "Manda pro síndico que cuida do seu prédio.".`,
+  clientes:
+    `OBJETIVO: ATRAIR NOVOS CONDOMÍNIOS (PREMIUM).\n` +
+    `- Quem decide trocar a administração precisa perceber que vive um problema BOUTIQUE: prédio único tratado como mais um, balancete padrão sem leitura, conselho sem interlocução técnica, decisões pelo formulário em vez de pela conversa.\n` +
+    `- Mostre o caos típico: balancete que ninguém entende, gestor que troca a cada 6 meses, prestação atrasada, conselho atropelado, plano de contas que não casa com o prédio. Resultado SEMPRE com número real: prazo, economia, redução de inadimplência, retomada de obras.\n` +
+    `- NUNCA prometa transformação digital, dashboard, tecnologia mágica. Venda: equipe especializada, atendimento próximo, balancete sob medida, plano de contas customizado, 20+ anos de mercado, gente que conhece o prédio pelo nome.\n` +
+    `- CTA elegante e seletivo: "O seu prédio merece uma administração que conhece ele pelo nome.", "Marca uma conversa.", "Talvez sua administração esteja te tratando como mais um.".`,
+  autoridade:
+    `OBJETIVO: POSICIONAR AUTORIDADE BOUTIQUE NO MERCADO.\n` +
+    `- Eleva a Consvicta como REFERÊNCIA em gestão condominial boutique de SP & RJ. Não é vender agora — é fazer o mercado pensar "essa administradora opera num outro nível". Sucesso = compartilhamentos qualificados, citação em mesa de conselho, percepção de elite.\n` +
+    `- Linguagem sofisticada, técnica, MENOS emocional. Visão de mercado, profissionalização do setor, futuro da administração condominial, gestão por dados, transparência, proximidade.\n` +
+    `- Temas: futuro da administração condominial, o erro de tratar prédio como template, por que balancete personalizado importa, o que diferencia gestão boutique de plataforma, sinais de uma administradora de elite, leitura crítica de prestação de contas.\n` +
+    `- CTA institucional: "A administração condominial mudou.", "Há gestão para gente, e gestão para template.", "Por uma administração que olha no olho.".`,
+};
+
 // PASSO 0 — objetivo do carrossel (@bysindicompany). Mesma ideia do
 // @sindicompanybr, mas o publico e o sindico PROFISSIONAL — muda
 // linguagem, dor, gatilhos, formatos, CTA e percepcao de valor. O
@@ -334,9 +368,19 @@ export async function gerarTresCopies(input: {
   n_slides: number;
   briefing?: string;
 }): Promise<{ ok: true; copies: CarrosselCopy[] } | { ok: false; error: string }> {
-  const brand = input.brand === "bysindicompany" ? "bysindicompany" : "sindicompanybr";
+  const brand =
+    input.brand === "bysindicompany"
+      ? "bysindicompany"
+      : input.brand === "consvictabr"
+        ? "consvictabr"
+        : "sindicompanybr";
   const isBy = brand === "bysindicompany";
-  const objMap = isBy ? OBJETIVO_INSTRUCOES_BY : OBJETIVO_INSTRUCOES;
+  const isConsvicta = brand === "consvictabr";
+  const objMap = isConsvicta
+    ? OBJETIVO_INSTRUCOES_CONSVICTA
+    : isBy
+      ? OBJETIVO_INSTRUCOES_BY
+      : OBJETIVO_INSTRUCOES;
   const objetivoBloco =
     input.objetivo && objMap[input.objetivo]
       ? `\n${objMap[input.objetivo]}\n`
@@ -346,38 +390,72 @@ export async function gerarTresCopies(input: {
     FORMATO_INSTRUCOES[input.formato] ??
     `FORMATO: ${formato_label} (estrutura livre, mantendo a voz e os 7 passos).`;
 
-  const assinatura = isBy
-    ? "By Sindicompany. Sindicatura no próximo nível."
-    : "Por mais lares. 🏡";
+  const assinatura = isConsvicta
+    ? "Consvicta. Administração condominial que entrega resultado."
+    : isBy
+      ? "By Sindicompany. Sindicatura no próximo nível."
+      : "Por mais lares. 🏡";
 
-  const blocoEstrategia = isBy
-    ? `ESTRATÉGIA @bysindicompany:\n` +
-      `- PÚBLICO: síndico profissional / aspirante / em crescimento / parceiro estratégico. NUNCA o morador.\n` +
-      `- OBJETIVO DA MARCA: atrair síndicos, gerar pertencimento, fortalecer a marca pessoal do síndico, mostrar estrutura/suporte, elevar o nível da sindicatura.\n` +
-      `- TOM: aspiracional, provocativo, estratégico, empresarial. Mentor que já chegou. NUNCA guru motivacional vazio.\n`
-    : `ESTRATÉGIA @sindicompanybr:\n` +
-      `- PÚBLICO: o MORADOR comum do condomínio. NUNCA o síndico.\n` +
-      `- OBJETIVO: educar, desmistificar, virar referência que se salva e se compartilha.\n` +
-      `- TOM: pessoa inteligente corrigindo um amigo. Direto, sem rodeio.\n`;
+  const handle = isConsvicta
+    ? "@consvictabr"
+    : isBy
+      ? "@bysindicompany"
+      : "@sindicompanybr";
 
-  const blocoContexto = isBy
-    ? `- Contexto: bastidores e realidade da SINDICATURA PROFISSIONAL — gestão, liderança, mercado, carreira, estrutura. Quando falar de condomínio, é pelo ângulo de quem GERE, não de quem mora. Pelo menos UM slide menciona "síndico"/"sindicatura"/"gestão" literal.\n`
-    : `- Contexto condominial sempre: assembleia, taxa, síndico, morador, área comum, regulamento, convivência, fachada, manutenção. Pelo menos UM slide menciona "condomínio" ou "condominial" literal.\n`;
+  const blocoEstrategia = isConsvicta
+    ? `ESTRATÉGIA @consvictabr:\n` +
+      `- PÚBLICO: síndico profissional, conselho consultivo, proprietário atento, tomador de decisão de prédio premium em SP & RJ. NUNCA o morador comum.\n` +
+      `- OBJETIVO DA MARCA: posicionar a Consvicta como administradora BOUTIQUE — equipe especializada que conhece cada prédio de perto. NÃO é plataforma de gestão.\n` +
+      `- TOM: premium, próximo, técnico mas humano. Confiante sem ser arrogante. Frases curtas e diretas. Sem cliché motivacional, sem corporativo vazio.\n` +
+      `- VENDE: experiência (20+ anos), atendimento boutique, balancete personalizado, plano de contas customizado, proximidade, decisão informada, prédio tratado como único.\n` +
+      `- NÃO VENDE: dashboard, plataforma, transformação digital, escala, tecnologia genérica.\n`
+    : isBy
+      ? `ESTRATÉGIA @bysindicompany:\n` +
+        `- PÚBLICO: síndico profissional / aspirante / em crescimento / parceiro estratégico. NUNCA o morador.\n` +
+        `- OBJETIVO DA MARCA: atrair síndicos, gerar pertencimento, fortalecer a marca pessoal do síndico, mostrar estrutura/suporte, elevar o nível da sindicatura.\n` +
+        `- TOM: aspiracional, provocativo, estratégico, empresarial. Mentor que já chegou. NUNCA guru motivacional vazio.\n`
+      : `ESTRATÉGIA @sindicompanybr:\n` +
+        `- PÚBLICO: o MORADOR comum do condomínio. NUNCA o síndico.\n` +
+        `- OBJETIVO: educar, desmistificar, virar referência que se salva e se compartilha.\n` +
+        `- TOM: pessoa inteligente corrigindo um amigo. Direto, sem rodeio.\n`;
 
-  const angulos = isBy
+  const blocoContexto = isConsvicta
+    ? `- Contexto: gestão condominial BOUTIQUE — administradora que conhece o prédio pelo nome. Quando falar de condomínio, é pelo ângulo de DECISÃO, GOVERNANÇA, PRESTAÇÃO DE CONTAS, RELAÇÃO conselho × administradora. Pelo menos UM slide menciona "condomínio", "administração condominial" ou "gestão" literal.\n`
+    : isBy
+      ? `- Contexto: bastidores e realidade da SINDICATURA PROFISSIONAL — gestão, liderança, mercado, carreira, estrutura. Quando falar de condomínio, é pelo ângulo de quem GERE, não de quem mora. Pelo menos UM slide menciona "síndico"/"sindicatura"/"gestão" literal.\n`
+      : `- Contexto condominial sempre: assembleia, taxa, síndico, morador, área comum, regulamento, convivência, fachada, manutenção. Pelo menos UM slide menciona "condomínio" ou "condominial" literal.\n`;
+
+  const angulos = isConsvicta
     ? [
-        "Recorte: dor / solidão / desafio do síndico (o que ninguém fala).",
-        "Recorte: crescimento / posicionamento / autoridade (como subir de nível).",
-        "Recorte: rede / estrutura / pertencimento (não estar sozinho, ter suporte).",
+        "Recorte: o erro de tratar prédio como template (gestão padronizada × boutique).",
+        "Recorte: governança e transparência (balancete personalizado, plano de contas sob medida, leitura crítica de prestação de contas).",
+        "Recorte: experiência e proximidade (20+ anos, equipe que conhece o condomínio pelo nome, decisão informada do conselho).",
       ]
-    : [
-        "Recorte: morador comum (apartamento, garagem, elevador, convivência doméstica).",
-        "Recorte: governança/financeiro (assembleia, taxa, prestação de contas, fundo de reserva).",
-        "Recorte: o que o morador espera do síndico/gestão.",
-      ];
+    : isBy
+      ? [
+          "Recorte: dor / solidão / desafio do síndico (o que ninguém fala).",
+          "Recorte: crescimento / posicionamento / autoridade (como subir de nível).",
+          "Recorte: rede / estrutura / pertencimento (não estar sozinho, ter suporte).",
+        ]
+      : [
+          "Recorte: morador comum (apartamento, garagem, elevador, convivência doméstica).",
+          "Recorte: governança/financeiro (assembleia, taxa, prestação de contas, fundo de reserva).",
+          "Recorte: o que o morador espera do síndico/gestão.",
+        ];
+
+  const listaNegraExtra = isBy
+    ? ", o sucesso é uma jornada, acredite no seu potencial, saia da zona de conforto, mindset vencedor"
+    : isConsvicta
+      ? ", transformação digital, soluções integradas, atendimento acolhedor, escala, plataforma de gestão"
+      : "";
+
+  const antiLeak = isConsvicta
+    ? `- PROIBIDO mencionar "Sindicompany", "By Sindicompany", "@sindicompanybr", "@bysindicompany" ou qualquer outra administradora/marca além da Consvicta. Concorrentes NUNCA aparecem nos slides nem na legenda.\n` +
+      `- PROIBIDO usar a tagline "Por mais lares" — essa NÃO é a tagline da Consvicta. A tagline correta é "Administração condominial que entrega resultado." e só aparece na legenda.\n`
+    : "";
 
   const buildPrompt = (angulo: string): string =>
-    `Crie UMA versão de copy pra um carrossel do ${isBy ? "@bysindicompany" : "@sindicompanybr"}.\n\n` +
+    `Crie UMA versão de copy pra um carrossel do ${handle}.\n\n` +
     `${blocoEstrategia}` +
     objetivoBloco +
     `\nBRIEFING:\n` +
@@ -397,9 +475,10 @@ export async function gerarTresCopies(input: {
     `- Cada slide interno: tipo + título (3-7 palavras) + body (1-3 frases curtas, máx 35 palavras). Seja conciso — não encha linguiça.\n` +
     `- Em posts educativos (mito, dado, tutorial, lista jurídica): pelo menos UMA âncora — artigo (ex: "Código Civil, art. 1.336"), decisão judicial (ex: "STJ, REsp 1.699.022/SP, 2019") OU dado com fonte nomeada e datada.\n` +
     blocoContexto +
-    `- LEGENDA Instagram: 4-8 linhas, hook na primeira, termina OBRIGATORIAMENTE com "${assinatura}" e EXATAMENTE 3 hashtags na linha seguinte.\n` +
+    antiLeak +
+    `- LEGENDA Instagram: 4-8 linhas, hook na primeira, termina OBRIGATORIAMENTE com "${assinatura}" e EXATAMENTE 3 hashtags na linha seguinte${isConsvicta ? ' (use #consvicta + 2 hashtags do tema — JAMAIS #sindicompany ou #bysindicompany)' : ""}.\n` +
     `- Acentos corretos em TODA palavra (você, síndico, condomínio, gestão). NUNCA: gerúndio, travessão (—), aspas curvas, emoji decorativo no slide, frases de introdução ("é importante ressaltar").\n` +
-    `- LISTA NEGRA: papel fundamental, momento crucial, cenário em constante evolução, destacando a importância, o futuro é promissor, juntos somos mais fortes, destaca-se, vibrante, no coração de, em meio a, reflete a, simboliza a, evidencia a, desafios e oportunidades, rica diversidade, não apenas X mas também Y, mergulhando em, celebrando a, fomentando o, estudos mostram, especialistas afirmam${isBy ? ", o sucesso é uma jornada, acredite no seu potencial, saia da zona de conforto, mindset vencedor" : ""}.\n\n` +
+    `- LISTA NEGRA: papel fundamental, momento crucial, cenário em constante evolução, destacando a importância, o futuro é promissor, juntos somos mais fortes, destaca-se, vibrante, no coração de, em meio a, reflete a, simboliza a, evidencia a, desafios e oportunidades, rica diversidade, não apenas X mas também Y, mergulhando em, celebrando a, fomentando o, estudos mostram, especialistas afirmam${listaNegraExtra}.\n\n` +
     `Devolva JSON estrito (sem markdown):\n` +
     `{ "slides": [{"tipo":"capa","titulo":"...","body":"..."}, ... total ${input.n_slides} slides], "legenda":"..." }`;
 

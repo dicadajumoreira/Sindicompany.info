@@ -555,7 +555,7 @@ FORMATO_INSTRUCOES = {
     ),
     "opiniao": (
         "FORMATO: OPINIAO FORTE (posicao clara da MARCA sobre tema polemico).\n"
-        "- A opiniao e da Sindicompany, nao de personagem ficticio. Precisa de 2-3 razoes concretas.\n"
+        "- A opiniao e da MARCA (perfil), nao de personagem ficticio. Precisa de 2-3 razoes concretas.\n"
         "- ANTECIPE o contra-argumento num slide ('sei que voce discorda, mas...') + responda.\n"
         "- NUNCA atacar pessoas. CTA obrigatoriamente de DEBATE.\n"
         "ESTRUTURA: 1(capa) a afirmacao provocativa sem contexto, MAX 6 palavras. "
@@ -652,14 +652,33 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
             "instruindo cliente."
         )
         assinatura = f"Por mais lares. {casa}"
-    contexto = (
-        "- Contexto: bastidores e realidade da SINDICATURA PROFISSIONAL — gestao, "
-        "lideranca, mercado, carreira, estrutura. Quando falar de condominio, e "
-        "sempre pelo angulo de quem GERE, nao de quem mora.\n"
-        if is_by
-        else "- Contexto condominial sempre (assembleia, taxa, sindico, morador, "
-        "area comum, regulamento, convivencia, fachada, manutencao). Pelo menos UM "
-        "slide menciona 'condominio' ou 'condominial' literal.\n"
+    if is_consvicta:
+        contexto = (
+            "- Contexto: gestao condominial BOUTIQUE — administradora que conhece "
+            "o predio pelo nome. Pelo angulo de DECISAO, GOVERNANCA, PRESTACAO DE "
+            "CONTAS, conselho × administradora. Pelo menos UM slide menciona "
+            "'condominio', 'administracao condominial' ou 'gestao' literal.\n"
+        )
+    elif is_by:
+        contexto = (
+            "- Contexto: bastidores e realidade da SINDICATURA PROFISSIONAL — gestao, "
+            "lideranca, mercado, carreira, estrutura. Quando falar de condominio, e "
+            "sempre pelo angulo de quem GERE, nao de quem mora.\n"
+        )
+    else:
+        contexto = (
+            "- Contexto condominial sempre (assembleia, taxa, sindico, morador, "
+            "area comum, regulamento, convivencia, fachada, manutencao). Pelo menos "
+            "UM slide menciona 'condominio' ou 'condominial' literal.\n"
+        )
+    anti_leak = (
+        "- PROIBIDO mencionar 'Sindicompany', 'By Sindicompany', '@sindicompanybr', "
+        "'@bysindicompany' ou qualquer outra administradora alem da Consvicta. "
+        "Concorrentes NUNCA aparecem nos slides nem na legenda.\n"
+        "- PROIBIDO usar 'Por mais lares' — nao e tagline da Consvicta. A "
+        "assinatura correta e 'Administracao condominial que entrega resultado.'\n"
+        if is_consvicta
+        else ""
     )
     extra_negra = (
         ", o sucesso e uma jornada, acredite no seu potencial, saia da zona de "
@@ -694,8 +713,11 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         f"- Capa: o tema '{tema}' aparece literal ou em parafrase clara. Capa inteira (titulo + body) tem no max 20 palavras.\n"
         f"- Cada slide interno: tipo + titulo (3-7 palavras) + body (1-3 frases curtas, max 35 palavras).\n"
         f"- Em posts educativos (mito, dado, tutorial, lista juridica): pelo menos UMA ancora — artigo (ex: 'Codigo Civil, art. 1.336'), decisao judicial (ex: 'STJ, REsp 1.699.022/SP, 2019') OU dado com fonte nomeada e datada.\n"
-        f"{contexto}\n"
-        f"LEGENDA Instagram: replica a narrativa em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com '{assinatura}' e EXATAMENTE 3 hashtags na linha seguinte.\n\n"
+        f"{contexto}"
+        f"{anti_leak}\n"
+        f"LEGENDA Instagram: replica a narrativa em texto corrido (4-8 linhas), hook na primeira linha, termina OBRIGATORIAMENTE com '{assinatura}' e EXATAMENTE 3 hashtags na linha seguinte"
+        + (" (use #consvicta + 2 hashtags do tema — JAMAIS #sindicompany ou #bysindicompany)" if is_consvicta else "")
+        + ".\n\n"
         f"REGRAS DE PORTUGUES E VOZ:\n"
         f"- Acentos corretos em toda palavra: voce, sindico, condominio, gestao, esta, sao.\n"
         f"- Fale 'voce', voz ativa, sujeito explicito. Frase curta: um sujeito, um predicado, acabou.\n"
@@ -708,12 +730,26 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         f'(total {n_slides} slides) ], "legenda":"..." }}'
     )
 
+    marca_fallback = (
+        "Consvicta"
+        if is_consvicta
+        else "By Sindicompany"
+        if is_by
+        else "Sindicompany"
+    )
+    hashtags_fallback = (
+        "#consvicta #condominio #gestaocondominial"
+        if is_consvicta
+        else "#bysindicompany #sindico #gestaocondominial"
+        if is_by
+        else "#sindicompany #condominio #sindico"
+    )
     fallback = {
         "slides": (
             [
                 {
                     "tipo": "capa",
-                    "titulo": titulo or tema or "Sindicompany",
+                    "titulo": titulo or tema or marca_fallback,
                     "body": "",
                 }
             ]
@@ -736,7 +772,7 @@ def _gerar_copy(carrossel: dict[str, Any]) -> dict[str, Any]:
         "legenda": (
             f"{titulo or tema}\n\n"
             f"Conta nos comentários se você já passou por isso.\n\n"
-            f"#sindicompany #condominio #sindico"
+            f"{hashtags_fallback}"
         ),
     }
 
@@ -986,11 +1022,15 @@ def _slide_html(
             accent = p["onix"]
             accent_text = p["white"]
 
-    badge_label = (
-        "Sindicompany"
-        if is_cta
-        else f"{slide_idx} / {total}"
-    )
+    if is_cta:
+        if _BRAND == "consvictabr":
+            badge_label = "Consvicta"
+        elif _BRAND == "bysindicompany":
+            badge_label = "By Sindicompany"
+        else:
+            badge_label = "Sindicompany"
+    else:
+        badge_label = f"{slide_idx} / {total}"
 
     body_html = f'<p class="slide-body">{_h(body)}</p>' if body else ""
 
