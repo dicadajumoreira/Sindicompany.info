@@ -83,9 +83,15 @@ export function ByAssetSlot({
       </div>
       {hint && <div className="text-[10px] text-g60 -mt-1">{hint}</div>}
       <div
-        className={`${aspect === "wide" ? "aspect-[4/3]" : "aspect-square"} w-full rounded border border-onix-100 bg-onix-50 bg-center bg-no-repeat bg-contain`}
+        className={`${aspect === "wide" ? "aspect-[4/3]" : "aspect-square"} w-full rounded border border-onix-100 bg-onix-50 bg-center bg-no-repeat bg-contain flex items-center justify-center`}
         style={url ? { backgroundImage: `url("${url}")` } : undefined}
-      />
+      >
+        {!url && (
+          <span className="text-[10px] uppercase tracking-wider text-onix-300">
+            Vazio
+          </span>
+        )}
+      </div>
       <input
         type="file"
         accept="image/jpeg,image/png,image/webp,image/svg+xml"
