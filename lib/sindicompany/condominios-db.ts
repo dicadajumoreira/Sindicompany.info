@@ -17,6 +17,12 @@ export interface CondoMeta {
   sindico_foto_path: string | null;
   sindico_email: string | null;
   sindico_whatsapp: string | null;
+  /** SEGUNDO sindico(a) opcional — quando preenchido, a comunicacao vai no plural. */
+  sindico2_nome: string | null;
+  sindico2_genero: Genero | null;
+  sindico2_foto_path: string | null;
+  sindico2_email: string | null;
+  sindico2_whatsapp: string | null;
   /** Logo do(a) sindico(a) — default usado na capa/contracapa da revista. */
   logo_url: string | null;
   /** Logotipo oficial do condominio — opcional, nao substitui o do sindico. */
@@ -29,6 +35,12 @@ export interface CondoMeta {
   gestor_foto_path: string | null;
   gestor_email: string | null;
   gestor_whatsapp: string | null;
+  /** SEGUNDO gestor(a) opcional — quando preenchido, vai no plural. */
+  gestor2_nome: string | null;
+  gestor2_genero: Genero | null;
+  gestor2_foto_path: string | null;
+  gestor2_email: string | null;
+  gestor2_whatsapp: string | null;
   /** Sindico faz parte do By Sindicompany — revista usa logo do By. */
   is_by_sindico: boolean;
   /** Link da comunidade do condominio (grupo, app, etc). */
@@ -61,6 +73,11 @@ export interface CondoMetaInput {
   sindico_foto_path?: string | null;
   sindico_email?: string | null;
   sindico_whatsapp?: string | null;
+  sindico2_nome?: string | null;
+  sindico2_genero?: Genero | null;
+  sindico2_foto_path?: string | null;
+  sindico2_email?: string | null;
+  sindico2_whatsapp?: string | null;
   logo_url?: string | null;
   logo_condominio_url?: string | null;
   gestor_nome?: string | null;
@@ -68,6 +85,11 @@ export interface CondoMetaInput {
   gestor_foto_path?: string | null;
   gestor_email?: string | null;
   gestor_whatsapp?: string | null;
+  gestor2_nome?: string | null;
+  gestor2_genero?: Genero | null;
+  gestor2_foto_path?: string | null;
+  gestor2_email?: string | null;
+  gestor2_whatsapp?: string | null;
   is_by_sindico?: boolean;
   comunidade_url?: string | null;
   comunidade_qrcode_path?: string | null;
@@ -213,6 +235,11 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
     sindico_foto_path: input.sindico_foto_path ?? null,
     sindico_email: input.sindico_email ?? null,
     sindico_whatsapp: input.sindico_whatsapp ?? null,
+    sindico2_nome: input.sindico2_nome ?? null,
+    sindico2_genero: input.sindico2_genero ?? null,
+    sindico2_foto_path: input.sindico2_foto_path ?? null,
+    sindico2_email: input.sindico2_email ?? null,
+    sindico2_whatsapp: input.sindico2_whatsapp ?? null,
     logo_url: input.logo_url ?? null,
     logo_condominio_url: input.logo_condominio_url ?? null,
     tem_gestor: temGestor,
@@ -221,6 +248,11 @@ export async function upsertCondoMeta(input: CondoMetaInput): Promise<CondoMeta>
     gestor_foto_path: input.gestor_foto_path ?? null,
     gestor_email: input.gestor_email ?? null,
     gestor_whatsapp: input.gestor_whatsapp ?? null,
+    gestor2_nome: input.gestor2_nome ?? null,
+    gestor2_genero: input.gestor2_genero ?? null,
+    gestor2_foto_path: input.gestor2_foto_path ?? null,
+    gestor2_email: input.gestor2_email ?? null,
+    gestor2_whatsapp: input.gestor2_whatsapp ?? null,
     is_by_sindico: !!input.is_by_sindico,
     comunidade_url: input.comunidade_url ?? null,
     comunidade_qrcode_path: input.comunidade_qrcode_path ?? null,

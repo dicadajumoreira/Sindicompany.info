@@ -180,6 +180,36 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
   const novoQrComunidade = await maybeUploadFoto(formData, "comunidade_qr", slug, "comunidade-qr");
   const novaCapaBoasVindas = await maybeUploadFoto(formData, "boasvindas_capa", slug, "boasvindas-capa");
 
+  // SEGUNDO sindico (opcional). So salva se tiver nome preenchido.
+  const sindico2_nome = getStr(formData, "sindico2_nome");
+  const sindico2GeneroRaw = getStr(formData, "sindico2_genero");
+  const sindico2_genero: Genero | null = sindico2_nome
+    ? (sindico2GeneroRaw === "masculino" || sindico2GeneroRaw === "feminino" || sindico2GeneroRaw === "empresa"
+        ? (sindico2GeneroRaw as Genero)
+        : null)
+    : null;
+  const sindico2_email = sindico2_nome ? getStr(formData, "sindico2_email") : "";
+  const sindico2_whatsapp = sindico2_nome ? getStr(formData, "sindico2_whatsapp") : "";
+  const sindico2FotoExistente = getStr(formData, "sindico2_foto_existente");
+  const novaFotoSindico2 = sindico2_nome
+    ? await maybeUploadFoto(formData, "sindico2_foto", slug, "sindico2")
+    : null;
+
+  // SEGUNDO gestor (opcional). Idem.
+  const gestor2_nome = temGestor ? getStr(formData, "gestor2_nome") : "";
+  const gestor2GeneroRaw = getStr(formData, "gestor2_genero");
+  const gestor2_genero: Genero | null = gestor2_nome
+    ? (gestor2GeneroRaw === "masculino" || gestor2GeneroRaw === "feminino"
+        ? (gestor2GeneroRaw as Genero)
+        : "masculino")
+    : null;
+  const gestor2_email = gestor2_nome ? getStr(formData, "gestor2_email") : "";
+  const gestor2_whatsapp = gestor2_nome ? getStr(formData, "gestor2_whatsapp") : "";
+  const gestor2FotoExistente = getStr(formData, "gestor2_foto_existente");
+  const novaFotoGestor2 = gestor2_nome
+    ? await maybeUploadFoto(formData, "gestor2_foto", slug, "gestor2")
+    : null;
+
   // Equipe de atendimento: ate 5 membros (nome, cargo, foto). Slots
   // sem nome E sem cargo sao descartados. Foto: novo upload sobrescreve,
   // senao mantem a existente.
@@ -207,6 +237,13 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
     sindico_foto_path: novaFotoSindico ?? sindicoFotoExistente ?? null,
     sindico_email: sindico_email || null,
     sindico_whatsapp: sindico_whatsapp || null,
+    sindico2_nome: sindico2_nome || null,
+    sindico2_genero: sindico2_genero,
+    sindico2_foto_path: sindico2_nome
+      ? (novaFotoSindico2 ?? sindico2FotoExistente ?? null)
+      : null,
+    sindico2_email: sindico2_email || null,
+    sindico2_whatsapp: sindico2_whatsapp || null,
     logo_url: novoLogoSindico ?? logoSindicoExistente ?? null,
     logo_condominio_url:
       novoLogoCondominio ?? logoCondominioExistente ?? null,
@@ -217,6 +254,13 @@ async function salvarCondoMetaImpl(formData: FormData): Promise<void> {
       : null,
     gestor_email: gestor_nome ? gestor_email || null : null,
     gestor_whatsapp: gestor_nome ? gestor_whatsapp || null : null,
+    gestor2_nome: gestor2_nome || null,
+    gestor2_genero: gestor2_genero,
+    gestor2_foto_path: gestor2_nome
+      ? (novaFotoGestor2 ?? gestor2FotoExistente ?? null)
+      : null,
+    gestor2_email: gestor2_email || null,
+    gestor2_whatsapp: gestor2_whatsapp || null,
     is_by_sindico,
     comunidade_url: comunidade_url || null,
     comunidade_qrcode_path: novoQrComunidade ?? comunidadeQrExistente ?? null,

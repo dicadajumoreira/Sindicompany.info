@@ -244,6 +244,75 @@ export default async function EditarCondoPage({
           </Field>
         </section>
 
+        {/* ============ SEGUNDO SÍNDICO (DUPLA) ============ */}
+        <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
+            Segundo síndico(a) — opcional (dupla de síndicos)
+          </h2>
+          <p className="text-xs text-g60 -mt-3">
+            Quando preenchido, a revista de Boas-Vindas e a Mensal escrevem em <strong>plural</strong> (&quot;Caros moradores, agradecemos pela confiança em nossa eleição como síndicos…&quot;), com concordância automática conforme o gênero da dupla.
+          </p>
+          <input type="hidden" name="sindico2_foto_existente" value={meta?.sindico2_foto_path ?? ""} />
+
+          <Field label="Nome">
+            <input
+              type="text"
+              name="sindico2_nome"
+              defaultValue={meta?.sindico2_nome ?? ""}
+              placeholder="Deixe em branco se não houver"
+              className={inputCls}
+            />
+          </Field>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="E-mail">
+              <input type="email" name="sindico2_email" defaultValue={meta?.sindico2_email ?? ""} className={inputCls} />
+            </Field>
+            <Field label="WhatsApp">
+              <input type="text" name="sindico2_whatsapp" defaultValue={meta?.sindico2_whatsapp ?? ""} className={inputCls} />
+            </Field>
+          </div>
+
+          <Field label="Tipo / gênero">
+            <div className="flex gap-4 mt-1 flex-wrap">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="radio" name="sindico2_genero" value="feminino" defaultChecked={meta?.sindico2_genero === "feminino"} />
+                Síndica
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="radio" name="sindico2_genero" value="masculino" defaultChecked={meta?.sindico2_genero === "masculino"} />
+                Síndico
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="radio" name="sindico2_genero" value="empresa" defaultChecked={meta?.sindico2_genero === "empresa"} />
+                Empresa
+              </label>
+            </div>
+          </Field>
+
+          <Field label="Foto / logo" hint="JPG/PNG/WebP, até 5MB.">
+            {meta?.sindico2_foto_path && (
+              <div className="mb-3 flex items-center gap-3">
+                <Image
+                  src={getCondoFotoPublicUrl(meta.sindico2_foto_path)}
+                  alt={`Foto de ${meta.sindico2_nome ?? "segundo síndico"}`}
+                  width={80}
+                  height={80}
+                  unoptimized
+                  className="rounded-full object-cover w-20 h-20 border border-onix-100"
+                />
+                <span className="text-xs text-g60">Foto atual. Suba uma nova abaixo para substituir.</span>
+              </div>
+            )}
+            <input
+              type="file"
+              name="sindico2_foto"
+              accept="image/jpeg,image/png,image/webp"
+              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+            />
+          </Field>
+        </section>
+
         {/* ============ GESTOR DE ATENDIMENTO ============ */}
         <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
@@ -361,6 +430,71 @@ export default async function EditarCondoPage({
             <input
               type="file"
               name="gestor_foto"
+              accept="image/jpeg,image/png,image/webp"
+              className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
+            />
+          </Field>
+        </section>
+
+        {/* ============ SEGUNDO GESTOR (DUPLA) ============ */}
+        <section className="bg-white rounded-xl border border-onix-100 p-6 space-y-5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-mint-700">
+            Segundo gestor(a) — opcional (dupla de gestores)
+          </h2>
+          <p className="text-xs text-g60 -mt-3">
+            Quando preenchido, a revista refere a dupla no plural: &quot;Gestores de Atendimento&quot; (M+M ou misto), &quot;Gestoras de Atendimento&quot; (F+F).
+          </p>
+          <input type="hidden" name="gestor2_foto_existente" value={meta?.gestor2_foto_path ?? ""} />
+
+          <Field label="Nome">
+            <input
+              type="text"
+              name="gestor2_nome"
+              defaultValue={meta?.gestor2_nome ?? ""}
+              placeholder="Deixe em branco se não houver"
+              className={inputCls}
+            />
+          </Field>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="E-mail">
+              <input type="email" name="gestor2_email" defaultValue={meta?.gestor2_email ?? ""} className={inputCls} />
+            </Field>
+            <Field label="WhatsApp">
+              <input type="text" name="gestor2_whatsapp" defaultValue={meta?.gestor2_whatsapp ?? ""} className={inputCls} />
+            </Field>
+          </div>
+
+          <Field label="Gênero">
+            <div className="flex gap-4 mt-1 flex-wrap">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="radio" name="gestor2_genero" value="feminino" defaultChecked={meta?.gestor2_genero === "feminino"} />
+                Gestora
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="radio" name="gestor2_genero" value="masculino" defaultChecked={meta?.gestor2_genero === "masculino"} />
+                Gestor
+              </label>
+            </div>
+          </Field>
+
+          <Field label="Foto" hint="JPG/PNG/WebP, até 5MB.">
+            {meta?.gestor2_foto_path && (
+              <div className="mb-3 flex items-center gap-3">
+                <Image
+                  src={getCondoFotoPublicUrl(meta.gestor2_foto_path)}
+                  alt={`Foto de ${meta.gestor2_nome ?? "segundo gestor"}`}
+                  width={80}
+                  height={80}
+                  unoptimized
+                  className="rounded-full object-cover w-20 h-20 border border-onix-100"
+                />
+                <span className="text-xs text-g60">Foto atual. Suba uma nova abaixo para substituir.</span>
+              </div>
+            )}
+            <input
+              type="file"
+              name="gestor2_foto"
               accept="image/jpeg,image/png,image/webp"
               className="block text-sm text-onix-800 file:mr-3 file:rounded-md file:border file:border-onix-100 file:bg-onix-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-onix-100"
             />

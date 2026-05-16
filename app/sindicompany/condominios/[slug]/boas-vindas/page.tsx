@@ -38,14 +38,31 @@ export default async function RevistaBoasVindasPage({
   const meta = await getCondoMeta(nome).catch(() => null);
 
   const sindicoNome = meta?.sindico_nome ?? "";
+  const sindico2Nome = (meta?.sindico2_nome ?? "").trim();
+  const temDupla = !!sindico2Nome;
+  const g1 = meta?.sindico_genero;
+  const g2 = meta?.sindico2_genero;
   // 'empresa' = sindicatura feita por administradora -> a revista fala
-  // aos moradores como uma equipe (1a pessoa do plural).
-  const ehEmpresa = meta?.sindico_genero === "empresa";
+  // aos moradores como uma equipe (1a pessoa do plural). Quando ha
+  // DUPLA de sindicos, o texto tambem vai em primeira pessoa do plural
+  // ("nos") com concordancia automatica conforme os generos.
+  const ehEmpresa = g1 === "empresa";
+  const ehPlural = temDupla || ehEmpresa;
+  // Titulo individual (so usado quando NAO ha dupla).
   const sindicoTitulo = ehEmpresa
     ? "Sindicatura Profissional"
-    : meta?.sindico_genero === "feminino"
+    : g1 === "feminino"
       ? "Síndica"
       : "Síndico";
+  // Titulo coletivo da dupla: F+F -> "Síndicas"; senao -> "Síndicos".
+  const tituloDupla = (g1 === "feminino" && g2 === "feminino") ? "Síndicas" : "Síndicos";
+  // Concordancia da carta plural (Obrigado/Obrigada). F+F -> "Obrigadas";
+  // M+F ou M+M -> "Obrigados". Empresa sem dupla -> "Obrigado pela
+  // confianca" (mantido).
+  const obrigadosConcordancia = (g1 === "feminino" && g2 === "feminino")
+    ? "Obrigadas"
+    : "Obrigados";
+  const sindicoFoto2 = meta?.sindico2_foto_path ? getCondoFotoPublicUrl(meta.sindico2_foto_path) : null;
   const logoUrl = meta?.logo_url ?? null;
   const logoCondominioUrl = meta?.logo_condominio_url ?? null;
   // Logo da contra-capa: prefere o do condominio; cai pro do sindico.
@@ -169,19 +186,28 @@ export default async function RevistaBoasVindasPage({
               Carta de agradecimento
             </div>
             <h2 style={{ fontSize: "20pt", fontWeight: 800, margin: "0 0 6mm", lineHeight: 1.1 }}>
-              {ehEmpresa
-                ? "Obrigado pela confiança."
-                : meta?.sindico_genero === "feminino"
-                  ? "Obrigada pelo voto de confiança."
-                  : "Obrigado pelo voto de confiança."}
+              {temDupla
+                ? `${obrigadosConcordancia} pelo voto de confiança.`
+                : ehEmpresa
+                  ? "Obrigado pela confiança."
+                  : g1 === "feminino"
+                    ? "Obrigada pelo voto de confiança."
+                    : "Obrigado pelo voto de confiança."}
             </h2>
             <div style={{ fontSize: "11.5pt", lineHeight: 1.6, color: "#3a3d4a", textAlign: "justify" }}>
               <p style={{ margin: "0 0 4mm" }}>
-                {ehEmpresa
+                {ehPlural
                   ? `Prezados moradores do Condomínio ${nome},`
                   : `Caro morador do Condomínio ${nome},`}
               </p>
-              {ehEmpresa ? (
+              {temDupla ? (
+                <p style={{ margin: "0 0 4mm" }}>
+                  É com gratidão que recebemos a confiança de vocês na nossa eleição
+                  como {tituloDupla.toLowerCase()}. Assumimos esse papel com
+                  responsabilidade e o compromisso de cuidar do nosso lar com
+                  transparência, organização e atenção a cada um de vocês.
+                </p>
+              ) : ehEmpresa ? (
                 <p style={{ margin: "0 0 4mm" }}>
                   É com gratidão que recebemos a confiança de vocês para
                   administrar o condomínio. Assumimos esse papel com
@@ -197,7 +223,7 @@ export default async function RevistaBoasVindasPage({
                 </p>
               )}
               <p style={{ margin: "0 0 4mm" }}>
-                A partir de agora, contamos com a sua participação para construir
+                A partir de agora, {ehPlural ? "contamos" : "conto"} com a sua participação para construir
                 uma convivência melhor todos os dias, com transparência e cuidado
                 com o nosso lar.
               </p>
@@ -209,11 +235,13 @@ export default async function RevistaBoasVindasPage({
                 </p>
               )}
               <p style={{ margin: "4mm 0 0", fontWeight: 700 }}>
-                {ehEmpresa
-                  ? sindicoNome || "Sindicatura Profissional"
-                  : sindicoNome
-                    ? `${sindicoTitulo} ${sindicoNome}`
-                    : sindicoTitulo}
+                {temDupla
+                  ? `${tituloDupla} ${sindicoNome} e ${sindico2Nome}`
+                  : ehEmpresa
+                    ? sindicoNome || "Sindicatura Profissional"
+                    : sindicoNome
+                      ? `${sindicoTitulo} ${sindicoNome}`
+                      : sindicoTitulo}
               </p>
             </div>
 
@@ -223,6 +251,16 @@ export default async function RevistaBoasVindasPage({
                 destaque, antes do bloco da administradora. */}
             {(() => {
               const gestorDestaque = ehEmpresa && temGestor;
+              const titulo1 = ehEmpresa
+                ? "Sindicatura Profissional"
+                : g1 === "feminino"
+                  ? "Síndica"
+                  : "Síndico";
+              const titulo2 = g2 === "empresa"
+                ? "Sindicatura Profissional"
+                : g2 === "feminino"
+                  ? "Síndica"
+                  : "Síndico";
               const sindicoCard = (
                 <div key="sindico" style={{ flex: gestorDestaque ? "1 1 60mm" : "1 1 70mm", minWidth: "60mm", background: "#F4F4F5", borderRadius: "4mm", padding: "6mm" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "4mm" }}>
@@ -233,7 +271,7 @@ export default async function RevistaBoasVindasPage({
                     <div>
                       {/* Nome em cima, cargo embaixo */}
                       <div style={{ fontSize: "13pt", fontWeight: 800, lineHeight: 1.2 }}>{sindicoNome || "—"}</div>
-                      <div style={{ fontSize: "9pt", letterSpacing: ".14em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginTop: "1mm" }}>{sindicoTitulo}</div>
+                      <div style={{ fontSize: "9pt", letterSpacing: ".14em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginTop: "1mm" }}>{titulo1}</div>
                     </div>
                   </div>
                   {((mostrarWhatsSindico && meta?.sindico_whatsapp) ||
@@ -244,6 +282,26 @@ export default async function RevistaBoasVindasPage({
                       )}
                       {mostrarEmailSindico && meta?.sindico_email && (
                         <div>E-mail: {meta.sindico_email}</div>
+                      )}
+                    </div>
+                  )}
+                  {temDupla && (
+                    <div style={{ marginTop: "4mm", borderTop: "1px dashed #d4d4d8", paddingTop: "3mm" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4mm" }}>
+                        {sindicoFoto2 && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={sindicoFoto2} alt={sindico2Nome} style={{ width: "16mm", height: "16mm", borderRadius: "50%", objectFit: "cover" }} />
+                        )}
+                        <div>
+                          <div style={{ fontSize: "13pt", fontWeight: 800, lineHeight: 1.2 }}>{sindico2Nome}</div>
+                          <div style={{ fontSize: "9pt", letterSpacing: ".14em", textTransform: "uppercase", color: "#84C7D3", fontWeight: 700, marginTop: "1mm" }}>{titulo2}</div>
+                        </div>
+                      </div>
+                      {(meta?.sindico2_whatsapp || meta?.sindico2_email) && (
+                        <div style={{ marginTop: "3mm", fontSize: "10pt", color: "#3a3d4a" }}>
+                          {meta?.sindico2_whatsapp && <div>WhatsApp: {meta.sindico2_whatsapp}</div>}
+                          {meta?.sindico2_email && <div>E-mail: {meta.sindico2_email}</div>}
+                        </div>
                       )}
                     </div>
                   )}
