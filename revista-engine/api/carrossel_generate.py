@@ -23,6 +23,7 @@ import io
 import json
 import os
 import random
+import re
 import sys
 import traceback
 import urllib.error
@@ -901,7 +902,11 @@ def _slide_html(
             if foto_capa_url
             else f'<div class="hero-img" style="background: linear-gradient(135deg, {p["mint"]} 0%, {p["onix"]} 100%);"></div>'
         )
-        body_html = f'<p class="capa-body">{_h(body)}</p>' if body else ""
+        body_html = (
+            f'<p class="capa-body">{_h_with_data(body, is_consvicta)}</p>'
+            if body
+            else ""
+        )
         # Capa: forca Icon 2 (slot fixo em __icons/icon-2.X)
         icon_url = _icon_slot_data_url(2)
         icon_img = (
@@ -1033,6 +1038,48 @@ def _slide_html(
     letter-spacing: {('0.20em' if is_consvicta else '0.08em')};
     text-transform: {('lowercase' if is_consvicta else 'none')};
   }}
+  /* Numeros / percentuais destacados inline no body/titulo
+     ("23%", "20+", "6 meses"). Bebas Neue + tiffany pra reforco
+     de marca, ligeiramente maior que o redor. */
+  .data-hi {{
+    font-family: {font_numeric};
+    font-weight: 400;
+    color: {p["mint"]};
+    font-size: 1.12em;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }}
+  /* Ambient layer Consvicta — orbs radiais e cross-hatch sutis,
+     copia do hero do site consvicta.com.br. So Consvicta. */
+  .ambient {{
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }}
+  .ambient-grid {{
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(176,141,87,0.05) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(176,141,87,0.05) 2px, transparent 2px);
+    background-size: 200px 200px;
+    pointer-events: none;
+  }}
+  .ambient-orb {{
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(20px);
+  }}
+  .ambient-orb-gold {{
+    top: -10%; right: -8%;
+    width: 1800px; height: 1800px;
+    background: radial-gradient(circle, rgba(176,141,87,0.18) 0%, transparent 60%);
+  }}
+  .ambient-orb-tiff {{
+    bottom: -12%; left: -10%;
+    width: 1500px; height: 1500px;
+    background: radial-gradient(circle, rgba(129,216,208,0.14) 0%, transparent 60%);
+  }}
   .brand-icon {{
     /* +100% sobre o tamanho anterior (220 -> 440) pra reforcar a marca. */
     position: absolute;
@@ -1058,7 +1105,7 @@ def _slide_html(
   <div class="content">
     <span class="badge">{_h(_formato_label(formato))}</span>
     <div class="accent-line"></div>
-    <h1 class="capa-titulo">{_h(titulo)}</h1>
+    <h1 class="capa-titulo">{_h_with_data(titulo, is_consvicta)}</h1>
     {body_html}
   </div>
   {logo_top_img}
@@ -1106,7 +1153,11 @@ def _slide_html(
     else:
         badge_label = f"{slide_idx} / {total}"
 
-    body_html = f'<p class="slide-body">{_h(body)}</p>' if body else ""
+    body_html = (
+        f'<p class="slide-body">{_h_with_data(body, is_consvicta)}</p>'
+        if body
+        else ""
+    )
 
     # Pattern de fundo:
     # - Slides internos: pattern ciclando, tile 800x800, 10% opacity
@@ -1366,9 +1417,52 @@ def _slide_html(
     opacity: 0.15;
     pointer-events: none;
   }}
+  /* Numeros/percentuais destacados inline ("23%", "20+", "6 meses").
+     Bebas Neue + accent — sensacao de infografico inline. So
+     Consvicta (controle pelo _h_with_data). */
+  .data-hi {{
+    font-family: {font_numeric};
+    font-weight: 400;
+    color: {accent};
+    font-size: 1.12em;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }}
+  /* Ambient layer Consvicta — orbs radiais e cross-hatch sutis
+     replicando o hero do consvicta.com.br. Atmosfera editorial sem
+     competir com texto. */
+  .ambient-grid {{
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(176,141,87,0.055) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(176,141,87,0.055) 2px, transparent 2px);
+    background-size: 200px 200px;
+    pointer-events: none;
+    z-index: 0;
+  }}
+  .ambient-orb {{
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(30px);
+    z-index: 0;
+  }}
+  .ambient-orb-gold {{
+    top: -10%; right: -8%;
+    width: 1800px; height: 1800px;
+    background: radial-gradient(circle,
+      rgba(176,141,87,{0.22 if is_cta else 0.16}) 0%, transparent 62%);
+  }}
+  .ambient-orb-tiff {{
+    bottom: -12%; left: -10%;
+    width: 1500px; height: 1500px;
+    background: radial-gradient(circle,
+      rgba(129,216,208,{0.18 if is_cta else 0.13}) 0%, transparent 62%);
+  }}
 </style></head>
 <body>
   {pattern_div}
+  {('<div class="ambient-grid"></div><div class="ambient-orb ambient-orb-gold"></div><div class="ambient-orb ambient-orb-tiff"></div>') if is_consvicta else ''}
   {watermark_div_internal}
   {slide_foto_div}
   {icon_bg_div}
@@ -1377,7 +1471,7 @@ def _slide_html(
   <div class="content">
     <span class="badge">{_h(badge_label)}</span>
     <div class="accent-line"></div>
-    <h2 class="slide-titulo">{_h(titulo)}</h2>
+    <h2 class="slide-titulo">{_h_with_data(titulo, is_consvicta)}</h2>
     {body_html}
   </div>
   {logo_top_img}
@@ -1389,6 +1483,34 @@ def _slide_html(
 
 def _h(s: str) -> str:
     return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+# Padrao pra detectar dados quantitativos em texto: "23%", "20+",
+# "6 meses", "4 horas", "100%", "R$ 5", "Art. 1.336", "2x". Casamos
+# DEPOIS de escapar HTML, entao trabalha com texto plano. So pega a
+# primeira parte numerica + unidade, sem comer letras vizinhas.
+_DATA_NUM_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"(R\$\s?\d+(?:[.,]\d+)*"
+    r"|\d+(?:[.,]\d+)?\s*%"
+    r"|\d+\s*\+"
+    r"|\d+(?:[.,]\d+)?\s+(?:anos|meses|dias|horas|min|minutos|semanas|x)"
+    r"|\d+x)",
+    re.IGNORECASE,
+)
+
+
+def _h_with_data(s: str, enabled: bool) -> str:
+    """Versao do _h() que destaca numeros/percentuais/unidades com
+    <span class="data-hi"> — Bebas Neue + accent color — pra dar
+    sensacao de infografico inline no body/titulo. So ativa quando
+    enabled=True (Consvicta). Senao, igual a _h()."""
+    escaped = _h(s)
+    if not enabled or not escaped:
+        return escaped
+    return _DATA_NUM_PATTERN.sub(
+        r'<span class="data-hi">\1</span>', escaped
+    )
 
 
 # =============================================================================
