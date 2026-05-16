@@ -79,7 +79,7 @@ def _patterns_data_urls() -> list[str]:
         return out
 
     for i in range(1, 21):
-        for ext in ("png", "jpg", "jpeg", "webp"):
+        for ext in ("svg", "png", "jpg", "jpeg", "webp"):
             url = (
                 f"{base}/storage/v1/object/public/"
                 f"condominios-fotos/{_asset_prefix()}patterns/pattern-{i}.{ext}"
@@ -205,7 +205,7 @@ def _pattern_slot_data_url(slot: int) -> str:
     if not base:
         _PATTERN_SLOT_CACHE[slot] = ""
         return ""
-    for ext in ("png", "jpg", "jpeg", "webp"):
+    for ext in ("svg", "png", "jpg", "jpeg", "webp"):
         url = (
             f"{base}/storage/v1/object/public/"
             f"condominios-fotos/{_asset_prefix()}patterns/pattern-{slot}.{ext}"
