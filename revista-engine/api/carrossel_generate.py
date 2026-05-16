@@ -219,6 +219,193 @@ _ICON_SLOT_CACHE: dict[int, str] = {}
 _LOGO_SLOT_CACHE: dict[int, str] = {}
 _CONSVICTA_FONTS_CSS_CACHE: str | None = None
 
+# Biblioteca de icones Consvicta (86 SVGs). Cache em memoria por processo.
+# Estrutura: {nome_sem_ext: svg_string}. Carrega lazily na primeira chamada.
+_CONSVICTA_ICONS_CACHE: dict[str, str] | None = None
+
+# Mapa de palavras-chave -> nomes de icones (file stem, sem extensao).
+# Match e LOWERCASE substring no titulo+body do slide. Multi-match: o
+# nome com MAIOR especificidade (mais letras) ganha. Sem match: cai no
+# fallback default (depende do contexto do slide: capa/cta/interno).
+#
+# Filenames seguem padrao "NN-nome-com-hifen.svg" (Geral) ou
+# "prefixo-nome.svg" (categorias). Os keywords sao derivados dos nomes
+# + sinonimos comuns do mercado condominial.
+_CONSVICTA_ICON_KEYWORDS: dict[str, tuple[str, ...]] = {
+    # Geral (60)
+    "01-documento": ("documento", "papel", "pdf"),
+    "02-relatorio": ("relatorio", "relatório", "report"),
+    "03-pasta": ("pasta", "arquivo", "arquivos"),
+    "04-contrato": ("contrato", "assinatura", "acordo"),
+    "05-balancete": ("balancete", "balanço", "balanco", "contabil", "contábil"),
+    "06-ata": ("ata", "ata de"),
+    "07-arquivo": ("arquivo", "documento antigo"),
+    "08-sindico": ("sindico", "síndico"),
+    "09-morador": ("morador", "condômino", "condomino"),
+    "10-visitante": ("visitante", "visita"),
+    "11-equipe": ("equipe", "time", "colaborador", "colaboradores"),
+    "12-porteiro": ("porteiro", "portaria"),
+    "13-funcionario": ("funcionario", "funcionário", "empregado", "colaborador"),
+    "14-boleto": ("boleto", "fatura", "cobrança bancaria"),
+    "15-pagamento": ("pagamento", "pagar", "pagou"),
+    "16-cobranca": ("cobrança", "cobranca"),
+    "17-inadimplencia": ("inadimplencia", "inadimplência", "atraso", "atrasado"),
+    "18-orcamento": ("orçamento", "orcamento", "previsao", "previsão"),
+    "19-prestacao-contas": ("prestação", "prestacao", "prestação de contas"),
+    "20-taxa-condominial": ("taxa", "taxa condominial", "condomínio"),
+    "21-protecao": ("proteção", "protecao", "seguranca", "segurança"),
+    "22-cadeado": ("cadeado", "trancado", "fechado"),
+    "23-chave": ("chave", "chaves", "acesso fisico"),
+    "24-camera-seguranca": ("câmera", "camera", "monitoramento", "cftv"),
+    "25-acesso": ("acesso", "controle de acesso"),
+    "26-alarme": ("alarme", "alerta sonoro"),
+    "28-email": ("email", "e-mail", "mensagem"),
+    "29-comunicado": ("comunicado", "informativo", "informe"),
+    "30-assembleia": ("assembleia", "assembléia", "reunião", "reuniao"),
+    "31-aviso": ("aviso", "alerta", "atenção", "atencao"),
+    "32-aplicativo": ("aplicativo", "app", "mobile"),
+    "33-assembleia-virtual": ("assembleia virtual", "assembléia virtual", "online", "remota"),
+    "36-integracao": ("integração", "integracao", "integrado"),
+    "37-edificio": ("edifício", "edificio", "prédio", "predio", "torre"),
+    "38-portaria": ("portaria", "recepção", "recepcao"),
+    "39-elevador": ("elevador", "elevadores"),
+    "40-estacionamento": ("estacionamento", "garagem", "vaga"),
+    "41-area-comum": ("área comum", "area comum", "espaço", "espaco"),
+    "43-limpeza": ("limpeza", "faxina", "limpo"),
+    "44-mensageria": ("mensageria", "encomenda", "pacote"),
+    "45-manobrista": ("manobrista", "valet"),
+    "48-coworking": ("coworking", "trabalho compartilhado"),
+    "49-carro-eletrico": ("carro elétrico", "carro eletrico", "ev", "elétrico"),
+    "50-mini-mercado": ("mercado", "mercadinho", "loja"),
+    "51-concierge": ("concierge", "conciergerie"),
+    "52-salao-festas": ("salão", "salao", "festa", "evento"),
+    "55-agenda": ("agenda", "calendario", "calendário", "data"),
+    "57-regulamento": ("regulamento", "regimento", "regra"),
+    "58-voto": ("voto", "votação", "votacao"),
+    "59-solicitacao": ("solicitação", "solicitacao", "pedido"),
+    "60-relatorio-financeiro": ("financeiro", "finança", "financa", "dre", "demonstrativo"),
+    # Aplicativo
+    "app-assembleia-virtual": ("assembleia virtual", "ao vivo digital"),
+    "app-fale-porteiro": ("fale porteiro", "interfone", "intercom"),
+    "app-pagamento-cartao": ("cartão", "cartao", "cartao de credito"),
+    "app-reserva-area": ("reserva", "agendamento"),
+    "app-segunda-via": ("segunda via", "2a via"),
+    "app-sindico-online": ("síndico online", "sindico online"),
+    "app-solicitacoes": ("solicitações", "solicitacoes"),
+    "app-visitantes": ("visitantes", "registro de visita"),
+    # Diferenciais
+    "dif-atendimento-24h": ("24h", "atendimento", "plantão", "plantao", "suporte"),
+    "dif-reducao-custo": ("redução de custo", "reducao de custo", "economia", "economizar"),
+    "dif-revisao-contrato": ("revisão de contrato", "revisao de contrato"),
+    "dif-seguro": ("seguro", "apólice", "apolice"),
+    "dif-tecnologia": ("tecnologia", "tech", "digital"),
+    # Equipe
+    "equipe-administrativo": ("administrativo", "administração", "administracao"),
+    "equipe-cobranca": ("cobrança", "cobranca"),
+    "equipe-comunicacao": ("comunicação", "comunicacao", "marketing"),
+    "equipe-juridico": ("jurídico", "juridico", "advogado", "lei"),
+    "equipe-tecnologia": ("tecnologia", "ti", "tech"),
+    # Facilities
+    "fac-carro-eletrico": ("carro elétrico", "carro eletrico", "carregador"),
+    "fac-concierge": ("concierge",),
+    "fac-coworking": ("coworking",),
+    "fac-lava-rapido": ("lava rápido", "lava rapido", "lava jato"),
+    "fac-lavanderia": ("lavanderia", "lavar"),
+    "fac-manobrista": ("manobrista",),
+    "fac-mensageria": ("mensageria", "delivery"),
+    "fac-mini-mercado": ("mercado", "mercadinho"),
+}
+
+# Ancoras por contexto: quando NAO ha match no texto, o engine cai
+# nesses defaults em vez de pegar aleatorio. Mantem a marca coesa.
+_CONSVICTA_ICON_DEFAULTS = {
+    "capa": "37-edificio",
+    "cta": "dif-atendimento-24h",
+    "interno": "02-relatorio",
+    "lista": "55-agenda",
+    "tutorial": "01-documento",
+    "dado_choca": "60-relatorio-financeiro",
+    "mito_verdade": "31-aviso",
+    "historia_real": "09-morador",
+    "antes_depois": "dif-reducao-custo",
+    "opiniao": "29-comunicado",
+}
+
+
+def _consvicta_icons_load() -> dict[str, str]:
+    """Carrega todos os 86 SVGs da biblioteca Consvicta em memoria
+    (~370KB total). Cache no processo. Chave = stem do arquivo
+    (ex: '05-balancete'). Valor = string SVG completa."""
+    global _CONSVICTA_ICONS_CACHE
+    if _CONSVICTA_ICONS_CACHE is not None:
+        return _CONSVICTA_ICONS_CACHE
+    here = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.join(here, "assets", "icons", "consvicta")
+    cache: dict[str, str] = {}
+    try:
+        for cat in os.listdir(root):
+            cat_dir = os.path.join(root, cat)
+            if not os.path.isdir(cat_dir):
+                continue
+            for fname in os.listdir(cat_dir):
+                if not fname.endswith(".svg"):
+                    continue
+                stem = fname[:-4]
+                try:
+                    with open(
+                        os.path.join(cat_dir, fname), "r", encoding="utf-8"
+                    ) as f:
+                        cache[stem] = f.read()
+                except Exception:  # noqa: BLE001
+                    continue
+    except Exception as e:  # noqa: BLE001
+        print(f"[carrossel] icones consvicta nao carregaram: {e}", flush=True)
+    print(f"[carrossel] {len(cache)} icones consvicta em memoria", flush=True)
+    _CONSVICTA_ICONS_CACHE = cache
+    return cache
+
+
+def _consvicta_icon_svg_recolored(stem: str, color: str) -> str:
+    """Devolve o SVG do icone trocando a cor do stroke (#81D8D0
+    original) pela cor passada. Sem alocacao se nao achar."""
+    icons = _consvicta_icons_load()
+    svg = icons.get(stem)
+    if not svg:
+        return ""
+    return svg.replace('#81D8D0', color).replace('#81d8d0', color)
+
+
+def _consvicta_icon_data_url(stem: str, color: str) -> str:
+    """Data URL pronto pra usar em <img src=...>. SVG recolorido pra
+    contraste correto com o fundo do slide."""
+    svg = _consvicta_icon_svg_recolored(stem, color)
+    if not svg:
+        return ""
+    b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+    return f"data:image/svg+xml;base64,{b64}"
+
+
+def _consvicta_pick_icon(
+    titulo: str, body: str, fallback_ctx: str = "interno"
+) -> str:
+    """Faz match keyword no titulo+body do slide e devolve o stem do
+    icone mais relevante. Sem match: usa o default do contexto
+    (capa/cta/interno + formato)."""
+    haystack = f"{titulo} {body}".lower()
+    best_stem = ""
+    best_score = 0
+    for stem, kws in _CONSVICTA_ICON_KEYWORDS.items():
+        for kw in kws:
+            if kw in haystack:
+                # specificity = comprimento do keyword (mais especifico vence)
+                score = len(kw)
+                if score > best_score:
+                    best_score = score
+                    best_stem = stem
+    if best_stem:
+        return best_stem
+    return _CONSVICTA_ICON_DEFAULTS.get(fallback_ctx, "02-relatorio")
+
 
 def _consvicta_fonts_css() -> str:
     """CSS @font-face com as 3 famílias Consvicta embutidas em base64
@@ -907,8 +1094,15 @@ def _slide_html(
             if body
             else ""
         )
-        # Capa: forca Icon 2 (slot fixo em __icons/icon-2.X)
-        icon_url = _icon_slot_data_url(2)
+        # Capa: Consvicta usa smart-picker (biblioteca de 86 icones
+        # embutida, escolhe por keyword do titulo+body). Outras marcas
+        # seguem o slot fixo 2 do bucket __icons/.
+        if is_consvicta:
+            stem = _consvicta_pick_icon(titulo, body, fallback_ctx="capa")
+            # Na capa o fundo eh sempre escuro (hero img) → icone branco.
+            icon_url = _consvicta_icon_data_url(stem, "#FDFCF9")
+        else:
+            icon_url = _icon_slot_data_url(2)
         icon_img = (
             f'<img class="brand-icon" src="{icon_url}" alt="" />' if icon_url else ""
         )
@@ -1081,11 +1275,15 @@ def _slide_html(
     background: radial-gradient(circle, rgba(129,216,208,0.14) 0%, transparent 60%);
   }}
   .brand-icon {{
-    /* +100% sobre o tamanho anterior (220 -> 440) pra reforcar a marca. */
+    /* Capa: corner icon bottom-right.
+       Consvicta usa biblioteca de line icons -> reduz pra 320px e
+       adiciona stroke-width sutil. Outras marcas mantem 440px. */
     position: absolute;
     bottom: 80px; right: 180px;
-    width: 440px; height: 440px;
+    width: {320 if is_consvicta else 440}px;
+    height: {320 if is_consvicta else 440}px;
     object-fit: contain;
+    {('stroke-width: 1.8;' if is_consvicta else '')}
   }}
   .logo-top {{
     /* Logo da marca no topo de TODOS os slides. Consvicta usa SVG
@@ -1200,10 +1398,22 @@ def _slide_html(
         if foto_slide_url
         else ""
     )
-    # Brand-icon do canto inferior direito: SO aparece em CTA (Icon 6
-    # em __icons/). Slides internos comuns ficam sem corner — Fundo
-    # Carrossel eh exclusivo da camada de fundo (.icon-bg).
-    corner_url = _icon_slot_data_url(6) if is_cta else ""
+    # Brand-icon do canto inferior direito. Outras marcas: SO em CTA
+    # (slot fixo Icon 6). Consvicta: TODO slide ganha um icone
+    # smart-pickado da biblioteca de 86 (semanticamente relacionado
+    # com o titulo+body). Em CTA escuro, icone branco. Em slides
+    # claros, icone na cor do accent (preto/mint).
+    if is_consvicta:
+        stem_corner = _consvicta_pick_icon(
+            titulo, body,
+            fallback_ctx=("cta" if is_cta else "interno"),
+        )
+        # No CTA fundo onix -> icone em mint (cor accent). Slides claros
+        # (mint/sand/lavender/white/gray_5) -> icone em accent (onix
+        # ou mint conforme o calculo de contraste).
+        corner_url = _consvicta_icon_data_url(stem_corner, accent)
+    else:
+        corner_url = _icon_slot_data_url(6) if is_cta else ""
     icon_img_internal = (
         f'<img class="brand-icon" src="{corner_url}" alt="" />'
         if corner_url
@@ -1368,11 +1578,15 @@ def _slide_html(
     text-transform: {('lowercase' if is_consvicta else 'none')};
   }}
   .brand-icon {{
-    /* Icone da marca no canto inferior direito de cada slide.
-       Slot 1 em __icons/icon-1 — fica vazio se nao houver. */
+    /* Slides internos Consvicta: icone smart-pickado no TOP-RIGHT
+       (260px), pra nao colidir com a .bignum (que ocupa o canto
+       inferior em pares/impares). CTA: bottom-right (320px),
+       posicao classica.
+       Outras marcas: bottom-right 440px (so aparece em CTA). */
     position: absolute;
-    bottom: 80px; right: 180px;
-    width: 440px; height: 440px;
+    {('top: 320px; right: 180px;' if (is_consvicta and not is_cta) else 'bottom: 80px; right: 180px;')}
+    width: {(260 if (is_consvicta and not is_cta) else (320 if is_consvicta else 440))}px;
+    height: {(260 if (is_consvicta and not is_cta) else (320 if is_consvicta else 440))}px;
     object-fit: contain;
   }}
   .logo-top {{
@@ -1498,8 +1712,11 @@ _DATA_NUM_PATTERN = re.compile(
     r"(R\$\s?\d+(?:[.,]\d+)*"
     r"|\d+(?:[.,]\d+)?\s*%"
     r"|\d+\s*\+"
-    r"|\d+(?:[.,]\d+)?\s+(?:anos|meses|dias|horas|min|minutos|semanas|x)"
-    r"|\d+x)",
+    # Unidades temporais — ORDEM IMPORTA: mais longas primeiro
+    # (senao "30 minutos" casa so "30 min" porque regex eh greedy
+    # da esquerda pra direita na alternancia).
+    r"|\d+(?:[.,]\d+)?\s+(?:minutos|semanas|meses|horas|dias|anos|min)\b"
+    r"|\d+x\b)",
     re.IGNORECASE,
 )
 
