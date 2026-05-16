@@ -137,7 +137,11 @@ export default async function CarrosseisPage() {
                   >
                     <td className="px-5 py-3">
                       <span className="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-onix-100 text-onix-800">
-                        {c.brand === "bysindicompany" ? "@bysindicompany" : "@sindicompanybr"}
+                        {c.brand === "bysindicompany"
+                          ? "@bysindicompany"
+                          : c.brand === "consvictabr"
+                            ? "@consvictabr"
+                            : "@sindicompanybr"}
                       </span>
                     </td>
                     <td className="px-5 py-3">
