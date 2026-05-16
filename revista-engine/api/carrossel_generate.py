@@ -1763,15 +1763,64 @@ def _render_slide_png(html: str) -> bytes:
 
 
 # =============================================================================
-# Humanizer (Consvicta only)
+# Humanizer (todas as marcas)
 # =============================================================================
 
 
-def _humanizer_pass_consvicta(
-    slides: list[dict[str, Any]], legenda: str
+# Regras de marca pro humanizer batch: handle, tagline e anti-leak
+# por marca. Cada carrossel passa pela mesma skill humanizer, mas o
+# prompt injeta as regras especificas pra preservar a identidade da
+# conta e proibir mencao a marcas irmas/concorrentes.
+_BRAND_HUMANIZER_RULES: dict[str, dict[str, str]] = {
+    "consvictabr": {
+        "handle": "@consvictabr",
+        "assinatura": "Administração condominial que entrega resultado.",
+        "anti_leak": (
+            "PROIBIDO mencionar Sindicompany, By Sindicompany, "
+            "@sindicompanybr, @bysindicompany, 'Por mais lares' ou qualquer "
+            "concorrente. A marca aqui e SO Consvicta."
+        ),
+        "tom": (
+            "Tom premium boutique: confiante, proximo, tecnico-mas-humano. "
+            "Fala com sindico profissional, conselho consultivo, "
+            "proprietario atento de predio premium em SP/RJ."
+        ),
+    },
+    "bysindicompany": {
+        "handle": "@bysindicompany",
+        "assinatura": "By Sindicompany. Sindicatura no próximo nível.",
+        "anti_leak": (
+            "Mantenha a identidade @bysindicompany. PROIBIDO mencionar "
+            "@consvictabr ou Consvicta. Sindicompany pode ser citada como "
+            "marca-mae quando fizer sentido."
+        ),
+        "tom": (
+            "Tom aspiracional, provocativo, estrategico, empresarial. Fala "
+            "com SINDICO PROFISSIONAL, NAO com o morador. Mentor que ja "
+            "chegou."
+        ),
+    },
+    "sindicompanybr": {
+        "handle": "@sindicompanybr",
+        "assinatura": "Por mais lares. 🏡",
+        "anti_leak": (
+            "Mantenha a identidade @sindicompanybr. PROIBIDO mencionar "
+            "@consvictabr ou Consvicta. By Sindicompany pode ser citada "
+            "como marca-irma quando fizer sentido."
+        ),
+        "tom": (
+            "Tom direto, pessoa inteligente corrigindo um amigo. Fala "
+            "com o MORADOR COMUM, nao com o sindico."
+        ),
+    },
+}
+
+
+def _humanizer_pass(
+    slides: list[dict[str, Any]], legenda: str, brand: str
 ) -> tuple[list[dict[str, Any]], str]:
-    """Aplica a skill Humanizer + revisão pt-BR em todos os slides e
-    legenda de um carrossel @consvictabr.
+    """Aplica a skill Humanizer + revisão pt-BR em TODOS os slides e
+    legenda de um carrossel, independente da marca.
 
     Pipeline:
       1. Pre: dicionario deterministico de acentos
@@ -1784,9 +1833,11 @@ def _humanizer_pass_consvicta(
          etapa 1.
       3. Post: passa o accent-dict de novo (rede de seguranca).
 
+    As regras especificas da marca (handle, assinatura, anti-leak,
+    tom) sao injetadas no prompt — vide _BRAND_HUMANIZER_RULES.
+
     Preserva: tipo de cada slide, numeros (38%, 6 dias, etc), citacoes
-    literais (Art. 1.336, REsp X), nome da marca (Consvicta) e o handle
-    (@consvictabr). NUNCA introduz mencao a Sindicompany.
+    literais (Art. 1.336, REsp X), nome da marca e o handle.
     """
     if not slides:
         return slides, legenda
@@ -1806,8 +1857,14 @@ def _humanizer_pass_consvicta(
     # Etapa 2 — OpenAI batch
     cli = _openai_client()
     if cli is None:
-        print("[carrossel] humanizer pulou (OPENAI_API_KEY ausente)", flush=True)
+        print(
+            f"[carrossel] humanizer pulou (OPENAI_API_KEY ausente) — "
+            f"slides com accent-fix deterministico aplicado",
+            flush=True,
+        )
         return slides, legenda
+
+    rules = _BRAND_HUMANIZER_RULES.get(brand, _BRAND_HUMANIZER_RULES["sindicompanybr"])
 
     payload = json.dumps(
         {
@@ -1826,15 +1883,18 @@ def _humanizer_pass_consvicta(
     )
 
     prompt = (
-        "Recebe um JSON com 'slides' (lista de {i, tipo, titulo, body}) e "
-        "'legenda' de um carrossel @consvictabr. Devolve o MESMO JSON, mesmas "
-        "chaves, com os textos revisados pelas regras da skill Humanizer.\n\n"
+        f"Recebe um JSON com 'slides' (lista de {{i, tipo, titulo, body}}) e "
+        f"'legenda' de um carrossel {rules['handle']}. Devolve o MESMO JSON, "
+        f"mesmas chaves, com os textos revisados pelas regras da skill "
+        f"Humanizer.\n\n"
+        f"IDENTIDADE DA CONTA: {rules['handle']}\n"
+        f"TOM: {rules['tom']}\n\n"
         "REGRAS DURAS:\n"
         "- Português brasileiro com TODOS os acentos corretos (á, é, í, ó, ú, "
         "â, ê, ô, ã, õ, ç, à). Sem exceções: 'voce'->você, 'sindico'->"
         "síndico, 'condominio'->condomínio, 'gestao'->gestão, 'manutencao'->"
         "manutenção, 'reuniao'->reunião, 'area'->área, 'experiencia'->"
-        "experiência, 'ate'->até, 'tambem'->também.\n"
+        "experiência, 'ate'->até, 'tambem'->também, 'nao'->não.\n"
         "- ZERO travessões (—, –) — substitua por vírgula ou ponto.\n"
         "- ZERO gerúndio decorativo: 'garantindo', 'proporcionando', "
         "'destacando', 'refletindo' — reescreva com verbo direto.\n"
@@ -1848,18 +1908,16 @@ def _humanizer_pass_consvicta(
         "da zona de conforto', 'o céu é o limite', 'mindset vencedor'.\n"
         "- ZERO aspas curvas (“”) — só aspas retas (\").\n"
         "- ZERO emoji decorativo nos slides. Legenda também sem emoji "
-        "decorativo (só nomes próprios e simbolos institucionais quando "
-        "literalmente necessario).\n"
+        "decorativo (excessao: a assinatura literal da marca pode "
+        "conservar emoji se for parte oficial dela).\n"
         "- ZERO construção 'não apenas X, mas também Y'.\n"
         "- Frases curtas, voz ativa, sujeito explícito. Uma ideia por frase.\n"
         "- Mantenha o MESMO sentido. Não encurte, não infle, não troque "
         "argumentos. Não invente fato. Não remova número, percentual ou "
         "citação literal (Art. 1.336, STJ REsp X, Lei 4.591/64).\n"
-        "- A marca é Consvicta. PROIBIDO mencionar Sindicompany, "
-        "By Sindicompany, @sindicompanybr, @bysindicompany, 'Por mais lares' "
-        "ou qualquer concorrente.\n"
-        "- A tagline oficial é 'Administração condominial que entrega "
-        "resultado.' — usar SO na legenda, NUNCA num slide.\n"
+        f"- ANTI-LEAK: {rules['anti_leak']}\n"
+        f"- Assinatura/tagline desta conta: '{rules['assinatura']}' — "
+        f"aparece SO na legenda, NUNCA num slide.\n"
         "- Preserve 'tipo' e 'i' exatamente.\n\n"
         "Devolva JSON estrito (sem markdown, sem comentários):\n"
         '{"slides":[{"i":0,"tipo":"capa","titulo":"...","body":"..."},...],'
@@ -1915,7 +1973,8 @@ def _humanizer_pass_consvicta(
         legenda = _apply_accent_dict(new_legenda)
 
     print(
-        f"[carrossel] humanizer aplicado em {len(slides)} slides + legenda",
+        f"[carrossel] humanizer ({brand}) aplicado em {len(slides)} slides + "
+        f"legenda",
         flush=True,
     )
     return slides, legenda
@@ -1971,13 +2030,12 @@ def gerar_carrossel(carrossel_id: str) -> int:
             legenda = copy.get("legenda") or ""
             print(f"[carrossel] copy gerado pelo engine: {len(slides)} slides", flush=True)
 
-        # 1b. Humanizer + revisão pt-BR — exclusivo Consvicta.
+        # 1b. Humanizer + revisão pt-BR — todas as marcas.
         # Roda DEPOIS da copy selecionada e ANTES do render dos slides.
-        # Outras marcas (Sindicompany, By Sindicompany) seguem com o
-        # texto raw da OpenAI (ja tem o anti-pattern no system prompt
-        # delas).
-        if _BRAND == "consvictabr":
-            slides, legenda = _humanizer_pass_consvicta(slides, legenda)
+        # Aplica accent-dict (sempre) + 1 batch GPT com SYSTEM_HUMANIZER
+        # (se OPENAI_API_KEY disponivel). Regras por marca:
+        # handle/assinatura/anti-leak/tom — vide _BRAND_HUMANIZER_RULES.
+        slides, legenda = _humanizer_pass(slides, legenda, _BRAND)
 
         # 2. Render + upload de cada slide
         n_total = len(slides)
