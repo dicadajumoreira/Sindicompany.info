@@ -1270,14 +1270,15 @@ def _slide_html(
     z-index: 1;
   }}
   .pattern-bg-capa {{
-    /* Pattern dark da Consvicta cobrindo a capa toda, 12% opacity.
-       Senta entre o hero-img e o overlay pro texto continuar legivel. */
+    /* Pattern dark da Consvicta cobrindo a capa toda, 40% opacity
+       (peso visual do brand book). Senta entre o hero-img e o
+       overlay pro texto continuar legivel. */
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     background-image: url('{capa_pattern_url}');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.12;
+    opacity: 0.40;
     pointer-events: none;
     z-index: 1;
   }}
@@ -1641,16 +1642,17 @@ def _slide_html(
     z-index: 1;
   }}
   .pattern-bg {{
-    /* Pattern da marca em 10% como textura de fundo nos slides internos.
-       Uma unica instancia que cobre todo o slide (cover preserva aspect
-       ratio do arquivo, recortando bordas se preciso). Sem repeat, sem
-       distorcao. */
+    /* Pattern da marca como textura de fundo. Sindicompany/By:
+       10% (textura sutil). Consvicta: 40% (peso visual do brand
+       book — os patterns sao parte do sistema visual, nao decoracao).
+       Uma unica instancia cobre todo o slide; cover preserva aspect
+       ratio. */
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     background-image: url('{pattern_url}');
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
-    opacity: 0.10;
+    opacity: {0.40 if is_consvicta else 0.10};
     pointer-events: none;
   }}
   .frame-corner {{
