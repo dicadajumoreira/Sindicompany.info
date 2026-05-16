@@ -1763,6 +1763,165 @@ def _render_slide_png(html: str) -> bytes:
 
 
 # =============================================================================
+# Humanizer (Consvicta only)
+# =============================================================================
+
+
+def _humanizer_pass_consvicta(
+    slides: list[dict[str, Any]], legenda: str
+) -> tuple[list[dict[str, Any]], str]:
+    """Aplica a skill Humanizer + revisão pt-BR em todos os slides e
+    legenda de um carrossel @consvictabr.
+
+    Pipeline:
+      1. Pre: dicionario deterministico de acentos
+         (_apply_accent_dict do text_gen) — pega 'manutencao' ->
+         'manutenção', 'voce' -> 'você', etc. Sempre roda.
+      2. OpenAI batch: 1 chamada GPT com SYSTEM_HUMANIZER + JSON com
+         TODOS os slides+legenda. Modelo devolve versao revisada
+         (sem gerundio, sem clichê, sem traço, acentos OK, mesmo
+         sentido). Se OpenAI falhar/timeout, mantem o resultado da
+         etapa 1.
+      3. Post: passa o accent-dict de novo (rede de seguranca).
+
+    Preserva: tipo de cada slide, numeros (38%, 6 dias, etc), citacoes
+    literais (Art. 1.336, REsp X), nome da marca (Consvicta) e o handle
+    (@consvictabr). NUNCA introduz mencao a Sindicompany.
+    """
+    if not slides:
+        return slides, legenda
+
+    # Etapa 1 — pre: accent dict deterministico
+    try:
+        from api.text_gen import _apply_accent_dict, SYSTEM_HUMANIZER
+    except Exception as e:  # noqa: BLE001
+        print(f"[carrossel] text_gen indisponivel pro humanizer: {e}", flush=True)
+        return slides, legenda
+
+    for s in slides:
+        s["titulo"] = _apply_accent_dict(str(s.get("titulo") or ""))
+        s["body"] = _apply_accent_dict(str(s.get("body") or ""))
+    legenda = _apply_accent_dict(legenda or "")
+
+    # Etapa 2 — OpenAI batch
+    cli = _openai_client()
+    if cli is None:
+        print("[carrossel] humanizer pulou (OPENAI_API_KEY ausente)", flush=True)
+        return slides, legenda
+
+    payload = json.dumps(
+        {
+            "slides": [
+                {
+                    "i": i,
+                    "tipo": str(s.get("tipo") or ""),
+                    "titulo": str(s.get("titulo") or ""),
+                    "body": str(s.get("body") or ""),
+                }
+                for i, s in enumerate(slides)
+            ],
+            "legenda": legenda,
+        },
+        ensure_ascii=False,
+    )
+
+    prompt = (
+        "Recebe um JSON com 'slides' (lista de {i, tipo, titulo, body}) e "
+        "'legenda' de um carrossel @consvictabr. Devolve o MESMO JSON, mesmas "
+        "chaves, com os textos revisados pelas regras da skill Humanizer.\n\n"
+        "REGRAS DURAS:\n"
+        "- Português brasileiro com TODOS os acentos corretos (á, é, í, ó, ú, "
+        "â, ê, ô, ã, õ, ç, à). Sem exceções: 'voce'->você, 'sindico'->"
+        "síndico, 'condominio'->condomínio, 'gestao'->gestão, 'manutencao'->"
+        "manutenção, 'reuniao'->reunião, 'area'->área, 'experiencia'->"
+        "experiência, 'ate'->até, 'tambem'->também.\n"
+        "- ZERO travessões (—, –) — substitua por vírgula ou ponto.\n"
+        "- ZERO gerúndio decorativo: 'garantindo', 'proporcionando', "
+        "'destacando', 'refletindo' — reescreva com verbo direto.\n"
+        "- ZERO clichês corporativos: 'soluções integradas', 'sinergia', "
+        "'excelência', 'transformação digital', 'atendimento acolhedor', "
+        "'levando em consideração', 'nesse contexto', 'vale destacar', "
+        "'é importante ressaltar', 'dito isso', 'papel fundamental', "
+        "'momento crucial', 'cenário em constante evolução', 'futuro "
+        "promissor', 'estudos mostram', 'especialistas afirmam'.\n"
+        "- ZERO clichê motivacional: 'acredite no seu potencial', 'saia "
+        "da zona de conforto', 'o céu é o limite', 'mindset vencedor'.\n"
+        "- ZERO aspas curvas (“”) — só aspas retas (\").\n"
+        "- ZERO emoji decorativo nos slides. Legenda também sem emoji "
+        "decorativo (só nomes próprios e simbolos institucionais quando "
+        "literalmente necessario).\n"
+        "- ZERO construção 'não apenas X, mas também Y'.\n"
+        "- Frases curtas, voz ativa, sujeito explícito. Uma ideia por frase.\n"
+        "- Mantenha o MESMO sentido. Não encurte, não infle, não troque "
+        "argumentos. Não invente fato. Não remova número, percentual ou "
+        "citação literal (Art. 1.336, STJ REsp X, Lei 4.591/64).\n"
+        "- A marca é Consvicta. PROIBIDO mencionar Sindicompany, "
+        "By Sindicompany, @sindicompanybr, @bysindicompany, 'Por mais lares' "
+        "ou qualquer concorrente.\n"
+        "- A tagline oficial é 'Administração condominial que entrega "
+        "resultado.' — usar SO na legenda, NUNCA num slide.\n"
+        "- Preserve 'tipo' e 'i' exatamente.\n\n"
+        "Devolva JSON estrito (sem markdown, sem comentários):\n"
+        '{"slides":[{"i":0,"tipo":"capa","titulo":"...","body":"..."},...],'
+        '"legenda":"..."}\n\n'
+        f"INPUT:\n{payload}"
+    )
+
+    try:
+        resp = cli.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": SYSTEM_HUMANIZER},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.4,
+            max_tokens=3000,
+            response_format={"type": "json_object"},
+        )
+        raw = resp.choices[0].message.content or "{}"
+        data = json.loads(raw)
+    except Exception as e:  # noqa: BLE001
+        print(
+            f"[carrossel] humanizer OpenAI falhou ({type(e).__name__}: {e}) "
+            f"— segue com accent-fix deterministico",
+            flush=True,
+        )
+        return slides, legenda
+
+    # Aplica revisão de volta, indexada por 'i'. Slide sem entry na
+    # resposta mantem o valor pos-accent-dict (etapa 1).
+    out_slides = data.get("slides")
+    if isinstance(out_slides, list):
+        by_idx: dict[int, dict[str, Any]] = {}
+        for item in out_slides:
+            if not isinstance(item, dict):
+                continue
+            i = item.get("i")
+            if isinstance(i, int) and 0 <= i < len(slides):
+                by_idx[i] = item
+        for i, s in enumerate(slides):
+            up = by_idx.get(i)
+            if not up:
+                continue
+            titulo = up.get("titulo")
+            body = up.get("body")
+            if isinstance(titulo, str) and titulo.strip():
+                s["titulo"] = _apply_accent_dict(titulo)
+            if isinstance(body, str):
+                s["body"] = _apply_accent_dict(body)
+
+    new_legenda = data.get("legenda")
+    if isinstance(new_legenda, str) and new_legenda.strip():
+        legenda = _apply_accent_dict(new_legenda)
+
+    print(
+        f"[carrossel] humanizer aplicado em {len(slides)} slides + legenda",
+        flush=True,
+    )
+    return slides, legenda
+
+
+# =============================================================================
 # Pipeline
 # =============================================================================
 
@@ -1811,6 +1970,14 @@ def gerar_carrossel(carrossel_id: str) -> int:
             slides = copy["slides"]
             legenda = copy.get("legenda") or ""
             print(f"[carrossel] copy gerado pelo engine: {len(slides)} slides", flush=True)
+
+        # 1b. Humanizer + revisão pt-BR — exclusivo Consvicta.
+        # Roda DEPOIS da copy selecionada e ANTES do render dos slides.
+        # Outras marcas (Sindicompany, By Sindicompany) seguem com o
+        # texto raw da OpenAI (ja tem o anti-pattern no system prompt
+        # delas).
+        if _BRAND == "consvictabr":
+            slides, legenda = _humanizer_pass_consvicta(slides, legenda)
 
         # 2. Render + upload de cada slide
         n_total = len(slides)
