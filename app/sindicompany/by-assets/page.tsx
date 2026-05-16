@@ -123,7 +123,7 @@ export default async function ByAssetsPage() {
           <AssetSlotGrid
             storageKey="by.fundos"
             label="Fundo"
-            hint={(slot) => `Slide ${slot + 1}`}
+            hintPrefix="Slide"
             initialUrls={fundos}
             uploadIntent={getByIconCarrosselUploadIntent}
           />

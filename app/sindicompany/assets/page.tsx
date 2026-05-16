@@ -120,7 +120,7 @@ export default async function AssetsSindicompanyPage() {
           <AssetSlotGrid
             storageKey="sindicompany.fundos"
             label="Fundo"
-            hint={(slot) => `Slide ${slot + 1}`}
+            hintPrefix="Slide"
             initialUrls={fundos}
             uploadIntent={getIconCarrosselUploadIntent}
           />

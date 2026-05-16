@@ -23,8 +23,10 @@ interface AssetSlotGridProps {
   /** Label do tipo de asset (Pattern/Icon/Logo/Fundo) — passa direto
    *  pro ByAssetSlot. */
   label: string;
-  /** Hint opcional pra cada slot — pode ser função do slot index. */
-  hint?: (slot: number) => string | undefined;
+  /** Prefixo opcional pra hint inline (ex: "Slide" → mostra
+   *  "Slide 1", "Slide 2"). String pura — funcoes NAO sao
+   *  serializaveis de Server pra Client Component no Next.js. */
+  hintPrefix?: string;
   /** Aspect ratio do preview (default quadrado, "wide" pra logos). */
   aspect?: "square" | "wide";
   /** Server action que cria intent de upload (mesma assinatura do
@@ -42,7 +44,7 @@ export function AssetSlotGrid({
   storageKey,
   initialUrls,
   label,
-  hint,
+  hintPrefix,
   aspect = "square",
   uploadIntent,
   gridClassName = "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4",
@@ -91,7 +93,7 @@ export function AssetSlotGrid({
             key={slot}
             slot={slot}
             label={label}
-            hint={hint?.(slot)}
+            hint={hintPrefix ? `${hintPrefix} ${slot}` : undefined}
             initialUrl={initialUrls[slot - 1] ?? null}
             uploadIntent={uploadIntent}
             aspect={aspect}

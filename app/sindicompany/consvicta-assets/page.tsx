@@ -286,7 +286,7 @@ export default async function ConsvictaAssetsPage() {
           <AssetSlotGrid
             storageKey="consvicta.fundos"
             label="Fundo"
-            hint={(slot) => `Slide ${slot}`}
+            hintPrefix="Slide"
             initialUrls={fundos}
             uploadIntent={getConsvictaIconCarrosselUploadIntent}
           />
