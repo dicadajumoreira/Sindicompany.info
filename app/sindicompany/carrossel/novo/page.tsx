@@ -263,14 +263,21 @@ const TEMAS_BY = [
   "Outros",
 ];
 
-// Temas pro @consvictabr — placeholder; ajuste conforme a marca evoluir.
+// Temas pro @consvictabr — administradora/sindicatura profissional premium.
+// Proposta inicial coerente com a hipotese da marca (convicção, solidez,
+// método). Ajuste conforme o briefing real for chegando.
 const TEMAS_CONSVICTA = [
-  "Manifesto da marca",
-  "Bastidores Consvicta",
-  "Tendência do mercado",
-  "Visão de futuro",
-  "Provocação editorial",
-  "Curadoria",
+  "Gestão com convicção (manifesto)",
+  "Bastidores da administração premium",
+  "Método Consvicta",
+  "Decisões difíceis do dia a dia",
+  "Saúde financeira do condomínio",
+  "Reputação do prédio e valorização do imóvel",
+  "Conselho consultivo: o que importa",
+  "Conformidade e legislação",
+  "Sustentabilidade na gestão",
+  "Tecnologia operacional",
+  "Mercado imobiliário vertical",
   "Outros",
 ];
 
