@@ -91,3 +91,19 @@ export const CONSVICTA_LIBRARY_LOGOS: ReadonlyArray<string> = [
   'symbol.svg',
   'wordmark.svg',
 ];
+
+export const CONSVICTA_LIBRARY_PATTERNS: ReadonlyArray<string> = [
+  'pattern-01-grid-dourado-light.svg',
+  'pattern-02-grid-escuro.svg',
+  'pattern-03-diagonal-dourado.svg',
+  'pattern-04-diagonal-tiffany-dark.svg',
+  'pattern-05-simbolo-watermark-light.svg',
+  'pattern-06-simbolo-dark-tiffany.svg',
+  'pattern-07-simbolos-em-grade.svg',
+  'pattern-08-corner-frame-light.svg',
+  'pattern-09-corner-frame-dark.svg',
+  'pattern-10-line-rule-system.svg',
+  'pattern-11-hero-texture-light.svg',
+  'pattern-12-hero-texture-dark.svg',
+  'pattern-13-dots-frame.svg',
+];

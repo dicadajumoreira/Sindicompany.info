@@ -6,7 +6,10 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { CONSVICTA_LIBRARY_ICONS } from "./library-manifest";
+import {
+  CONSVICTA_LIBRARY_ICONS,
+  CONSVICTA_LIBRARY_PATTERNS,
+} from "./library-manifest";
 
 const BUCKET = "condominios-fotos";
 
@@ -134,6 +137,20 @@ export async function uploadEmbeddedConsvictaAssets(): Promise<UploadResult> {
     await upload(
       path.join(iconsRoot, file),
       `__consvicta-icons/icon-${slot}.svg`,
+    );
+  }
+
+  // Patterns — 13 SVGs derivados do brand book (grid dourado, diagonal,
+  // simbolo watermark, corner frames, hero textures, dots+frame). O
+  // engine carrossel le de __consvicta-patterns/pattern-{slot}.X com
+  // pesos por slide (ver _SLIDE_PATTERN_WHITELIST).
+  const patternsRoot = "public/consvicta-library/patterns";
+  for (let i = 0; i < CONSVICTA_LIBRARY_PATTERNS.length; i++) {
+    const slot = i + 1;
+    const file = CONSVICTA_LIBRARY_PATTERNS[i];
+    await upload(
+      path.join(patternsRoot, file),
+      `__consvicta-patterns/pattern-${slot}.svg`,
     );
   }
 

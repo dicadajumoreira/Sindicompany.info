@@ -24,6 +24,7 @@ import { UploadLibraryButton } from "./upload-library-button";
 import {
   CONSVICTA_LIBRARY_ICONS,
   CONSVICTA_LIBRARY_LOGOS,
+  CONSVICTA_LIBRARY_PATTERNS,
 } from "./library-manifest";
 
 /** Biblioteca embutida (public/consvicta-library): logos e ícones servidos
@@ -32,6 +33,7 @@ import {
  *  Netlify/Vercel — public/ é estático no CDN, não no Node). */
 function readEmbeddedLibrary(): {
   logos: string[];
+  patterns: string[];
   iconsByCategory: Array<{ category: string; files: string[] }>;
 } {
   const byCat = new Map<string, string[]>();
@@ -46,6 +48,7 @@ function readEmbeddedLibrary(): {
     .sort((a, b) => a.category.localeCompare(b.category));
   return {
     logos: [...CONSVICTA_LIBRARY_LOGOS].sort(),
+    patterns: [...CONSVICTA_LIBRARY_PATTERNS].sort(),
     iconsByCategory,
   };
 }
@@ -153,6 +156,32 @@ export default async function ConsvictaAssetsPage() {
                       />
                       <code className="text-[10px] text-g60 break-all">
                         {f}
+                      </code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {library.patterns.length > 0 && (
+              <div className="mb-5">
+                <h3 className="text-xs uppercase tracking-wider text-onix-700 font-semibold mb-2">
+                  Patterns ({library.patterns.length})
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {library.patterns.map((f) => (
+                    <div
+                      key={f}
+                      className="rounded border border-onix-100 bg-white overflow-hidden"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`/consvicta-library/patterns/${f}`}
+                        alt={f}
+                        className="w-full aspect-square object-cover block"
+                      />
+                      <code className="block px-2 py-1.5 text-[10px] text-g60 break-all">
+                        {f.replace("pattern-", "").replace(".svg", "")}
                       </code>
                     </div>
                   ))}
