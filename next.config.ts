@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "8mb",
     },
   },
+  // Empacota os SVGs da biblioteca Consvicta na serverless function
+  // que faz fs.readFile no upload. Em Netlify/Vercel, public/ é
+  // servido como estático no CDN mas NAO fica acessivel via Node fs
+  // em runtime — esse trace inclui os arquivos no bundle da rota.
+  outputFileTracingIncludes: {
+    "/sindicompany/consvicta-assets": [
+      "./public/consvicta-library/**/*",
+    ],
+  },
   images: {
     remotePatterns: [
       {

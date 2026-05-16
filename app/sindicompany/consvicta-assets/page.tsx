@@ -1,8 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import {
   ICON_CARROSSEL_MAX_SLOTS,
@@ -23,37 +21,33 @@ import {
 import { ByAssetSlot } from "../by-assets-slot";
 import { DashboardShell } from "../shell";
 import { UploadLibraryButton } from "./upload-library-button";
+import {
+  CONSVICTA_LIBRARY_ICONS,
+  CONSVICTA_LIBRARY_LOGOS,
+} from "./library-manifest";
 
-/** Lê a biblioteca embutida (public/consvicta-library): logos e ícones que
- *  o engine carrega direto do filesystem — não passa pelo Supabase. Filenames
- *  em icons/ são namespaceados por categoria (Geral_NN-nome.svg, Aplicativo_*,
- *  Diferenciais_*, Equipe_Multidisciplinar_*, Facilities_*). */
-async function readEmbeddedLibrary(): Promise<{
+/** Biblioteca embutida (public/consvicta-library): logos e ícones servidos
+ *  via CDN como assets estáticos. Lista vem do manifesto hardcoded —
+ *  evita fs.readdir em runtime (que NÃO funciona em serverless do
+ *  Netlify/Vercel — public/ é estático no CDN, não no Node). */
+function readEmbeddedLibrary(): {
   logos: string[];
   iconsByCategory: Array<{ category: string; files: string[] }>;
-}> {
-  const root = path.join(process.cwd(), "public", "consvicta-library");
-  try {
-    const logoFiles = (
-      await fs.readdir(path.join(root, "logos")).catch(() => [] as string[])
-    ).filter((f) => f.endsWith(".svg"));
-    const iconFiles = (
-      await fs.readdir(path.join(root, "icons")).catch(() => [] as string[])
-    ).filter((f) => f.endsWith(".svg"));
-    const byCat = new Map<string, string[]>();
-    for (const f of iconFiles) {
-      const idx = f.indexOf("_");
-      const cat = idx > 0 ? f.slice(0, idx) : "Outros";
-      if (!byCat.has(cat)) byCat.set(cat, []);
-      byCat.get(cat)!.push(f);
-    }
-    const iconsByCategory = Array.from(byCat.entries())
-      .map(([category, files]) => ({ category, files: files.sort() }))
-      .sort((a, b) => a.category.localeCompare(b.category));
-    return { logos: logoFiles.sort(), iconsByCategory };
-  } catch {
-    return { logos: [], iconsByCategory: [] };
+} {
+  const byCat = new Map<string, string[]>();
+  for (const f of CONSVICTA_LIBRARY_ICONS) {
+    const idx = f.indexOf("_");
+    const cat = idx > 0 ? f.slice(0, idx) : "Outros";
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat)!.push(f);
   }
+  const iconsByCategory = Array.from(byCat.entries())
+    .map(([category, files]) => ({ category, files: [...files].sort() }))
+    .sort((a, b) => a.category.localeCompare(b.category));
+  return {
+    logos: [...CONSVICTA_LIBRARY_LOGOS].sort(),
+    iconsByCategory,
+  };
 }
 
 export default async function ConsvictaAssetsPage() {
@@ -88,7 +82,7 @@ export default async function ConsvictaAssetsPage() {
     Array(LOGO_MAX_SLOTS).fill(null) as (string | null)[],
   );
 
-  const library = await readEmbeddedLibrary();
+  const library = readEmbeddedLibrary();
 
   return (
     <DashboardShell>

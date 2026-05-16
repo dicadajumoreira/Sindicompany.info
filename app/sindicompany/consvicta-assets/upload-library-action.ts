@@ -1,11 +1,12 @@
 "use server";
 
-import { readFile, readdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { CONSVICTA_LIBRARY_ICONS } from "./library-manifest";
 
 const BUCKET = "condominios-fotos";
 
@@ -72,9 +73,30 @@ export async function uploadEmbeddedConsvictaAssets(): Promise<UploadResult> {
   let uploaded = 0;
   let failed = 0;
 
+  // Lê arquivo em modo robusto: tenta vários paths possíveis
+  // (process.cwd, __dirname relativo, etc) pra cobrir as variações
+  // de bundling do Netlify/Vercel.
+  const tryReadFile = async (relPath: string): Promise<Buffer> => {
+    const candidates = [
+      relPath,
+      path.join(process.cwd(), relPath),
+      path.join(process.cwd(), ".next", "standalone", relPath),
+      path.join(process.cwd(), ".next", "server", relPath),
+    ];
+    let lastErr: Error | null = null;
+    for (const p of candidates) {
+      try {
+        return await readFile(p);
+      } catch (e) {
+        lastErr = e as Error;
+      }
+    }
+    throw lastErr ?? new Error(`Não encontrei ${relPath} em nenhum candidato`);
+  };
+
   const upload = async (localPath: string, remotePath: string) => {
     try {
-      const buf = await readFile(localPath);
+      const buf = await tryReadFile(localPath);
       const { error } = await sb.storage.from(BUCKET).upload(remotePath, buf, {
         contentType: "image/svg+xml",
         upsert: true,
@@ -94,18 +116,9 @@ export async function uploadEmbeddedConsvictaAssets(): Promise<UploadResult> {
     await upload(src, `__consvicta-logos/logo-${slot}.svg`);
   }
 
-  // Icons — confirma que os arquivos existem em disco antes
+  // Icons — usa manifest hardcoded em vez de readdir
+  const iconFiles = new Set(CONSVICTA_LIBRARY_ICONS);
   const iconsRoot = "public/consvicta-library/icons";
-  let iconFiles: Set<string>;
-  try {
-    iconFiles = new Set(
-      (await readdir(iconsRoot)).filter((f) => f.endsWith(".svg")),
-    );
-  } catch (e) {
-    iconFiles = new Set();
-    const msg = e instanceof Error ? e.message : String(e);
-    details.push({ path: iconsRoot, ok: false, error: `não acessível: ${msg}` });
-  }
 
   for (const { slot, name } of ICON_MAP) {
     const file = `${name}.svg`;
@@ -114,7 +127,7 @@ export async function uploadEmbeddedConsvictaAssets(): Promise<UploadResult> {
       details.push({
         path: `__consvicta-icons/icon-${slot}.svg`,
         ok: false,
-        error: `arquivo ${file} não encontrado em ${iconsRoot}`,
+        error: `arquivo ${file} não está no manifest`,
       });
       continue;
     }
