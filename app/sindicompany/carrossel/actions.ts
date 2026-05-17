@@ -9,6 +9,7 @@ import {
   createCarrosselFotoUploadIntent,
   deleteCarrossel,
   getCarrossel,
+  isValidCoverArchetype,
   updateCarrossel,
   uploadCarrosselFotoBytes,
   type CarrosselInput,
@@ -130,6 +131,10 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
   const n_slides = Number.isFinite(n_slides_raw)
     ? Math.max(1, Math.min(10, n_slides_raw))
     : 6;
+  const coverArchetypeRaw = getStr(formData, "cover_archetype");
+  const cover_archetype = isValidCoverArchetype(coverArchetypeRaw)
+    ? coverArchetypeRaw
+    : undefined;
 
   if (!titulo) backTo("/sindicompany/carrossel/novo", "Informe o título do carrossel.", formData);
   if (!objetivo) {
@@ -153,6 +158,7 @@ export async function iniciarCarrosselAction(formData: FormData): Promise<void> 
     formato,
     briefing: briefing || undefined,
     n_slides,
+    cover_archetype,
   };
 
   let carrossel;
