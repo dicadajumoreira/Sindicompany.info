@@ -2449,6 +2449,482 @@ def _capa_hero_portrait(
 """
 
 
+def _capa_avatar_quote(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 33 "Avatar quote".
+
+    Fundo Paper, aspas Beige gigantes no topo, citacao italic Navy
+    (body) ocupando o meio, avatar circular pequeno + atribuicao
+    (titulo) na base. Sem foto: avatar vira um circulo Beige solido
+    mantendo o ritmo visual."""
+    avatar_bg = (
+        f"background-image: url('{foto_capa_url}'); background-size: cover; background-position: center;"
+        if foto_capa_url
+        else f"background: {_SC_BEIGE};"
+    )
+    quote_text = body or titulo
+    attribution = (
+        f'<div class="attribution">{_h(titulo)}</div>'
+        if body and titulo
+        else ""
+    )
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .marks {{
+    position: absolute;
+    top: 460px; left: 180px;
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 820px;
+    line-height: 0.7;
+    color: {_SC_BEIGE};
+    z-index: 1;
+    pointer-events: none;
+  }}
+  .quote {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 36%;
+    font-family: {font_display};
+    font-style: italic;
+    font-weight: 500;
+    font-size: 200px;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+    z-index: 2;
+  }}
+  .avatar-row {{
+    position: absolute;
+    left: 180px; right: 180px;
+    bottom: 320px;
+    display: flex; align-items: center;
+    z-index: 3;
+  }}
+  .avatar {{
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background-repeat: no-repeat;
+    flex-shrink: 0;
+    {avatar_bg}
+  }}
+  .attribution {{
+    margin-left: 60px;
+    font-family: {font_body};
+    font-weight: 600;
+    font-size: 76px;
+    line-height: 1.20;
+    color: {_SC_NAVY};
+    letter-spacing: -0.01em;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  <div class="marks">&ldquo;</div>
+  {logo_top_img}
+  <div class="quote">{_h(quote_text)}</div>
+  <div class="avatar-row">
+    <div class="avatar"></div>
+    {attribution}
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_photo_circle(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 38 "Foto circular".
+
+    Fundo Paper. Foto recortada num circulo gigante ancorado no canto
+    superior direito (~70% da menor dimensao). Texto inferior esquerdo
+    com headline grande Navy + body. Sem foto: circulo vira Beige
+    solido, preservando a geometria."""
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+    circle_style = (
+        f"background-image: url('{foto_capa_url}'); background-size: cover; background-position: center;"
+        if foto_capa_url
+        else f"background: {_SC_BEIGE};"
+    )
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .photo-circle {{
+    position: absolute;
+    top: -480px; right: -480px;
+    width: 2500px; height: 2500px;
+    border-radius: 50%;
+    {circle_style}
+    z-index: 1;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .content {{
+    position: absolute;
+    left: 180px;
+    right: 180px;
+    bottom: 320px;
+    max-width: 1700px;
+    z-index: 3;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 240px;
+    line-height: 0.94;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 78px;
+    line-height: 1.30;
+    color: {_SC_NAVY};
+    opacity: 0.82;
+    margin-top: 60px;
+    max-width: 24ch;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_NAVY};
+    letter-spacing: 0.04em;
+    z-index: 4;
+  }}
+</style></head>
+<body>
+  <div class="photo-circle"></div>
+  {logo_top_img}
+  <div class="content">
+    <h1 class="capa-titulo">{_h(titulo)}</h1>
+    {body_html}
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_pull_quote(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 10 "Pull quote".
+
+    Fundo Paper. Par de aspas Beige gigantes no topo, citacao italic
+    Navy (body, ou titulo se body vazio) ocupando o centro, atribuicao
+    mono na base. Capa sem foto por design."""
+    del foto_capa_url
+    quote_text = body or titulo
+    attribution_text = titulo if body else ""
+    attribution_html = (
+        f'<div class="attribution">— {_h(attribution_text)}</div>'
+        if attribution_text
+        else ""
+    )
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .marks {{
+    position: absolute;
+    top: 380px; left: 160px;
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 1100px;
+    line-height: 0.7;
+    color: {_SC_BEIGE};
+    z-index: 1;
+    pointer-events: none;
+  }}
+  .quote {{
+    position: absolute;
+    left: 220px; right: 220px;
+    top: 40%;
+    font-family: {font_display};
+    font-style: italic;
+    font-weight: 500;
+    font-size: 240px;
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+    z-index: 2;
+  }}
+  .attribution {{
+    position: absolute;
+    left: 220px;
+    bottom: 320px;
+    font-family: {font_body};
+    font-weight: 600;
+    font-size: 72px;
+    color: {_SC_NAVY};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  <div class="marks">&ldquo;</div>
+  {logo_top_img}
+  <div class="quote">{_h(quote_text)}</div>
+  {attribution_html}
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_glow_hero(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 23 "Glow hero".
+
+    Fundo Navy, simbolo Sindicompany gigante no centro com dois glows
+    radiais atras (Cyan + Beige). Headline Branca abaixo do simbolo,
+    body sutil. Capa sem foto por design."""
+    del foto_capa_url
+    symbol_url = (
+        _logo_slot_data_url(2)
+        or _logo_slot_data_url(3)
+        or _logo_slot_data_url(1)
+        or ""
+    )
+    symbol_img = (
+        f'<img class="hero-symbol" src="{symbol_url}" alt="" />'
+        if symbol_url
+        else '<div class="hero-symbol-fallback"></div>'
+    )
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_NAVY};
+    color: #ffffff;
+    overflow: hidden;
+    position: relative;
+  }}
+  .glow-a {{
+    position: absolute;
+    top: 18%; left: 50%;
+    transform: translateX(-50%);
+    width: 2200px; height: 2200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, {_SC_CYAN} 0%, rgba(136,200,208,0) 60%);
+    opacity: 0.55;
+    filter: blur(80px);
+    z-index: 1;
+    pointer-events: none;
+  }}
+  .glow-b {{
+    position: absolute;
+    top: 22%; left: 50%;
+    transform: translateX(-50%);
+    width: 1600px; height: 1600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, {_SC_BEIGE} 0%, rgba(224,176,152,0) 65%);
+    opacity: 0.45;
+    filter: blur(60px);
+    z-index: 2;
+    pointer-events: none;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) invert(1);
+  }}
+  .hero-symbol {{
+    position: absolute;
+    top: 22%; left: 50%;
+    transform: translateX(-50%);
+    width: 1100px; height: 1100px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    z-index: 3;
+  }}
+  .hero-symbol-fallback {{
+    position: absolute;
+    top: 28%; left: 50%;
+    transform: translateX(-50%);
+    width: 800px; height: 800px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 4px solid rgba(255,255,255,0.18);
+    z-index: 3;
+  }}
+  .content {{
+    position: absolute;
+    left: 180px; right: 180px;
+    bottom: 320px;
+    text-align: center;
+    z-index: 4;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 240px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: #ffffff;
+    text-wrap: balance;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 78px;
+    line-height: 1.30;
+    color: #ffffff;
+    opacity: 0.78;
+    margin-top: 50px;
+    max-width: 28ch;
+    margin-left: auto;
+    margin-right: auto;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 50%;
+    transform: translateX(-50%);
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 5;
+  }}
+</style></head>
+<body>
+  <div class="glow-a"></div>
+  <div class="glow-b"></div>
+  {symbol_img}
+  {logo_top_img}
+  <div class="content">
+    <h1 class="capa-titulo">{_h(titulo)}</h1>
+    {body_html}
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
 # Registry dos arquetipos de capa do Brand Hub Sindicompany 2026-05-17.
 #
 # REGRA INDISPENSAVEL: todo arquetipo que tem variante COM FOTO deve
@@ -2473,11 +2949,15 @@ COVER_ARCHETYPES_SC = {
     "manifesto": _capa_manifesto,
     "pattern-explosion": _capa_pattern_explosion,
     "headline-only": _capa_headline_only,
+    "pull-quote": _capa_pull_quote,
+    "glow-hero": _capa_glow_hero,
     # COM foto (consomem foto_capa_url da etapa 3)
     "dark-premium": _capa_dark_premium,
     "magazine-cover": _capa_magazine_cover,
     "split-portrait": _capa_split_portrait,
     "hero-portrait": _capa_hero_portrait,
+    "avatar-quote": _capa_avatar_quote,
+    "photo-circle": _capa_photo_circle,
 }
 
 
