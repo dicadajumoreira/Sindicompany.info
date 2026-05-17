@@ -240,6 +240,7 @@ _ICONS_LIST_CACHE: list[str] | None = None
 _ICON_SLOT_CACHE: dict[int, str] = {}
 _LOGO_SLOT_CACHE: dict[int, str] = {}
 _CONSVICTA_FONTS_CSS_CACHE: str | None = None
+_SINDICOMPANY_FONTS_CSS_CACHE: str | None = None
 
 # Biblioteca de icones Consvicta (86 SVGs). Cache em memoria por processo.
 # Estrutura: {nome_sem_ext: svg_string}. Carrega lazily na primeira chamada.
@@ -457,6 +458,36 @@ def _consvicta_fonts_css() -> str:
         )
         _CONSVICTA_FONTS_CSS_CACHE = ""
     return _CONSVICTA_FONTS_CSS_CACHE
+
+
+def _sindicompany_fonts_css() -> str:
+    """CSS @font-face com Provicali (.otf, 400) + Epilogue Variable
+    (.woff2, 100-900 normal/italic) embutidos em base64. Arquivo em
+    api/assets/fonts/sindicompany/. Cache por processo. String vazia
+    se nao encontrar — engine cai pro fallback Epilogue do Google
+    Fonts."""
+    global _SINDICOMPANY_FONTS_CSS_CACHE
+    if _SINDICOMPANY_FONTS_CSS_CACHE is not None:
+        return _SINDICOMPANY_FONTS_CSS_CACHE
+    here = os.path.dirname(os.path.abspath(__file__))
+    css_path = os.path.join(
+        here, "assets", "fonts", "sindicompany", "sindicompany-fonts-inline.css"
+    )
+    try:
+        with open(css_path, "r", encoding="utf-8") as f:
+            _SINDICOMPANY_FONTS_CSS_CACHE = f.read()
+        print(
+            f"[carrossel] sindicompany-fonts-inline.css carregado "
+            f"({len(_SINDICOMPANY_FONTS_CSS_CACHE)//1024} KB)",
+            flush=True,
+        )
+    except Exception as e:  # noqa: BLE001
+        print(
+            f"[carrossel] sindicompany-fonts-inline.css nao encontrado: {e}",
+            flush=True,
+        )
+        _SINDICOMPANY_FONTS_CSS_CACHE = ""
+    return _SINDICOMPANY_FONTS_CSS_CACHE
 
 
 def _logo_slot_data_url(slot: int) -> str:
@@ -1177,19 +1208,28 @@ def _slide_html(
     p = _palette()
     handle = _handle()
     is_consvicta = _BRAND == "consvictabr"
-    epilogue_url = (
-        "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;800;900&display=swap"
-    )
     # Consvicta usa tipografia propria (Cormorant Garamond + Outfit +
-    # Bebas Neue), embutida via base64 — sem dependencia de Google
-    # Fonts no render. Demais marcas seguem com Epilogue (Google Fonts).
+    # Bebas Neue), embutida via base64. Sindicompany/By Sindicompany
+    # usam Provicali (wordmark) + Epilogue (display/body/numeric)
+    # tambem embutidas via base64 do Brand Hub 2026-05-17. Sem
+    # dependencia de Google Fonts no render.
     if is_consvicta:
         head_fonts = f"<style>{_consvicta_fonts_css()}</style>"
         font_display = "'Cormorant Garamond', Georgia, serif"
         font_body = "'Outfit', system-ui, sans-serif"
         font_numeric = "'Bebas Neue', Impact, sans-serif"
     else:
-        head_fonts = f'<link href="{epilogue_url}" rel="stylesheet">'
+        sindi_css = _sindicompany_fonts_css()
+        if sindi_css:
+            head_fonts = f"<style>{sindi_css}</style>"
+        else:
+            # Fallback: Google Fonts Epilogue se o CSS inline nao tiver
+            # sido empacotado por algum motivo.
+            head_fonts = (
+                '<link href="https://fonts.googleapis.com/css2?'
+                'family=Epilogue:wght@400;600;800;900&display=swap" '
+                'rel="stylesheet">'
+            )
         font_display = "'Epilogue', sans-serif"
         font_body = "'Epilogue', sans-serif"
         font_numeric = "'Epilogue', sans-serif"
