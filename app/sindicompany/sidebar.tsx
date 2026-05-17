@@ -47,9 +47,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Brand Assets", href: "/sindicompany/assets/brand-assets" },
       { label: "Social Media", href: "/sindicompany/assets/social-media" },
       { label: "Visual Library", href: "/sindicompany/assets/visual-library" },
-      { label: "Icon Library", href: "/sindicompany/assets/icon-library" },
-      { label: "AI Ready", href: "/sindicompany/assets/ai-ready" },
-      { label: "Templates", href: "/sindicompany/assets/templates" },
+      { label: "AI Ready Assets", href: "/sindicompany/assets/ai-ready" },
     ],
   },
   {
@@ -60,9 +58,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Brand Assets", href: "/sindicompany/by-assets/brand-assets" },
       { label: "Social Media", href: "/sindicompany/by-assets/social-media" },
       { label: "Visual Library", href: "/sindicompany/by-assets/visual-library" },
-      { label: "Icon Library", href: "/sindicompany/by-assets/icon-library" },
-      { label: "AI Ready", href: "/sindicompany/by-assets/ai-ready" },
-      { label: "Templates", href: "/sindicompany/by-assets/templates" },
+      { label: "AI Ready Assets", href: "/sindicompany/by-assets/ai-ready" },
     ],
   },
   {
@@ -73,9 +69,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Brand Assets", href: "/sindicompany/consvicta-assets/brand-assets" },
       { label: "Social Media", href: "/sindicompany/consvicta-assets/social-media" },
       { label: "Visual Library", href: "/sindicompany/consvicta-assets/visual-library" },
-      { label: "Icon Library", href: "/sindicompany/consvicta-assets/icon-library" },
-      { label: "AI Ready", href: "/sindicompany/consvicta-assets/ai-ready" },
-      { label: "Templates", href: "/sindicompany/consvicta-assets/templates" },
+      { label: "AI Ready Assets", href: "/sindicompany/consvicta-assets/ai-ready" },
     ],
   },
 ];

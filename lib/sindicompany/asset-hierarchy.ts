@@ -1,20 +1,25 @@
 /**
  * Hierarquia oficial de Assets do Sindicompany.info.
  *
- * Estrutura por marca: cada uma das 3 marcas (Sindicompany, BySindicompany,
- * Consvicta) tem sua propria copia completa desta arvore.
+ * Organizada em 4 PILARES (conforme handoff do Brand Hub):
+ *   1. Brand Assets       — institucional/fixo da marca
+ *   2. Social Media       — capas, carrosseis, CTAs, elementos
+ *   3. Visual Library     — patterns, fotografia, backgrounds, icones
+ *   4. AI Ready Assets    — prompts, composicoes, regras, templates
+ *
+ * Estrutura por marca: cada uma das 3 marcas (Sindicompany,
+ * BySindicompany, Consvicta) tem sua propria copia completa desta arvore.
  *
  * Levels:
- *   1. Brand (sindicompany | by | consvicta) — definido no path da rota
- *   2. Section (Brand Assets, Social Media Assets, Visual Library, ...)
- *   3. Category (Logotipos, Tipografia, Patterns, Texturas, ...)
- *   4. Subcategory (opcional — ex: Carrosseis > Fundos > Capa)
- *   5. Leaf (asset slot — onde upload acontece)
+ *   1. Brand    (definido no path da rota: /assets, /by-assets, /consvicta-assets)
+ *   2. Pillar   (Brand Assets, Social Media, ...)
+ *   3. Category (Logotipos, Capas, Patterns, Prompts Visuais, ...)
+ *   4. Leaf     (asset slot — onde upload acontece)
  *
  * Cada leaf gera um bucket prefix no Supabase Storage no formato:
- *   __{brand-prefix}/{section}/{category}/{subcategory}/{leaf}
+ *   __{brand-prefix}{pillar}-{category}-{leaf}
  *
- * Onde brand-prefix = "" (Sindicompany), "by", ou "consvicta".
+ * Onde brand-prefix = "" (Sindicompany), "by-" (By), "consvicta-".
  */
 
 export type AssetBrand = "sindicompanybr" | "bysindicompany" | "consvictabr";
@@ -29,7 +34,6 @@ export interface AssetNode {
   legacyBucket?: string;
 }
 
-/** Helper: marca um node como leaf (sem children) com label + slug. */
 function leaf(slug: string, label: string, opts: { legacyBucket?: string } = {}): AssetNode {
   return { slug, label, ...opts };
 }
@@ -41,119 +45,141 @@ export const ASSET_HIERARCHY: AssetNode[] = [
   {
     slug: "brand-assets",
     label: "Brand Assets",
-    description: "Tudo que é institucional e fixo da marca",
+    description: "Institucional e fixo da marca — logos, paleta, tipografia, guidelines",
     children: [
       {
-        slug: "logotipos",
+        slug: "logos",
         label: "Logotipos",
         children: [
-          // Principal reusa o bucket legacy "logos" pros 10 slots ja
-          // uploadados (Sindicompany/By: logo padrao; Consvicta: wordmark + symbol)
-          leaf("principal", "Principal", { legacyBucket: "logos" }),
-          leaf("branco", "Branco"),
-          leaf("preto", "Preto"),
-          leaf("horizontal", "Horizontal"),
-          leaf("vertical", "Vertical"),
-          leaf("simbolo", "Símbolo"),
-          leaf("svg", "SVG"),
-          leaf("png", "PNG"),
-          leaf("fundo-transparente", "Fundo transparente"),
+          // Principal reusa "logos" — mantem uploads ja feitos
+          leaf("master", "Master / Principal", { legacyBucket: "logos" }),
+          leaf("horizontal-mono", "Horizontal monocromático"),
+          leaf("horizontal-duo", "Horizontal duo (combinações cromáticas)"),
+          leaf("vertical", "Vertical lockup"),
+          leaf("simbolo-mono", "Símbolo mono"),
+          leaf("simbolo-duo", "Símbolo duo"),
+          leaf("simbolo-foto", "Símbolo com foto"),
+          leaf("sobre-fotografia", "Logo sobre fotografia"),
+          leaf("containers-badges", "Containers & Badges"),
+          leaf("escalas-pequenas", "Escalas pequenas (favicon 16→128px)"),
+          leaf("area-protecao", "Área de proteção"),
         ],
       },
       {
-        slug: "tipografia",
+        slug: "palette",
+        label: "Paleta",
+        children: [
+          leaf("cores-principais", "6 Cores principais"),
+          leaf("neutros", "Neutros (Paper, Line, Muted)"),
+          leaf("pares-aprovados", "Pares aprovados"),
+          leaf("gradientes", "Gradientes (Aurora, Sunset, Deep Sea, Sand)"),
+        ],
+      },
+      {
+        slug: "type",
         label: "Tipografia",
         children: [
-          leaf("fontes-oficiais", "Fontes oficiais"),
-          leaf("hierarquia", "Hierarquia tipográfica"),
-          leaf("combinacoes", "Combinações"),
-          leaf("regras-uso", "Regras de uso"),
+          leaf("provicali", "Provicali (wordmark)"),
+          leaf("epilogue", "Epilogue (display + body)"),
+          leaf("jetbrains-mono", "JetBrains Mono (specs/captions)"),
+          leaf("escala", "Escala tipográfica"),
         ],
       },
       {
-        slug: "paleta-cores",
-        label: "Paleta de cores",
+        slug: "guidelines",
+        label: "Guidelines",
         children: [
-          leaf("hex", "HEX"),
-          leaf("rgb", "RGB"),
-          leaf("gradientes", "Gradientes"),
-          leaf("combinacoes-aprovadas", "Combinações aprovadas"),
-        ],
-      },
-      {
-        slug: "brand-guidelines",
-        label: "Brand Guidelines",
-        children: [
-          leaf("manual", "Manual da marca"),
-          leaf("aplicacoes-corretas", "Aplicações corretas"),
-          leaf("aplicacoes-proibidas", "Aplicações proibidas"),
+          leaf("dos", "DOs (3 regras)"),
+          leaf("donts", "DON'Ts (6 erros)"),
+          leaf("tom-de-voz", "Tom de voz (6 atributos)"),
         ],
       },
     ],
   },
 
   // ───────────────────────────────────────────────────────────────────
-  // 2. Social Media Assets
+  // 2. Social Media
   // ───────────────────────────────────────────────────────────────────
   {
     slug: "social-media",
-    label: "Social Media Assets",
-    description: "Carrosséis, posts, stories — material publicado",
+    label: "Social Media",
+    description: "Capas, carrosséis, CTAs e elementos gráficos para feed",
     children: [
       {
-        slug: "carrosseis",
-        label: "Carrosséis",
+        slug: "capas",
+        label: "Capas (30 arquétipos)",
         children: [
-          {
-            slug: "fundos",
-            label: "Fundos",
-            children: [
-              // Conteudo reusa "icon-carrossel" (bucket existente)
-              leaf("capa", "Capa"),
-              leaf("conteudo", "Conteúdo", { legacyBucket: "icon-carrossel" }),
-              leaf("cta", "CTA"),
-              leaf("editorial", "Editorial"),
-              leaf("premium", "Premium"),
-              leaf("minimalista", "Minimalista"),
-              leaf("escuro", "Escuro"),
-              leaf("claro", "Claro"),
-            ],
-          },
-          {
-            slug: "elementos-graficos",
-            label: "Elementos gráficos",
-            children: [
-              leaf("linhas", "Linhas"),
-              leaf("molduras", "Molduras"),
-              leaf("setas", "Setas"),
-              leaf("boxes", "Boxes"),
-              leaf("tags", "Tags"),
-              leaf("glow", "Glow"),
-              leaf("blur", "Blur"),
-              leaf("texturas", "Texturas"),
-            ],
-          },
-          {
-            slug: "cta-assets",
-            label: "CTA Assets",
-            children: [
-              leaf("comente", "“Comente”"),
-              leaf("compartilhe", "“Compartilhe”"),
-              leaf("salve", "“Salve”"),
-              leaf("segue", "“Segue”"),
-              leaf("whatsapp", "WhatsApp"),
-              leaf("botoes-visuais", "Botões visuais"),
-            ],
-          },
-          {
-            slug: "covers",
-            label: "Covers",
-            children: [
-              leaf("templates-capa", "Templates de capa"),
-              leaf("estruturas-prontas", "Estruturas prontas"),
-              leaf("variacoes-titulo", "Variações de título"),
-            ],
-          },
+          leaf("editorial-question", "Editorial Question"),
+          leaf("dark-premium", "Dark Premium"),
+          leaf("stat-slap", "Stat slap"),
+          leaf("numbered-guide", "Numbered guide"),
+          leaf("manifesto", "Manifesto"),
+          leaf("pattern-explosion", "Pattern explosion"),
+          leaf("magazine-cover", "Magazine cover"),
+          leaf("checklist", "Checklist"),
+          leaf("versus", "Versus"),
+          leaf("pull-quote", "Pull quote"),
+          leaf("split-portrait", "Split portrait"),
+          leaf("documento", "Documento"),
+          leaf("mosaic", "Mosaic"),
+          leaf("headline-only", "Headline-only"),
+          leaf("sticker-stack", "Sticker stack"),
+          leaf("save-the-date", "Save the date"),
+          leaf("indice", "Índice"),
+          leaf("qa", "Q&A"),
+          leaf("timeline", "Timeline"),
+          leaf("breaking-news", "Breaking news"),
+          leaf("comparativo", "Comparativo"),
+          leaf("carta", "Carta"),
+          leaf("glow-hero", "Glow hero"),
+          leaf("polaroids", "Polaroids"),
+          leaf("hero-portrait", "Hero portrait"),
+          leaf("antes-depois", "Antes/Depois"),
+          leaf("maxi-quote", "Maxi-quote"),
+          leaf("tres-stats", "Três stats"),
+          leaf("pattern-hero", "Pattern hero"),
+          leaf("word-grid", "Word grid"),
+        ],
+      },
+      {
+        slug: "carrosseis",
+        label: "Carrosséis (11 flows)",
+        children: [
+          leaf("editorial", "Editorial"),
+          leaf("manifesto", "Manifesto"),
+          leaf("data-report", "Data Report"),
+          leaf("entrevista", "Entrevista"),
+          leaf("historia-real", "História real"),
+          leaf("mito-verdade", "Mito vs. Verdade"),
+          leaf("dado-choca", "Dado que choca"),
+          leaf("opiniao-forte", "Opinião forte"),
+          leaf("lista", "Lista"),
+          leaf("antes-depois", "Antes / Depois"),
+          leaf("tutorial-rapido", "Tutorial rápido"),
+        ],
+      },
+      {
+        slug: "ctas",
+        label: "CTAs",
+        children: [
+          leaf("comente", "Comente"),
+          leaf("compartilhe", "Compartilhe"),
+          leaf("salve", "Salve"),
+          leaf("segue", "Segue"),
+          leaf("whatsapp", "WhatsApp"),
+          leaf("link", "Link"),
+        ],
+      },
+      {
+        slug: "elementos",
+        label: "Elementos gráficos",
+        children: [
+          leaf("setas", "Setas (3 estilos)"),
+          leaf("tags-labels", "Tags & labels"),
+          leaf("boxes", "Boxes (quote/stat/tip)"),
+          leaf("molduras", "Molduras casa-shape"),
+          leaf("glow-blur", "Glow & blur"),
+          leaf("linhas-decorativas", "Linhas decorativas"),
         ],
       },
     ],
@@ -165,67 +191,52 @@ export const ASSET_HIERARCHY: AssetNode[] = [
   {
     slug: "visual-library",
     label: "Visual Library",
-    description: "Patterns, texturas, backgrounds — biblioteca visual",
+    description: "Patterns, fotografia, backgrounds e ícones",
     children: [
       {
         slug: "patterns",
         label: "Patterns",
         children: [
-          // Geométricos reusa o bucket "patterns" (todos uploads atuais)
-          leaf("geometricos", "Geométricos", { legacyBucket: "patterns" }),
-          leaf("arquitetonicos", "Arquitetônicos"),
-          leaf("premium", "Premium"),
-          leaf("organicos", "Orgânicos"),
-          leaf("editorial", "Editorial"),
+          // Cantos reusa "patterns" (bucket legado dos uploads atuais)
+          leaf("cantos", "Cantos", { legacyBucket: "patterns" }),
+          leaf("decorativos", "Decorativos"),
+          leaf("criativos", "Criativos (bordas laterais)"),
+          leaf("fundos-hero", "Fundos hero compositions"),
+          leaf("fundos-tile", "Fundos seamless tile"),
         ],
       },
       {
-        slug: "texturas",
-        label: "Texturas",
+        slug: "fotografia",
+        label: "Fotografia",
         children: [
-          leaf("marmore", "Mármore"),
-          leaf("papel", "Papel"),
-          leaf("concreto", "Concreto"),
-          leaf("vidro", "Vidro"),
-          leaf("metal", "Metal"),
-          leaf("noise", "Noise"),
+          leaf("studio-cyan", "Linha Studio Cyan (retratos)"),
+          leaf("banco-institucional", "Banco institucional"),
+          leaf("tratamentos", "Tratamentos de cor"),
+          leaf("dos-donts", "DOs & DON'Ts"),
+          leaf("foto-marca", "Aplicação Foto + Marca (50/50)"),
         ],
       },
       {
         slug: "backgrounds",
-        label: "Backgrounds",
+        label: "Backgrounds (80 = 4 formatos × 20 receitas)",
         children: [
-          leaf("institucional", "Institucional"),
-          leaf("instagram", "Instagram"),
-          leaf("story", "Story"),
-          leaf("site", "Site"),
-          leaf("apresentacao", "Apresentação"),
+          leaf("1080x1080", "1080 × 1080 (Feed quadrado)"),
+          leaf("1080x1350", "1080 × 1350 (Feed 4:5)"),
+          leaf("1080x1920", "1080 × 1920 (Story/Reels)"),
+          leaf("1080x720", "1080 × 720 (Horizontal)"),
         ],
       },
-    ],
-  },
-
-  // ───────────────────────────────────────────────────────────────────
-  // 4. Icon Library
-  // ───────────────────────────────────────────────────────────────────
-  {
-    slug: "icon-library",
-    label: "Icon Library",
-    description: "Biblioteca de ícones por estilo e área",
-    children: [
       {
-        slug: "icones",
-        label: "Ícones",
+        slug: "icons",
+        label: "Ícones (56 em 7 categorias)",
         children: [
-          leaf("outline", "Outline"),
-          leaf("filled", "Filled"),
-          leaf("minimalistas", "Minimalistas"),
-          // Condomínio reusa o bucket "icons" (86 icones Consvicta + Sindicompany)
+          // Condomínio reusa "icons" (86 ícones Consvicta + atuais Sindicompany)
           leaf("condominio", "Condomínio", { legacyBucket: "icons" }),
           leaf("financeiro", "Financeiro"),
           leaf("juridico", "Jurídico"),
           leaf("engenharia", "Engenharia"),
           leaf("comunicacao", "Comunicação"),
+          leaf("manutencao", "Manutenção"),
           leaf("ia", "IA"),
         ],
       },
@@ -233,87 +244,65 @@ export const ASSET_HIERARCHY: AssetNode[] = [
   },
 
   // ───────────────────────────────────────────────────────────────────
-  // 5. AI Ready Assets
+  // 4. AI Ready Assets
   // ───────────────────────────────────────────────────────────────────
   {
     slug: "ai-ready",
     label: "AI Ready Assets",
-    description: "Prompts, composições e regras pra geração via IA",
+    description: "Prompts, composições, regras e templates para geração via IA",
     children: [
       {
         slug: "prompts-visuais",
-        label: "Prompts Visuais",
+        label: "Prompts Visuais (5 estilos)",
         children: [
           leaf("editorial", "Estilo editorial"),
           leaf("ultra-realista", "Estilo ultra-realista"),
           leaf("instagram", "Estilo Instagram"),
-          leaf("pixar", "Estilo Pixar"),
+          leaf("pixar-3d", "Estilo Pixar / 3D"),
           leaf("corporativo", "Estilo corporativo"),
         ],
       },
       {
         slug: "composicoes",
-        label: "Composições",
+        label: "Composições (6 cenários)",
         children: [
           leaf("mulher-executiva", "Mulher executiva"),
           leaf("assembleia", "Assembleia"),
           leaf("area-comum", "Área comum"),
-          leaf("sindico", "Síndico"),
+          leaf("sindico-trabalho", "Síndico no trabalho"),
           leaf("prestacao-contas", "Prestação de contas"),
-          leaf("conflito-condominial", "Conflito condominial"),
+          leaf("conflito", "Conflito condominial"),
         ],
       },
       {
         slug: "regras-visuais",
         label: "Regras Visuais",
         children: [
-          leaf("safe-area-instagram", "Safe area Instagram"),
-          leaf("margens", "Margens"),
+          leaf("safe-area-instagram", "Safe areas Instagram"),
           leaf("estetica-marca", "Estética da marca"),
-          leaf("profundidade", "Profundidade"),
           leaf("iluminacao", "Iluminação"),
-          leaf("tipografia-ideal", "Tipografia ideal"),
-        ],
-      },
-    ],
-  },
-
-  // ───────────────────────────────────────────────────────────────────
-  // 6. Templates
-  // ───────────────────────────────────────────────────────────────────
-  {
-    slug: "templates",
-    label: "Templates",
-    description: "Modelos prontos pra reuso",
-    children: [
-      {
-        slug: "instagram",
-        label: "Instagram",
-        children: [
-          leaf("carrossel", "Carrossel"),
-          leaf("reels-cover", "Reels cover"),
-          leaf("story", "Story"),
-          leaf("feed-unico", "Feed único"),
+          leaf("tipografia-imagem", "Tipografia em imagem"),
         ],
       },
       {
-        slug: "comercial",
-        label: "Comercial",
+        slug: "templates",
+        label: "Templates (12 estruturas)",
         children: [
-          leaf("propostas", "Propostas"),
-          leaf("pdfs", "PDFs"),
-          leaf("apresentacoes", "Apresentações"),
-          leaf("relatorios", "Relatórios"),
-        ],
-      },
-      {
-        slug: "eventos",
-        label: "Eventos",
-        children: [
-          leaf("convites", "Convites"),
-          leaf("credenciais", "Credenciais"),
-          leaf("backdrop", "Backdrop"),
-          leaf("certificados", "Certificados"),
+          // Instagram
+          leaf("instagram-carrossel", "Instagram · Carrossel"),
+          leaf("instagram-reels-cover", "Instagram · Reels cover"),
+          leaf("instagram-story", "Instagram · Story"),
+          leaf("instagram-feed-unico", "Instagram · Feed único"),
+          // Comercial
+          leaf("comercial-propostas", "Comercial · Propostas"),
+          leaf("comercial-pdfs", "Comercial · PDFs"),
+          leaf("comercial-apresentacoes", "Comercial · Apresentações"),
+          leaf("comercial-relatorios", "Comercial · Relatórios"),
+          // Eventos
+          leaf("eventos-convites", "Eventos · Convites"),
+          leaf("eventos-credenciais", "Eventos · Credenciais"),
+          leaf("eventos-backdrop", "Eventos · Backdrop"),
+          leaf("eventos-certificados", "Eventos · Certificados"),
         ],
       },
     ],
@@ -324,14 +313,12 @@ export const ASSET_HIERARCHY: AssetNode[] = [
 // Helpers
 // ─────────────────────────────────────────────────────────────────────
 
-/** Prefixo do bucket por marca (corresponde aos buckets ja existentes). */
 export const BRAND_PREFIX: Record<AssetBrand, string> = {
-  sindicompanybr: "__",            // ex: __logos, __patterns
-  bysindicompany: "__by-",         // ex: __by-logos, __by-patterns
-  consvictabr: "__consvicta-",     // ex: __consvicta-logos, __consvicta-patterns
+  sindicompanybr: "__",
+  bysindicompany: "__by-",
+  consvictabr: "__consvicta-",
 };
 
-/** URL da rota de assets por marca. */
 export const BRAND_ROUTE: Record<AssetBrand, string> = {
   sindicompanybr: "/sindicompany/assets",
   bysindicompany: "/sindicompany/by-assets",
@@ -350,8 +337,6 @@ export const BRAND_HANDLE: Record<AssetBrand, string> = {
   consvictabr: "@consvictabr",
 };
 
-/** Encontra um node a partir do path (array de slugs).
- *  Retorna o node OU null se path inexistente. */
 export function findNode(path: string[]): AssetNode | null {
   if (path.length === 0) return null;
   let level: AssetNode[] = ASSET_HIERARCHY;
@@ -365,7 +350,6 @@ export function findNode(path: string[]): AssetNode | null {
   return found;
 }
 
-/** Resolve o nome do bucket pra um leaf, considerando legacy. */
 export function bucketForLeaf(
   brand: AssetBrand,
   pathSegments: string[],
@@ -373,26 +357,20 @@ export function bucketForLeaf(
 ): string {
   const prefix = BRAND_PREFIX[brand];
   if (leafNode.legacyBucket) {
-    // Bucket legado (ex: "__consvicta-logos", "__patterns", "__by-icons")
     return `${prefix}${leafNode.legacyBucket}`;
   }
-  // Bucket novo derivado do path. Ex: "__consvicta-brand-logotipos-branco"
   const slug = pathSegments.join("-");
   return `${prefix}${slug}`;
 }
 
-/** Determina basename pro upload baseado no node leaf (consistente com
- *  buckets antigos: pattern-N.svg, icon-N.svg, logo-N.svg, ...). */
 export function basenameForLeaf(leafNode: AssetNode): string {
   if (leafNode.legacyBucket === "patterns") return "pattern";
   if (leafNode.legacyBucket === "icons") return "icon";
   if (leafNode.legacyBucket === "icon-carrossel") return "icon";
   if (leafNode.legacyBucket === "logos") return "logo";
-  // Novos: usa o slug do leaf como basename. Ex: leaf "branco" -> branco-N.svg
   return leafNode.slug;
 }
 
-/** Itera todos os leaves da hierarquia, retornando path + node. */
 export function* iterLeaves(
   nodes: AssetNode[] = ASSET_HIERARCHY,
   prefix: string[] = [],

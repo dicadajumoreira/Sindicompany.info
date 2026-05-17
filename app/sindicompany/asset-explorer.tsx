@@ -142,10 +142,12 @@ function HubView({ brand }: { brand: AssetBrand }) {
             Assets {brandLabel}
           </h1>
           <p className="text-sm text-g60 max-w-2xl">
-            Biblioteca completa de assets da marca {brandLabel}. Organizada em 6
-            seções: Brand Assets (institucional), Social Media Assets
-            (carrosséis), Visual Library (patterns/texturas), Icon Library, AI
-            Ready Assets e Templates.
+            Biblioteca completa de assets da marca {brandLabel}. Organizada em 4
+            pilares: <strong>Brand Assets</strong> (institucional),{" "}
+            <strong>Social Media</strong> (capas + carrosséis + CTAs +
+            elementos), <strong>Visual Library</strong> (patterns + fotografia
+            + backgrounds + ícones) e <strong>AI Ready Assets</strong>{" "}
+            (prompts + composições + regras + templates).
           </p>
         </header>
 
