@@ -1201,22 +1201,26 @@ def _capa_editorial_question(
     head_fonts: str,
     font_display: str,
     font_body: str,
+    foto_capa_url: str = "",
 ) -> str:
     """Brand Hub 2026-05-17 — arquetipo de capa "Editorial Question".
 
-    Capa minimalista do brand book novo:
-      - Fundo Paper (#FAF7F2) — luz quente
-      - Faixa de 8% no topo em Beige, sutil
-      - Titulo gigante em Epilogue weight 800 + uma fracao italic
-        com cor Purple, evocando a pergunta editorial
-      - Body em weight 400 abaixo, espacamento aerado
-      - Simbolo Sindicompany grande no canto inferior direito, em Navy
-      - Handle inferior esquerdo em Cyan
-      - Sem badge de formato, sem accent-line
+    Duas variantes selecionadas automaticamente conforme presenca de
+    foto_capa_url:
 
-    Paleta hardcoded das constantes Brand Hub (nao usa _palette() que
-    eh legacy mint/onix). Mantem o logo_top_img padrao no topo pra
-    consistencia com os outros slides do mesmo carrossel.
+    1. SEM FOTO (minimalista): Fundo Paper, faixa Beige no topo,
+       titulo Epilogue 800 com fracao italic Purple + roman Navy,
+       simbolo Sindicompany no canto inferior direito, handle Cyan.
+
+    2. COM FOTO ("Editorial Photo"): Foto ocupa metade superior
+       (45% da altura). Faixa Beige fina (4%) separa foto e bloco
+       de texto. Metade inferior em fundo Paper com pergunta italic
+       Purple + roman Navy. Simbolo pequeno no canto inferior direito.
+
+    Paleta hardcoded das constantes Brand Hub (nao usa _palette()
+    legacy). Mantem logo_top_img no topo pra consistencia com os
+    outros slides do mesmo carrossel. Aplica so pras marcas Sindicompany
+    (sindicompanybr + bysindicompany), nunca Consvicta.
     """
     NAVY = "#182028"
     CYAN = "#88C8D0"
@@ -1225,12 +1229,9 @@ def _capa_editorial_question(
     PAPER = "#FAF7F2"
     PAPER_WARM = "#F2EDE5"
 
-    # Simbolo Sindicompany: mask-houses + mask-dot em base64 inline.
-    # Reusa _logo_slot_data_url se houver, senao fallback de texto.
-    # Aqui pegamos o slot 5 (logo principal Sindicompany), que ja eh
-    # carregado em logo_top_img. Pro corner usamos o mesmo arquivo,
-    # mas em tamanho maior — preferencia pelo logo-symbolPhoto se
-    # existir no bucket. Default: deixa vazio (slide funciona sem).
+    # Simbolo Sindicompany no canto inferior direito. Pegamos um logo
+    # menor (slot 2 ou 3) e filtramos pra Navy via CSS. Vazio se nao
+    # houver upload — slide funciona sem.
     symbol_url = _logo_slot_data_url(2) or _logo_slot_data_url(3) or ""
     symbol_img = (
         f'<img class="corner-symbol" src="{symbol_url}" alt="" />'
@@ -1257,6 +1258,119 @@ def _capa_editorial_question(
     else:
         titulo_render = f'<span class="rest">{titulo_h}</span>'
 
+    has_photo = bool(foto_capa_url)
+
+    # === Variante COM FOTO ===
+    if has_photo:
+        return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {PAPER};
+    color: {NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .photo {{
+    /* Foto ocupa 45% do topo — proporcao editorial classica do
+       Brand Hub (foto grande mas deixa metade pra respiro). */
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 45%;
+    background-image: url('{foto_capa_url}');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0;
+  }}
+  .divider {{
+    /* Faixa Beige fina (4%) entre foto e bloco de texto. */
+    position: absolute; left: 0; right: 0;
+    top: 45%; height: 4%;
+    background: linear-gradient(180deg, {BEIGE} 0%, {PAPER_WARM} 100%);
+    z-index: 1;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) invert(1);
+  }}
+  .content {{
+    /* Bloco de texto na metade inferior, abaixo da divider. */
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 53%; bottom: 220px;
+    display: flex; flex-direction: column; justify-content: center;
+    z-index: 2;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 220px;
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }}
+  .capa-titulo .q {{
+    color: {PURPLE};
+    font-style: italic;
+    font-weight: 800;
+  }}
+  .capa-titulo .rest {{
+    color: {NAVY};
+    display: block;
+    margin-top: 0.15em;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 78px;
+    line-height: 1.30;
+    color: {NAVY};
+    opacity: 0.78;
+    margin-top: 60px;
+    max-width: 28ch;
+  }}
+  .corner-symbol {{
+    /* Simbolo menor na variante com foto (deixa o texto respirar). */
+    position: absolute;
+    bottom: 80px; right: 180px;
+    width: 320px; height: 320px;
+    object-fit: contain;
+    z-index: 1;
+    filter: brightness(0) saturate(100%);
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {NAVY};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  <div class="photo"></div>
+  <div class="divider"></div>
+  <div class="content">
+    <h1 class="capa-titulo">{titulo_render}</h1>
+    {body_html}
+  </div>
+  {symbol_img}
+  {logo_top_img}
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+    # === Variante SEM FOTO (minimalista) ===
     return f"""
 <!doctype html><html><head><meta charset="utf-8">
 {head_fonts}
@@ -1325,8 +1439,6 @@ def _capa_editorial_question(
     width: 640px; height: 640px;
     object-fit: contain;
     z-index: 1;
-    /* Realca o simbolo em Navy mesmo que o PNG original esteja em
-       outra cor — filter brightness 0 forca preto solido. */
     filter: brightness(0) saturate(100%);
   }}
   .handle {{
@@ -1477,6 +1589,7 @@ def _slide_html(
                 head_fonts=head_fonts,
                 font_display=font_display,
                 font_body=font_body,
+                foto_capa_url=foto_capa_url,
             )
         return f"""
 <!doctype html><html><head><meta charset="utf-8">
