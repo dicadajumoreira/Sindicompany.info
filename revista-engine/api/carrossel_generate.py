@@ -1192,6 +1192,167 @@ def _formato_label(formato: str) -> str:
     return FORMATO_LABELS.get(f, f.replace("_", " ").title() or "Carrossel")
 
 
+def _capa_editorial_question(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+) -> str:
+    """Brand Hub 2026-05-17 — arquetipo de capa "Editorial Question".
+
+    Capa minimalista do brand book novo:
+      - Fundo Paper (#FAF7F2) — luz quente
+      - Faixa de 8% no topo em Beige, sutil
+      - Titulo gigante em Epilogue weight 800 + uma fracao italic
+        com cor Purple, evocando a pergunta editorial
+      - Body em weight 400 abaixo, espacamento aerado
+      - Simbolo Sindicompany grande no canto inferior direito, em Navy
+      - Handle inferior esquerdo em Cyan
+      - Sem badge de formato, sem accent-line
+
+    Paleta hardcoded das constantes Brand Hub (nao usa _palette() que
+    eh legacy mint/onix). Mantem o logo_top_img padrao no topo pra
+    consistencia com os outros slides do mesmo carrossel.
+    """
+    NAVY = "#182028"
+    CYAN = "#88C8D0"
+    BEIGE = "#E0B098"
+    PURPLE = "#8890D0"
+    PAPER = "#FAF7F2"
+    PAPER_WARM = "#F2EDE5"
+
+    # Simbolo Sindicompany: mask-houses + mask-dot em base64 inline.
+    # Reusa _logo_slot_data_url se houver, senao fallback de texto.
+    # Aqui pegamos o slot 5 (logo principal Sindicompany), que ja eh
+    # carregado em logo_top_img. Pro corner usamos o mesmo arquivo,
+    # mas em tamanho maior — preferencia pelo logo-symbolPhoto se
+    # existir no bucket. Default: deixa vazio (slide funciona sem).
+    symbol_url = _logo_slot_data_url(2) or _logo_slot_data_url(3) or ""
+    symbol_img = (
+        f'<img class="corner-symbol" src="{symbol_url}" alt="" />'
+        if symbol_url
+        else ""
+    )
+
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+
+    # Split do titulo: a primeira sentenca/frase ate o "?" ganha
+    # destaque italic Purple; o resto fica em Navy roman. Best-effort
+    # pra qualquer titulo (se nao tiver "?", titulo inteiro vai roman).
+    titulo_h = _h(titulo)
+    if "?" in titulo_h:
+        head, _, tail = titulo_h.partition("?")
+        titulo_render = (
+            f'<span class="q">{head}?</span>'
+            f'<span class="rest">{tail.strip()}</span>'
+            if tail.strip()
+            else f'<span class="q">{head}?</span>'
+        )
+    else:
+        titulo_render = f'<span class="rest">{titulo_h}</span>'
+
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {PAPER};
+    color: {NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .top-band {{
+    /* Faixa quente de 8% no topo — assina o arquetipo Editorial. */
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 8%;
+    background: linear-gradient(180deg, {BEIGE} 0%, {PAPER_WARM} 100%);
+    z-index: 0;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+  }}
+  .content {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 18%; bottom: 28%;
+    display: flex; flex-direction: column; justify-content: center;
+    z-index: 2;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 280px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }}
+  .capa-titulo .q {{
+    color: {PURPLE};
+    font-style: italic;
+    font-weight: 800;
+  }}
+  .capa-titulo .rest {{
+    color: {NAVY};
+    display: block;
+    margin-top: 0.15em;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 92px;
+    line-height: 1.30;
+    color: {NAVY};
+    opacity: 0.78;
+    margin-top: 80px;
+    max-width: 26ch;
+  }}
+  .corner-symbol {{
+    position: absolute;
+    bottom: 80px; right: 180px;
+    width: 640px; height: 640px;
+    object-fit: contain;
+    z-index: 1;
+    /* Realca o simbolo em Navy mesmo que o PNG original esteja em
+       outra cor — filter brightness 0 forca preto solido. */
+    filter: brightness(0) saturate(100%);
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 72px;
+    font-weight: 600;
+    color: {CYAN};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  <div class="top-band"></div>
+  <div class="content">
+    <h1 class="capa-titulo">{titulo_render}</h1>
+    {body_html}
+  </div>
+  {symbol_img}
+  {logo_top_img}
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
 def _slide_html(
     *,
     slide_idx: int,
@@ -1296,6 +1457,27 @@ def _slide_html(
         capa_fundo_div = (
             '<div class="icon-bg-capa"></div>' if capa_fundo_url else ""
         )
+
+        # Brand Hub 2026-05-17: arquetipo de capa controlado por env var
+        # SINDICOMPANY_COVER_ARCHETYPE. Default "default" (capa atual com
+        # hero img + overlay escuro). "editorial-question" ativa o
+        # arquetipo minimalista do Brand Hub novo: fundo Paper, titulo
+        # em Provicali italic Navy, simbolo no canto inferior direito,
+        # sem badge/accent-line. So aplica pras marcas Sindicompany
+        # (sindicompanybr + bysindicompany), nunca pra Consvicta.
+        cover_archetype = os.environ.get(
+            "SINDICOMPANY_COVER_ARCHETYPE", "default"
+        ).strip().lower()
+        if cover_archetype == "editorial-question" and not is_consvicta:
+            return _capa_editorial_question(
+                titulo=titulo,
+                body=body,
+                handle=handle,
+                logo_top_img=logo_top_img,
+                head_fonts=head_fonts,
+                font_display=font_display,
+                font_body=font_body,
+            )
         return f"""
 <!doctype html><html><head><meta charset="utf-8">
 {head_fonts}
