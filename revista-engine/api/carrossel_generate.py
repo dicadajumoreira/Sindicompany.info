@@ -1987,6 +1987,22 @@ def _capa_headline_only(
 """
 
 
+# Registry dos arquetipos de capa do Brand Hub Sindicompany 2026-05-17.
+#
+# REGRA INDISPENSAVEL: todo arquetipo que tem variante COM FOTO deve
+# usar exatamente a foto carregada pelo operador na etapa 3 "Foto da
+# capa" do /sindicompany/carrossel/novo. Essa URL chega como
+# foto_capa_url no parametro de cada funcao, originada de
+# carrosseis.foto_capa_url no Supabase. NAO buscar foto stock, NAO
+# gerar via IA, NAO usar foto de outro slide — sempre a foto da etapa 3.
+#
+# Arquetipos SEM foto (capas 03/04/05/06/14 e similares) descartam o
+# parametro via `del foto_capa_url` no inicio da funcao.
+#
+# Arquetipos COM foto (capas 02/07/11/25/31/32/33/35/36/37/38/39/40/42
+# do doc) devem ler foto_capa_url e renderizar a foto. Se foto_capa_url
+# vier vazia, eh aceitavel cair pra uma variante minimalista sem foto
+# (ver _capa_editorial_question como referencia).
 COVER_ARCHETYPES_SC = {
     "editorial-question": _capa_editorial_question,
     "stat-slap": _capa_stat_slap,
