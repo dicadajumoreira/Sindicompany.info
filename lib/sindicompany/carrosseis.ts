@@ -21,6 +21,57 @@ export const CARROSSEL_BRANDS: { id: CarrosselBrand; handle: string; label: stri
   { id: "consvictabr", handle: "@consvictabr", label: "Consvicta" },
 ];
 
+// Arquetipos de capa do Brand Hub Sindicompany 2026-05-17. Espelha o
+// registry COVER_ARCHETYPES_SC do revista-engine/api/carrossel_generate.py.
+// hasPhoto indica se o arquetipo consome a foto da etapa 3 do
+// /sindicompany/carrossel/novo. Aplica so a sindicompanybr +
+// bysindicompany — Consvicta sempre usa a capa propria.
+export type CarrosselCoverArchetype =
+  | "editorial-question"
+  | "stat-slap"
+  | "numbered-guide"
+  | "manifesto"
+  | "pattern-explosion"
+  | "pull-quote"
+  | "headline-only"
+  | "glow-hero"
+  | "dark-premium"
+  | "magazine-cover"
+  | "split-portrait"
+  | "hero-portrait"
+  | "avatar-quote"
+  | "photo-circle";
+
+export const CARROSSEL_COVER_ARCHETYPES: {
+  id: CarrosselCoverArchetype;
+  label: string;
+  hasPhoto: boolean;
+  hint: string;
+}[] = [
+  // SEM foto
+  { id: "editorial-question", label: "Editorial Question", hasPhoto: false, hint: "Pergunta italic Purple + Navy sobre Paper" },
+  { id: "stat-slap", label: "Stat slap", hasPhoto: false, hint: "Número gigante sobre fundo Beige" },
+  { id: "numbered-guide", label: "Numbered guide", hasPhoto: false, hint: "Split número Navy / headline" },
+  { id: "manifesto", label: "Manifesto", hasPhoto: false, hint: "Italic gigante sobre fundo Cyan" },
+  { id: "pattern-explosion", label: "Pattern explosion", hasPhoto: false, hint: "Pattern topo + card Paper na base" },
+  { id: "pull-quote", label: "Pull quote", hasPhoto: false, hint: "Aspas Beige gigantes + citação italic" },
+  { id: "headline-only", label: "Headline-only", hasPhoto: false, hint: "Headline gigante sobre Beige" },
+  { id: "glow-hero", label: "Glow hero", hasPhoto: false, hint: "Símbolo + glows duplos sobre Navy" },
+  // COM foto (etapa 3)
+  { id: "dark-premium", label: "Dark Premium", hasPhoto: true, hint: "Foto full + gradient Navy" },
+  { id: "magazine-cover", label: "Magazine cover", hasPhoto: true, hint: "Masthead + foto + faixa Paper" },
+  { id: "split-portrait", label: "Split portrait", hasPhoto: true, hint: "Foto 45% esquerda + texto 55% Paper" },
+  { id: "hero-portrait", label: "Hero portrait", hasPhoto: true, hint: "Foto full + tag mono + box Beige" },
+  { id: "avatar-quote", label: "Avatar quote", hasPhoto: true, hint: "Avatar circular + citação italic" },
+  { id: "photo-circle", label: "Foto circular", hasPhoto: true, hint: "Círculo gigante TR + texto BL" },
+];
+
+const COVER_ARCHETYPE_IDS = new Set(CARROSSEL_COVER_ARCHETYPES.map((a) => a.id));
+
+export function isValidCoverArchetype(s: string): s is CarrosselCoverArchetype {
+  return COVER_ARCHETYPE_IDS.has(s as CarrosselCoverArchetype);
+}
+
 export interface Carrossel {
   id: string;
   brand: CarrosselBrand;
@@ -30,6 +81,7 @@ export interface Carrossel {
   formato: string | null;
   briefing: string | null;
   foto_capa_url: string | null;
+  cover_archetype: CarrosselCoverArchetype | null;
   n_slides: number;
   status: CarrosselStatus;
   png_paths: string[] | null;
@@ -52,6 +104,7 @@ export interface CarrosselInput {
   formato?: string;
   briefing?: string;
   foto_capa_url?: string;
+  cover_archetype?: CarrosselCoverArchetype;
   n_slides?: number;
 }
 

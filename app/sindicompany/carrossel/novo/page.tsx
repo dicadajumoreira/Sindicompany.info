@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
+import { CARROSSEL_COVER_ARCHETYPES } from "@/lib/sindicompany/carrosseis";
 import { DashboardShell } from "../../shell";
 import { iniciarCarrosselAction } from "../actions";
 import { BrandTemaPicker } from "./brand-tema-picker";
@@ -411,6 +412,33 @@ export default async function NovoCarrosselPage({
                   {n} slide{n > 1 ? "s" : ""}
                 </option>
               ))}
+            </select>
+          </Field>
+
+          <Field
+            label="Estilo da capa"
+            hint="Arquétipos do Brand Hub. Os marcados “com foto” usam a foto da etapa 3. Padrão clássica mantém o hero img + overlay escuro atual. Não afeta @consvictabr."
+          >
+            <select
+              name="cover_archetype"
+              defaultValue={v("cover_archetype")}
+              className={inputCls}
+            >
+              <option value="">Padrão clássica (capa atual)</option>
+              <optgroup label="Sem foto">
+                {CARROSSEL_COVER_ARCHETYPES.filter((a) => !a.hasPhoto).map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.label} — {a.hint}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Com foto (usa a foto da etapa 3)">
+                {CARROSSEL_COVER_ARCHETYPES.filter((a) => a.hasPhoto).map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.label} — {a.hint}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </Field>
 

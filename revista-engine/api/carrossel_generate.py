@@ -38,6 +38,12 @@ from api.text_gen import _client as _openai_client, MODEL, _gerar_json
 # lookup de asset. Define qual conjunto de buckets/handle/logo usar.
 _BRAND = "sindicompanybr"
 
+# Arquetipo de capa do Brand Hub Sindicompany 2026-05-17. Setado em
+# gerar_carrossel() a partir do campo carrosseis.cover_archetype.
+# Vazio = usa o fallback da env var SINDICOMPANY_COVER_ARCHETYPE
+# (legado) ou a capa classica se a env nao estiver setada.
+_COVER_ARCHETYPE = ""
+
 
 def _asset_prefix() -> str:
     """Prefixo dos buckets de assets conforme a marca:
@@ -3066,17 +3072,13 @@ def _slide_html(
             '<div class="icon-bg-capa"></div>' if capa_fundo_url else ""
         )
 
-        # Brand Hub 2026-05-17: arquetipo de capa controlado por env var
-        # SINDICOMPANY_COVER_ARCHETYPE. Valor "default" (ou vazio) mantem
-        # a capa classica (hero img + overlay escuro). Valores aceitos
-        # pelo Brand Hub novo: editorial-question, stat-slap,
-        # numbered-guide, manifesto, pattern-explosion, headline-only.
-        # So aplica pras marcas Sindicompany (sindicompanybr +
-        # bysindicompany), nunca pra Consvicta.
-        cover_archetype = os.environ.get(
-            "SINDICOMPANY_COVER_ARCHETYPE", "default"
-        ).strip().lower()
-        archetype_fn = COVER_ARCHETYPES_SC.get(cover_archetype)
+        # Brand Hub 2026-05-17: arquetipo de capa lido da variavel de
+        # modulo _COVER_ARCHETYPE (setada em gerar_carrossel a partir
+        # do campo carrosseis.cover_archetype, ou da env var legada
+        # SINDICOMPANY_COVER_ARCHETYPE). Vazio ou desconhecido mantem
+        # a capa classica. So aplica pras marcas Sindicompany
+        # (sindicompanybr + bysindicompany), nunca pra Consvicta.
+        archetype_fn = COVER_ARCHETYPES_SC.get(_COVER_ARCHETYPE)
         if archetype_fn is not None and not is_consvicta:
             return archetype_fn(
                 titulo=titulo,
@@ -4123,7 +4125,7 @@ def _humanizer_pass(
 
 def gerar_carrossel(carrossel_id: str) -> int:
     """Pipeline completo. Retorna 0 se OK, 1 se falhou."""
-    global _BRAND
+    global _BRAND, _COVER_ARCHETYPE
     print(f"[carrossel] iniciando geração de {carrossel_id}", flush=True)
     try:
         carrossel = _fetch_carrossel(carrossel_id)
@@ -4141,6 +4143,21 @@ def gerar_carrossel(carrossel_id: str) -> int:
         else:
             _BRAND = "sindicompanybr"
         print(f"[carrossel] brand={_BRAND}", flush=True)
+
+        # Brand Hub 2026-05-17: prefere o arquetipo escolhido pela
+        # editora no /carrossel/novo (coluna cover_archetype). Cai pra
+        # env var SINDICOMPANY_COVER_ARCHETYPE como fallback (uso legado
+        # via GitHub Variables). Sem nada setado, _slide_html mantem a
+        # capa classica.
+        ca_db = (carrossel.get("cover_archetype") or "").strip().lower()
+        ca_env = os.environ.get("SINDICOMPANY_COVER_ARCHETYPE", "").strip().lower()
+        _COVER_ARCHETYPE = ca_db or ca_env
+        if _COVER_ARCHETYPE:
+            print(
+                f"[carrossel] cover_archetype={_COVER_ARCHETYPE}"
+                f" (source={'db' if ca_db else 'env'})",
+                flush=True,
+            )
 
         _update_carrossel(carrossel_id, {"status": "em_producao", "erro_mensagem": None})
 
