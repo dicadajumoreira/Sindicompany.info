@@ -14,6 +14,7 @@ import {
 import { AssetSlotGrid } from "./asset-slot-grid";
 import { DashboardShell } from "./shell";
 import { UploadLibraryButton } from "./consvicta-assets/upload-library-button";
+import { UploadLibraryButtonSindicompany } from "./assets/upload-library-button";
 import { NoLibraryNote } from "./no-library-note";
 
 const BUCKET = "condominios-fotos";
@@ -153,6 +154,8 @@ function HubView({ brand }: { brand: AssetBrand }) {
 
         {brand === "consvictabr" ? (
           <UploadLibraryButton />
+        ) : brand === "sindicompanybr" ? (
+          <UploadLibraryButtonSindicompany />
         ) : (
           <NoLibraryNote brand={brandLabel} />
         )}

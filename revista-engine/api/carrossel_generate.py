@@ -739,13 +739,25 @@ BUCKET = "condominios-fotos"
 SLIDE_W = 3072
 SLIDE_H = 3839  # 4:5 vertical
 
+# Paleta oficial Sindicompany — Brand Hub 2026-05-17
+# (Navy/Cyan/Beige/Lavender/Purple/White). Mantém as chaves antigas
+# (onix/mint/sand/lavender/white/gray_5) pra compatibilidade com o
+# template HTML — só os valores HEX trocam.
+#  - onix     -> Navy (texto/fundos principais)
+#  - mint     -> Cyan (acento, confiança)
+#  - sand     -> Beige (calor, humano)
+#  - lavender -> Lavender novo (inovação, tech)
+#  - purple   -> Purple novo (profundidade, IA) — nova chave opcional
+#  - white    -> White puro
+#  - gray_5   -> Paper warm (substitui o gray_5 frio antigo)
 PALETTE = {
-    "onix": "#1A1C29",
-    "mint": "#84C7D3",
-    "sand": "#DABDA9",
-    "lavender": "#B8C0FF",
+    "onix": "#182028",       # Navy
+    "mint": "#88C8D0",       # Cyan
+    "sand": "#E0B098",       # Beige
+    "lavender": "#BFC0FF",   # Lavender
+    "purple": "#8890D0",     # Purple (nova — Brand Hub 2026-05-17)
     "white": "#FFFFFF",
-    "gray_5": "#F4F4F5",
+    "gray_5": "#FAF7F2",     # Paper
 }
 
 # Paleta oficial Consvicta (Brand Book). Mapeia para as mesmas chaves
