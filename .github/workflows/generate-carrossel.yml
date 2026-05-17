@@ -54,12 +54,18 @@ jobs:
           # Toggle do arquetipo de capa do Brand Hub 2026-05-17. Default
           # vazio = capa classica (hero img + overlay escuro). Setar via
           # GitHub Settings -> Variables. Valores aceitos do Brand Hub:
+          # SEM foto:
           #   - editorial-question  (capa 01, com/sem foto)
           #   - stat-slap           (capa 03, numero gigante sobre bege)
           #   - numbered-guide      (capa 04, split numero/headline)
           #   - manifesto           (capa 05, italic gigante sobre cyan)
           #   - pattern-explosion   (capa 06, pattern topo + card paper)
           #   - headline-only       (capa 14, headline gigante sobre bege)
+          # COM foto (usam a foto da etapa 3 do /carrossel/novo):
+          #   - dark-premium        (capa 02, foto full + gradient navy)
+          #   - magazine-cover      (capa 07, masthead + foto + paper)
+          #   - split-portrait      (capa 11, foto 45% + texto 55%)
+          #   - hero-portrait       (capa 25, foto full + tag + box bege)
           # So afeta as marcas @sindicompanybr e @bysindicompany.
           SINDICOMPANY_COVER_ARCHETYPE: ${{ vars.SINDICOMPANY_COVER_ARCHETYPE }}
         run: |
