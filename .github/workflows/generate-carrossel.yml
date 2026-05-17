@@ -52,10 +52,15 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: gpt-4o-mini
           # Toggle do arquetipo de capa do Brand Hub 2026-05-17. Default
-          # vazio = capa classica (hero img + overlay escuro). Setar pra
-          # "editorial-question" via GitHub Settings -> Variables ativa
-          # o arquetipo minimalista do brand book novo. So afeta as marcas
-          # @sindicompanybr e @bysindicompany.
+          # vazio = capa classica (hero img + overlay escuro). Setar via
+          # GitHub Settings -> Variables. Valores aceitos do Brand Hub:
+          #   - editorial-question  (capa 01, com/sem foto)
+          #   - stat-slap           (capa 03, numero gigante sobre bege)
+          #   - numbered-guide      (capa 04, split numero/headline)
+          #   - manifesto           (capa 05, italic gigante sobre cyan)
+          #   - pattern-explosion   (capa 06, pattern topo + card paper)
+          #   - headline-only       (capa 14, headline gigante sobre bege)
+          # So afeta as marcas @sindicompanybr e @bysindicompany.
           SINDICOMPANY_COVER_ARCHETYPE: ${{ vars.SINDICOMPANY_COVER_ARCHETYPE }}
         run: |
           python -m api.carrossel_generate "${{ inputs.carrossel_id }}"
