@@ -240,6 +240,7 @@ _ICONS_LIST_CACHE: list[str] | None = None
 _ICON_SLOT_CACHE: dict[int, str] = {}
 _LOGO_SLOT_CACHE: dict[int, str] = {}
 _CONSVICTA_FONTS_CSS_CACHE: str | None = None
+_SINDICOMPANY_FONTS_CSS_CACHE: str | None = None
 
 # Biblioteca de icones Consvicta (86 SVGs). Cache em memoria por processo.
 # Estrutura: {nome_sem_ext: svg_string}. Carrega lazily na primeira chamada.
@@ -457,6 +458,36 @@ def _consvicta_fonts_css() -> str:
         )
         _CONSVICTA_FONTS_CSS_CACHE = ""
     return _CONSVICTA_FONTS_CSS_CACHE
+
+
+def _sindicompany_fonts_css() -> str:
+    """CSS @font-face com Provicali (.otf, 400) + Epilogue Variable
+    (.woff2, 100-900 normal/italic) embutidos em base64. Arquivo em
+    api/assets/fonts/sindicompany/. Cache por processo. String vazia
+    se nao encontrar — engine cai pro fallback Epilogue do Google
+    Fonts."""
+    global _SINDICOMPANY_FONTS_CSS_CACHE
+    if _SINDICOMPANY_FONTS_CSS_CACHE is not None:
+        return _SINDICOMPANY_FONTS_CSS_CACHE
+    here = os.path.dirname(os.path.abspath(__file__))
+    css_path = os.path.join(
+        here, "assets", "fonts", "sindicompany", "sindicompany-fonts-inline.css"
+    )
+    try:
+        with open(css_path, "r", encoding="utf-8") as f:
+            _SINDICOMPANY_FONTS_CSS_CACHE = f.read()
+        print(
+            f"[carrossel] sindicompany-fonts-inline.css carregado "
+            f"({len(_SINDICOMPANY_FONTS_CSS_CACHE)//1024} KB)",
+            flush=True,
+        )
+    except Exception as e:  # noqa: BLE001
+        print(
+            f"[carrossel] sindicompany-fonts-inline.css nao encontrado: {e}",
+            flush=True,
+        )
+        _SINDICOMPANY_FONTS_CSS_CACHE = ""
+    return _SINDICOMPANY_FONTS_CSS_CACHE
 
 
 def _logo_slot_data_url(slot: int) -> str:
@@ -739,13 +770,25 @@ BUCKET = "condominios-fotos"
 SLIDE_W = 3072
 SLIDE_H = 3839  # 4:5 vertical
 
+# Paleta oficial Sindicompany — Brand Hub 2026-05-17
+# (Navy/Cyan/Beige/Lavender/Purple/White). Mantém as chaves antigas
+# (onix/mint/sand/lavender/white/gray_5) pra compatibilidade com o
+# template HTML — só os valores HEX trocam.
+#  - onix     -> Navy (texto/fundos principais)
+#  - mint     -> Cyan (acento, confiança)
+#  - sand     -> Beige (calor, humano)
+#  - lavender -> Lavender novo (inovação, tech)
+#  - purple   -> Purple novo (profundidade, IA) — nova chave opcional
+#  - white    -> White puro
+#  - gray_5   -> Paper warm (substitui o gray_5 frio antigo)
 PALETTE = {
-    "onix": "#1A1C29",
-    "mint": "#84C7D3",
-    "sand": "#DABDA9",
-    "lavender": "#B8C0FF",
+    "onix": "#182028",       # Navy
+    "mint": "#88C8D0",       # Cyan
+    "sand": "#E0B098",       # Beige
+    "lavender": "#BFC0FF",   # Lavender
+    "purple": "#8890D0",     # Purple (nova — Brand Hub 2026-05-17)
     "white": "#FFFFFF",
-    "gray_5": "#F4F4F5",
+    "gray_5": "#FAF7F2",     # Paper
 }
 
 # Paleta oficial Consvicta (Brand Book). Mapeia para as mesmas chaves
@@ -1149,6 +1192,167 @@ def _formato_label(formato: str) -> str:
     return FORMATO_LABELS.get(f, f.replace("_", " ").title() or "Carrossel")
 
 
+def _capa_editorial_question(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+) -> str:
+    """Brand Hub 2026-05-17 — arquetipo de capa "Editorial Question".
+
+    Capa minimalista do brand book novo:
+      - Fundo Paper (#FAF7F2) — luz quente
+      - Faixa de 8% no topo em Beige, sutil
+      - Titulo gigante em Epilogue weight 800 + uma fracao italic
+        com cor Purple, evocando a pergunta editorial
+      - Body em weight 400 abaixo, espacamento aerado
+      - Simbolo Sindicompany grande no canto inferior direito, em Navy
+      - Handle inferior esquerdo em Cyan
+      - Sem badge de formato, sem accent-line
+
+    Paleta hardcoded das constantes Brand Hub (nao usa _palette() que
+    eh legacy mint/onix). Mantem o logo_top_img padrao no topo pra
+    consistencia com os outros slides do mesmo carrossel.
+    """
+    NAVY = "#182028"
+    CYAN = "#88C8D0"
+    BEIGE = "#E0B098"
+    PURPLE = "#8890D0"
+    PAPER = "#FAF7F2"
+    PAPER_WARM = "#F2EDE5"
+
+    # Simbolo Sindicompany: mask-houses + mask-dot em base64 inline.
+    # Reusa _logo_slot_data_url se houver, senao fallback de texto.
+    # Aqui pegamos o slot 5 (logo principal Sindicompany), que ja eh
+    # carregado em logo_top_img. Pro corner usamos o mesmo arquivo,
+    # mas em tamanho maior — preferencia pelo logo-symbolPhoto se
+    # existir no bucket. Default: deixa vazio (slide funciona sem).
+    symbol_url = _logo_slot_data_url(2) or _logo_slot_data_url(3) or ""
+    symbol_img = (
+        f'<img class="corner-symbol" src="{symbol_url}" alt="" />'
+        if symbol_url
+        else ""
+    )
+
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+
+    # Split do titulo: a primeira sentenca/frase ate o "?" ganha
+    # destaque italic Purple; o resto fica em Navy roman. Best-effort
+    # pra qualquer titulo (se nao tiver "?", titulo inteiro vai roman).
+    titulo_h = _h(titulo)
+    if "?" in titulo_h:
+        head, _, tail = titulo_h.partition("?")
+        titulo_render = (
+            f'<span class="q">{head}?</span>'
+            f'<span class="rest">{tail.strip()}</span>'
+            if tail.strip()
+            else f'<span class="q">{head}?</span>'
+        )
+    else:
+        titulo_render = f'<span class="rest">{titulo_h}</span>'
+
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {PAPER};
+    color: {NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .top-band {{
+    /* Faixa quente de 8% no topo — assina o arquetipo Editorial. */
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 8%;
+    background: linear-gradient(180deg, {BEIGE} 0%, {PAPER_WARM} 100%);
+    z-index: 0;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+  }}
+  .content {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 18%; bottom: 28%;
+    display: flex; flex-direction: column; justify-content: center;
+    z-index: 2;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 280px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }}
+  .capa-titulo .q {{
+    color: {PURPLE};
+    font-style: italic;
+    font-weight: 800;
+  }}
+  .capa-titulo .rest {{
+    color: {NAVY};
+    display: block;
+    margin-top: 0.15em;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 92px;
+    line-height: 1.30;
+    color: {NAVY};
+    opacity: 0.78;
+    margin-top: 80px;
+    max-width: 26ch;
+  }}
+  .corner-symbol {{
+    position: absolute;
+    bottom: 80px; right: 180px;
+    width: 640px; height: 640px;
+    object-fit: contain;
+    z-index: 1;
+    /* Realca o simbolo em Navy mesmo que o PNG original esteja em
+       outra cor — filter brightness 0 forca preto solido. */
+    filter: brightness(0) saturate(100%);
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 72px;
+    font-weight: 600;
+    color: {CYAN};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  <div class="top-band"></div>
+  <div class="content">
+    <h1 class="capa-titulo">{titulo_render}</h1>
+    {body_html}
+  </div>
+  {symbol_img}
+  {logo_top_img}
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
 def _slide_html(
     *,
     slide_idx: int,
@@ -1165,19 +1369,28 @@ def _slide_html(
     p = _palette()
     handle = _handle()
     is_consvicta = _BRAND == "consvictabr"
-    epilogue_url = (
-        "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;800;900&display=swap"
-    )
     # Consvicta usa tipografia propria (Cormorant Garamond + Outfit +
-    # Bebas Neue), embutida via base64 — sem dependencia de Google
-    # Fonts no render. Demais marcas seguem com Epilogue (Google Fonts).
+    # Bebas Neue), embutida via base64. Sindicompany/By Sindicompany
+    # usam Provicali (wordmark) + Epilogue (display/body/numeric)
+    # tambem embutidas via base64 do Brand Hub 2026-05-17. Sem
+    # dependencia de Google Fonts no render.
     if is_consvicta:
         head_fonts = f"<style>{_consvicta_fonts_css()}</style>"
         font_display = "'Cormorant Garamond', Georgia, serif"
         font_body = "'Outfit', system-ui, sans-serif"
         font_numeric = "'Bebas Neue', Impact, sans-serif"
     else:
-        head_fonts = f'<link href="{epilogue_url}" rel="stylesheet">'
+        sindi_css = _sindicompany_fonts_css()
+        if sindi_css:
+            head_fonts = f"<style>{sindi_css}</style>"
+        else:
+            # Fallback: Google Fonts Epilogue se o CSS inline nao tiver
+            # sido empacotado por algum motivo.
+            head_fonts = (
+                '<link href="https://fonts.googleapis.com/css2?'
+                'family=Epilogue:wght@400;600;800;900&display=swap" '
+                'rel="stylesheet">'
+            )
         font_display = "'Epilogue', sans-serif"
         font_body = "'Epilogue', sans-serif"
         font_numeric = "'Epilogue', sans-serif"
@@ -1244,6 +1457,27 @@ def _slide_html(
         capa_fundo_div = (
             '<div class="icon-bg-capa"></div>' if capa_fundo_url else ""
         )
+
+        # Brand Hub 2026-05-17: arquetipo de capa controlado por env var
+        # SINDICOMPANY_COVER_ARCHETYPE. Default "default" (capa atual com
+        # hero img + overlay escuro). "editorial-question" ativa o
+        # arquetipo minimalista do Brand Hub novo: fundo Paper, titulo
+        # em Provicali italic Navy, simbolo no canto inferior direito,
+        # sem badge/accent-line. So aplica pras marcas Sindicompany
+        # (sindicompanybr + bysindicompany), nunca pra Consvicta.
+        cover_archetype = os.environ.get(
+            "SINDICOMPANY_COVER_ARCHETYPE", "default"
+        ).strip().lower()
+        if cover_archetype == "editorial-question" and not is_consvicta:
+            return _capa_editorial_question(
+                titulo=titulo,
+                body=body,
+                handle=handle,
+                logo_top_img=logo_top_img,
+                head_fonts=head_fonts,
+                font_display=font_display,
+                font_body=font_body,
+            )
         return f"""
 <!doctype html><html><head><meta charset="utf-8">
 {head_fonts}

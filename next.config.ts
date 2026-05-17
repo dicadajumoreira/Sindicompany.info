@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
     "/sindicompany/consvicta-assets": [
       "./public/consvicta-library/**/*",
     ],
+    "/sindicompany/assets": [
+      "./public/sindicompany-library/**/*",
+    ],
   },
   images: {
     remotePatterns: [
