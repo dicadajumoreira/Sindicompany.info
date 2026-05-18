@@ -44,6 +44,9 @@ export type CarrosselCoverArchetype =
   | "grid-stats"
   | "highlight"
   | "stamp"
+  | "bullet-list"
+  | "wallpaper"
+  | "underline"
   | "dark-premium"
   | "magazine-cover"
   | "split-portrait"
@@ -56,7 +59,8 @@ export type CarrosselCoverArchetype =
   | "cinema"
   | "polaroid"
   | "portrait-frame"
-  | "photo-strip";
+  | "photo-strip"
+  | "photo-grid";
 
 export const CARROSSEL_COVER_ARCHETYPES: {
   id: CarrosselCoverArchetype;
@@ -82,6 +86,9 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "grid-stats", label: "Grid stats", hasPhoto: false, hint: 'Grid 2×2 de números (body "n1: lab1; n2: lab2; …")' },
   { id: "highlight", label: "Highlight", hasPhoto: false, hint: "Headline com palavra entre **asteriscos** vira marca-texto Cyan" },
   { id: "stamp", label: "Stamp", hasPhoto: false, hint: "Selo vermelho diagonal sobre headline (body = palavra do selo)" },
+  { id: "bullet-list", label: "Bullet list", hasPhoto: false, hint: 'Pílulas Cyan numeradas + texto (body "item1; item2; …")' },
+  { id: "wallpaper", label: "Wallpaper", hasPhoto: false, hint: "Tile de pattern + card Beige centralizado com label Cyan" },
+  { id: "underline", label: "Underline", hasPhoto: false, hint: "Headline com **palavra** sublinhada com Cyan grosso" },
   // COM foto (etapa 3)
   { id: "dark-premium", label: "Dark Premium", hasPhoto: true, hint: "Foto full + gradient Navy" },
   { id: "magazine-cover", label: "Magazine cover", hasPhoto: true, hint: "Masthead + foto + faixa Paper" },
@@ -96,6 +103,7 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "polaroid", label: "Polaroid", hasPhoto: true, hint: "Foto em moldura polaroid rotacionada com sombra" },
   { id: "portrait-frame", label: "Portrait frame", hasPhoto: true, hint: "Foto em quadro Beige com inner border Navy" },
   { id: "photo-strip", label: "Photo strip", hasPhoto: true, hint: "Foto em faixa horizontal estreita central + headline acima" },
+  { id: "photo-grid", label: "Photo grid", hasPhoto: true, hint: "Split 50/50 horizontal: foto top + texto bottom" },
 ];
 
 const COVER_ARCHETYPE_IDS = new Set(CARROSSEL_COVER_ARCHETYPES.map((a) => a.id));
