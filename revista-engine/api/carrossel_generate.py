@@ -3406,6 +3406,477 @@ def _capa_floating_card(
 """
 
 
+def _capa_mythbuster(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 08 "Mythbuster".
+
+    Fundo Paper. Bloco MITO (label Beige) com a crenca incorreta em
+    italic Navy + bloco VERDADE (label Cyan) com a correcao em Navy
+    bold. Titulo opcional como pergunta acima ('verdade ou mito?').
+    Body usa formato 'mito | verdade' (pipe separador). Capa sem
+    foto por design."""
+    del foto_capa_url
+    parts = (body or "").split("|", 1)
+    mito = parts[0].strip() if parts else ""
+    verdade = parts[1].strip() if len(parts) > 1 else ""
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .head {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 24%;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 170px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .blocks {{
+    position: absolute;
+    left: 180px; right: 180px;
+    bottom: 320px;
+    display: flex; flex-direction: column; gap: 80px;
+  }}
+  .block {{
+    border-left: 14px solid;
+    padding-left: 60px;
+  }}
+  .block-mito {{ border-color: {_SC_BEIGE}; }}
+  .block-verdade {{ border-color: {_SC_CYAN}; }}
+  .label {{
+    display: inline-block;
+    padding: 18px 40px;
+    border-radius: 8px;
+    font-family: {font_body};
+    font-weight: 800;
+    font-size: 52px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 38px;
+  }}
+  .label-mito {{ background: {_SC_BEIGE}; color: {_SC_NAVY}; }}
+  .label-verdade {{ background: {_SC_CYAN}; color: {_SC_NAVY}; }}
+  .block-text {{
+    font-family: {font_display};
+    font-size: 96px;
+    line-height: 1.10;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .block-text.mito {{
+    font-style: italic;
+    opacity: 0.65;
+  }}
+  .block-text.verdade {{
+    font-weight: 700;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  {logo_top_img}
+  <div class="head"><h1 class="capa-titulo">{_h(titulo)}</h1></div>
+  <div class="blocks">
+    <div class="block block-mito">
+      <span class="label label-mito">Mito</span>
+      <div class="block-text mito">{_h(mito or "&nbsp;")}</div>
+    </div>
+    <div class="block block-verdade">
+      <span class="label label-verdade">Verdade</span>
+      <div class="block-text verdade">{_h(verdade or "&nbsp;")}</div>
+    </div>
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_brackets(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 17 "Brackets".
+
+    Fundo Paper. Colchetes Beige gigantes ancorados nas laterais
+    (left + right), envolvendo a headline Navy bold centralizada.
+    Body opcional Navy mono pequeno abaixo da headline. Capa sem
+    foto por design."""
+    del foto_capa_url
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .bracket {{
+    position: absolute;
+    top: 28%; bottom: 28%;
+    width: 200px;
+    font-family: {font_display};
+    font-weight: 200;
+    font-size: 1400px;
+    line-height: 0.6;
+    color: {_SC_BEIGE};
+    z-index: 1;
+    pointer-events: none;
+    display: flex; align-items: center;
+  }}
+  .bracket-l {{
+    left: 80px;
+  }}
+  .bracket-r {{
+    right: 80px;
+    justify-content: flex-end;
+  }}
+  .content {{
+    position: absolute;
+    left: 320px; right: 320px;
+    top: 30%; bottom: 30%;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center;
+    z-index: 3;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 220px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 70px;
+    line-height: 1.30;
+    color: {_SC_NAVY};
+    opacity: 0.78;
+    margin-top: 50px;
+    max-width: 26ch;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 50%;
+    transform: translateX(-50%);
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 4;
+  }}
+</style></head>
+<body>
+  {logo_top_img}
+  <div class="bracket bracket-l">[</div>
+  <div class="bracket bracket-r">]</div>
+  <div class="content">
+    <h1 class="capa-titulo">{_h(titulo)}</h1>
+    {body_html}
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_photo_blur(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 37 "Photo blur".
+
+    Foto full-bleed desfocada como background + camada Navy translucida
+    + headline Branca crisp centralizada. Efeito glassmorphism. Sem
+    foto cai num fundo Navy solido com a headline mantida no centro."""
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+    if foto_capa_url:
+        photo_layer = (
+            f'<div class="photo-blur" style="background-image: url(\'{foto_capa_url}\')"></div>'
+            '<div class="overlay"></div>'
+        )
+    else:
+        photo_layer = '<div class="solid-navy"></div>'
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_NAVY};
+    color: #ffffff;
+    overflow: hidden;
+    position: relative;
+  }}
+  .photo-blur {{
+    position: absolute;
+    top: -100px; left: -100px; right: -100px; bottom: -100px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(80px) saturate(1.05);
+    transform: scale(1.15);
+    z-index: 0;
+  }}
+  .overlay {{
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(24,32,40,0.55);
+    z-index: 1;
+  }}
+  .solid-navy {{
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: {_SC_NAVY};
+    z-index: 0;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) invert(1);
+  }}
+  .content {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    z-index: 3;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 260px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: #ffffff;
+    text-wrap: balance;
+    text-shadow: 0 8px 40px rgba(0,0,0,0.35);
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 78px;
+    line-height: 1.30;
+    color: #ffffff;
+    opacity: 0.90;
+    margin-top: 60px;
+    max-width: 28ch;
+    margin-left: auto; margin-right: auto;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 50%;
+    transform: translateX(-50%);
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 4;
+  }}
+</style></head>
+<body>
+  {photo_layer}
+  {logo_top_img}
+  <div class="content">
+    <h1 class="capa-titulo">{_h(titulo)}</h1>
+    {body_html}
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_cinema(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 39 "Cinema".
+
+    Fundo Navy + faixa horizontal central (~45% altura) com a foto
+    em formato cinemascope ancorada no centro. Headline branca acima
+    da faixa, body Cyan abaixo. Sem foto: faixa central vira Beige
+    solida."""
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+    if foto_capa_url:
+        cinema_band = (
+            f'<div class="cinema-band" style="background-image: url(\'{foto_capa_url}\')"></div>'
+        )
+    else:
+        cinema_band = '<div class="cinema-band cinema-fallback"></div>'
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_NAVY};
+    color: #ffffff;
+    overflow: hidden;
+    position: relative;
+  }}
+  .cinema-band {{
+    position: absolute;
+    left: 0; right: 0;
+    top: 30%; height: 40%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+  }}
+  .cinema-fallback {{
+    background: {_SC_BEIGE};
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) invert(1);
+  }}
+  .head {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 30%;
+    transform: translateY(-100%);
+    padding-bottom: 80px;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 200px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: #ffffff;
+    text-wrap: balance;
+  }}
+  .footer {{
+    position: absolute;
+    left: 180px; right: 180px;
+    bottom: 220px;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 500;
+    font-size: 70px;
+    line-height: 1.30;
+    color: {_SC_CYAN};
+    max-width: 28ch;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 4;
+  }}
+</style></head>
+<body>
+  {cinema_band}
+  {logo_top_img}
+  <div class="head"><h1 class="capa-titulo">{_h(titulo)}</h1></div>
+  <div class="footer">
+    {body_html}
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
 # Registry dos arquetipos de capa do Brand Hub Sindicompany 2026-05-17.
 #
 # REGRA INDISPENSAVEL: todo arquetipo que tem variante COM FOTO deve
@@ -3434,6 +3905,8 @@ COVER_ARCHETYPES_SC = {
     "glow-hero": _capa_glow_hero,
     "versus": _capa_versus,
     "sticky-note": _capa_sticky_note,
+    "mythbuster": _capa_mythbuster,
+    "brackets": _capa_brackets,
     # COM foto (consomem foto_capa_url da etapa 3)
     "dark-premium": _capa_dark_premium,
     "magazine-cover": _capa_magazine_cover,
@@ -3443,6 +3916,8 @@ COVER_ARCHETYPES_SC = {
     "photo-circle": _capa_photo_circle,
     "photo-banner": _capa_photo_banner,
     "floating-card": _capa_floating_card,
+    "photo-blur": _capa_photo_blur,
+    "cinema": _capa_cinema,
 }
 
 
