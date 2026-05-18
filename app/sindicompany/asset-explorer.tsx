@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isValidCoverArchetype } from "@/lib/sindicompany/carrosseis";
+import {
+  isValidCoverArchetype,
+  isValidFlowTemplate,
+} from "@/lib/sindicompany/carrosseis";
 import {
   ASSET_HIERARCHY,
   AssetBrand,
@@ -209,12 +212,17 @@ async function BranchView({
 }) {
   const children = node.children ?? [];
 
-  // Quando o folder e Capas (children sao archetypes do carrossel), busca
-  // a capa real mais recente de cada archetype na tabela `carrosseis`
-  // (png_paths[0]). Isso pega as capas geradas via /carrossel/novo, que
-  // vivem em __carrosseis/<id>/slide-1.png e nao no bucket de assets.
+  // Folder Capas: children sao archetypes de capa. Busca a capa real mais
+  // recente de cada na tabela `carrosseis` (png_paths[0] = slide-1).
+  // Folder Carrosseis: children sao templates de flow (formato). Mesma
+  // ideia, mas filtrando por `formato` em vez de `cover_archetype`.
+  // Carrosseis publicados vivem em __carrosseis/<id>/slide-N.png — NAO no
+  // bucket de assets — entao a query SQL e o unico jeito de pegar.
   const archetypeSlugs = children
     .filter((c) => !c.children && isValidCoverArchetype(c.slug))
+    .map((c) => c.slug);
+  const flowSlugs = children
+    .filter((c) => !c.children && isValidFlowTemplate(c.slug))
     .map((c) => c.slug);
   const carrosselCovers = new Map<string, string>();
   if (archetypeSlugs.length > 0) {
@@ -236,13 +244,34 @@ async function BranchView({
       // ignora — cai no fallback de bucket listing
     }
   }
+  const flowPreviews = new Map<string, string>();
+  if (flowSlugs.length > 0) {
+    try {
+      const sb = createAdminClient();
+      const { data } = await sb
+        .from("carrosseis")
+        .select("formato, png_paths, updated_at")
+        .in("formato", flowSlugs)
+        .not("png_paths", "is", null)
+        .order("updated_at", { ascending: false });
+      for (const row of data ?? []) {
+        const fmt = row.formato as string | null;
+        const paths = row.png_paths as string[] | null;
+        if (!fmt || !paths?.length || flowPreviews.has(fmt)) continue;
+        flowPreviews.set(fmt, paths[0]);
+      }
+    } catch {
+      // ignora — cai no fallback de bucket listing
+    }
+  }
 
   // Pra cada child-LEAF: prefere capa real do carrossel; senao tenta o 1o
   // upload manual do bucket de assets. Folders nao tem thumbnail.
   const previews = await Promise.all(
     children.map(async (child) => {
       if (child.children) return null;
-      const fromCarrossel = carrosselCovers.get(child.slug);
+      const fromCarrossel =
+        carrosselCovers.get(child.slug) ?? flowPreviews.get(child.slug);
       if (fromCarrossel) return fromCarrossel;
       const bucket = bucketForLeaf(brand, [...path, child.slug], child);
       const basename = basenameForLeaf(child);
