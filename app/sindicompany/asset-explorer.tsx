@@ -299,10 +299,24 @@ async function BranchView({
           {children.map((child, i) => {
             const isLeaf = !child.children;
             const previewUrl = previews[i];
+            // Leaves cujo slug e um flow template viram atalhos pro
+            // /carrossel/novo com formato pre-selecionado. Demais leaves
+            // (capas, ctas, elementos) seguem indo pra tela de slots.
+            const isFlowTemplate = isLeaf && isValidFlowTemplate(child.slug);
+            // /carrossel/novo e unica pros 3 brands (vive sob /sindicompany).
+            // O brand do carrossel e escolhido la dentro, nao via URL.
+            const href = isFlowTemplate
+              ? `/sindicompany/carrossel/novo?formato=${child.slug}`
+              : `${brandRoute}/${path.join("/")}/${child.slug}`;
+            const caption = child.children?.length
+              ? `${child.children.length} subcategorias`
+              : isFlowTemplate
+              ? "Gerar carrossel →"
+              : "Asset slots";
             return (
               <Link
                 key={child.slug}
-                href={`${brandRoute}/${path.join("/")}/${child.slug}`}
+                href={href}
                 className="rounded-lg border border-onix-100 bg-white overflow-hidden hover:border-mint-400 hover:shadow-sm transition group flex flex-col"
               >
                 {isLeaf && (
@@ -317,7 +331,7 @@ async function BranchView({
                       />
                     ) : (
                       <div className="text-[10px] text-onix-400 uppercase tracking-wider px-3 text-center">
-                        Sem upload ainda
+                        {isFlowTemplate ? "Sem carrossel ainda" : "Sem upload ainda"}
                       </div>
                     )}
                   </div>
@@ -331,10 +345,14 @@ async function BranchView({
                       {child.description}
                     </p>
                   )}
-                  <div className="text-[10px] text-onix-500 uppercase tracking-wider">
-                    {child.children?.length
-                      ? `${child.children.length} subcategorias`
-                      : "Asset slots"}
+                  <div
+                    className={
+                      isFlowTemplate
+                        ? "text-[10px] text-mint-700 uppercase tracking-wider font-semibold"
+                        : "text-[10px] text-onix-500 uppercase tracking-wider"
+                    }
+                  >
+                    {caption}
                   </div>
                 </div>
               </Link>
