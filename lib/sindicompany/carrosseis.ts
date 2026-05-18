@@ -39,6 +39,8 @@ export type CarrosselCoverArchetype =
   | "sticky-note"
   | "mythbuster"
   | "brackets"
+  | "type-tower"
+  | "split-color"
   | "dark-premium"
   | "magazine-cover"
   | "split-portrait"
@@ -48,7 +50,9 @@ export type CarrosselCoverArchetype =
   | "photo-banner"
   | "floating-card"
   | "photo-blur"
-  | "cinema";
+  | "cinema"
+  | "polaroid"
+  | "portrait-frame";
 
 export const CARROSSEL_COVER_ARCHETYPES: {
   id: CarrosselCoverArchetype;
@@ -69,6 +73,8 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "sticky-note", label: "Sticky note", hasPhoto: false, hint: "Card Beige tipo post-it rotacionado" },
   { id: "mythbuster", label: "Mito × Verdade", hasPhoto: false, hint: 'Mito + Verdade com labels (body "mito | verdade")' },
   { id: "brackets", label: "Brackets", hasPhoto: false, hint: "Colchetes Beige gigantes envolvendo headline" },
+  { id: "type-tower", label: "Type tower", hasPhoto: false, hint: "Palavras empilhadas em tamanhos crescentes" },
+  { id: "split-color", label: "Split color", hasPhoto: false, hint: "Diagonal Beige/Navy com headline cruzando" },
   // COM foto (etapa 3)
   { id: "dark-premium", label: "Dark Premium", hasPhoto: true, hint: "Foto full + gradient Navy" },
   { id: "magazine-cover", label: "Magazine cover", hasPhoto: true, hint: "Masthead + foto + faixa Paper" },
@@ -80,6 +86,8 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "floating-card", label: "Floating card", hasPhoto: true, hint: "Foto em card centralizado sobre Navy" },
   { id: "photo-blur", label: "Photo blur", hasPhoto: true, hint: "Foto desfocada como background + headline crisp" },
   { id: "cinema", label: "Cinema", hasPhoto: true, hint: "Foto em faixa cinemascope central + headline acima" },
+  { id: "polaroid", label: "Polaroid", hasPhoto: true, hint: "Foto em moldura polaroid rotacionada com sombra" },
+  { id: "portrait-frame", label: "Portrait frame", hasPhoto: true, hint: "Foto em quadro Beige com inner border Navy" },
 ];
 
 const COVER_ARCHETYPE_IDS = new Set(CARROSSEL_COVER_ARCHETYPES.map((a) => a.id));
