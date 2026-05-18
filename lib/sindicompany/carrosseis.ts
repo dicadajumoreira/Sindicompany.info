@@ -27,48 +27,23 @@ export const CARROSSEL_BRANDS: { id: CarrosselBrand; handle: string; label: stri
 // /sindicompany/carrossel/novo. Aplica so a sindicompanybr +
 // bysindicompany — Consvicta sempre usa a capa propria.
 export type CarrosselCoverArchetype =
-  | "editorial-question"
-  | "stat-slap"
   | "numbered-guide"
   | "manifesto"
   | "pattern-explosion"
-  | "pull-quote"
-  | "headline-only"
-  | "glow-hero"
-  | "versus"
   | "sticky-note"
-  | "mythbuster"
   | "brackets"
   | "type-tower"
-  | "split-color"
-  | "grid-stats"
-  | "highlight"
-  | "stamp"
-  | "bullet-list"
-  | "wallpaper"
-  | "underline"
-  | "timeline"
-  | "conversation"
-  | "receipt"
   | "corner-tape"
-  | "ribbon"
-  | "polaroid-stack"
-  | "maxi-quote"
-  | "calendar"
   | "dark-premium"
   | "magazine-cover"
   | "split-portrait"
   | "hero-portrait"
-  | "avatar-quote"
   | "photo-circle"
   | "photo-banner"
-  | "floating-card"
   | "photo-blur"
   | "cinema"
   | "polaroid"
-  | "portrait-frame"
-  | "photo-strip"
-  | "photo-grid";
+  | "portrait-frame";
 
 export const CARROSSEL_COVER_ARCHETYPES: {
   id: CarrosselCoverArchetype;
@@ -76,50 +51,25 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   hasPhoto: boolean;
   hint: string;
 }[] = [
-  // SEM foto
-  { id: "editorial-question", label: "Editorial Question", hasPhoto: false, hint: "Pergunta italic Purple + Navy sobre Paper" },
-  { id: "stat-slap", label: "Stat slap", hasPhoto: false, hint: "Número gigante sobre fundo Beige" },
+  // SEM foto (7) — selecionados pela Juliana 2026-05-18
   { id: "numbered-guide", label: "Numbered guide", hasPhoto: false, hint: "Split número Navy / headline" },
   { id: "manifesto", label: "Manifesto", hasPhoto: false, hint: "Italic gigante sobre fundo Cyan" },
   { id: "pattern-explosion", label: "Pattern explosion", hasPhoto: false, hint: "Pattern topo + card Paper na base" },
-  { id: "pull-quote", label: "Pull quote", hasPhoto: false, hint: "Aspas Beige gigantes + citação italic" },
-  { id: "headline-only", label: "Headline-only", hasPhoto: false, hint: "Headline gigante sobre Beige" },
-  { id: "glow-hero", label: "Glow hero", hasPhoto: false, hint: "Símbolo + glows duplos sobre Navy" },
-  { id: "versus", label: "Versus", hasPhoto: false, hint: 'Errado vs Certo (body no formato "errado | certo")' },
   { id: "sticky-note", label: "Sticky note", hasPhoto: false, hint: "Card Beige tipo post-it rotacionado" },
-  { id: "mythbuster", label: "Mito × Verdade", hasPhoto: false, hint: 'Mito + Verdade com labels (body "mito | verdade")' },
   { id: "brackets", label: "Brackets", hasPhoto: false, hint: "Colchetes Beige gigantes envolvendo headline" },
   { id: "type-tower", label: "Type tower", hasPhoto: false, hint: "Palavras empilhadas em tamanhos crescentes" },
-  { id: "split-color", label: "Split color", hasPhoto: false, hint: "Diagonal Beige/Navy com headline cruzando" },
-  { id: "grid-stats", label: "Grid stats", hasPhoto: false, hint: 'Grid 2×2 de números (body "n1: lab1; n2: lab2; …")' },
-  { id: "highlight", label: "Highlight", hasPhoto: false, hint: "Headline com palavra entre **asteriscos** vira marca-texto Cyan" },
-  { id: "stamp", label: "Stamp", hasPhoto: false, hint: "Selo vermelho diagonal sobre headline (body = palavra do selo)" },
-  { id: "bullet-list", label: "Bullet list", hasPhoto: false, hint: 'Pílulas Cyan numeradas + texto (body "item1; item2; …")' },
-  { id: "wallpaper", label: "Wallpaper", hasPhoto: false, hint: "Tile de pattern + card Beige centralizado com label Cyan" },
-  { id: "underline", label: "Underline", hasPhoto: false, hint: "Headline com **palavra** sublinhada com Cyan grosso" },
-  { id: "timeline", label: "Timeline", hasPhoto: false, hint: 'Linha vertical com pontos numerados (body "etapa1; etapa2; …")' },
-  { id: "conversation", label: "Conversation", hasPhoto: false, hint: 'Bolhas chat alternando in/out (body "msg1 | msg2 | …")' },
-  { id: "receipt", label: "Receipt", hasPhoto: false, hint: 'Recibo Paper sobre Navy (body "item: valor; … total: R$ X")' },
   { id: "corner-tape", label: "Corner tape", hasPhoto: false, hint: "Fitas Cyan diagonais nos 4 cantos + headline centralizada" },
-  { id: "ribbon", label: "Ribbon", hasPhoto: false, hint: "Fita Cyan diagonal gigante com texto (body) + headline acima" },
-  { id: "polaroid-stack", label: "Polaroid stack", hasPhoto: false, hint: "3 polaroides empilhadas (Beige/Beige/Cyan) com rotações" },
-  { id: "maxi-quote", label: "Maxi quote", hasPhoto: false, hint: "Citação 2 linhas: Navy italic + Cyan italic sublinhado" },
-  { id: "calendar", label: "Calendar", hasPhoto: false, hint: 'Folha de calendário (body "MES | dia") + headline abaixo' },
-  // COM foto (etapa 3)
+  // COM foto (10) — consomem foto_capa_url da etapa 3
   { id: "dark-premium", label: "Dark Premium", hasPhoto: true, hint: "Foto full + gradient Navy" },
   { id: "magazine-cover", label: "Magazine cover", hasPhoto: true, hint: "Masthead + foto + faixa Paper" },
   { id: "split-portrait", label: "Split portrait", hasPhoto: true, hint: "Foto 45% esquerda + texto 55% Paper" },
   { id: "hero-portrait", label: "Hero portrait", hasPhoto: true, hint: "Foto full + tag mono + box Beige" },
-  { id: "avatar-quote", label: "Avatar quote", hasPhoto: true, hint: "Avatar circular + citação italic" },
-  { id: "photo-circle", label: "Foto circular", hasPhoto: true, hint: "Círculo gigante TR + texto BL" },
+  { id: "photo-circle", label: "Foto circular", hasPhoto: true, hint: "Círculo grande centralizado + texto abaixo" },
   { id: "photo-banner", label: "Photo banner", hasPhoto: true, hint: "Foto top 60% + Paper bottom com headline" },
-  { id: "floating-card", label: "Floating card", hasPhoto: true, hint: "Foto em card centralizado sobre Navy" },
   { id: "photo-blur", label: "Photo blur", hasPhoto: true, hint: "Foto desfocada como background + headline crisp" },
-  { id: "cinema", label: "Cinema", hasPhoto: true, hint: "Foto em faixa cinemascope central + headline acima" },
+  { id: "cinema", label: "Cinema", hasPhoto: true, hint: "Foto em faixa cinemascope central (imagem sempre centrada)" },
   { id: "polaroid", label: "Polaroid", hasPhoto: true, hint: "Foto em moldura polaroid rotacionada com sombra" },
   { id: "portrait-frame", label: "Portrait frame", hasPhoto: true, hint: "Foto em quadro Beige com inner border Navy" },
-  { id: "photo-strip", label: "Photo strip", hasPhoto: true, hint: "Foto em faixa horizontal estreita central + headline acima" },
-  { id: "photo-grid", label: "Photo grid", hasPhoto: true, hint: "Split 50/50 horizontal: foto top + texto bottom" },
 ];
 
 const COVER_ARCHETYPE_IDS = new Set(CARROSSEL_COVER_ARCHETYPES.map((a) => a.id));

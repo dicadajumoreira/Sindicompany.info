@@ -2589,15 +2589,16 @@ def _capa_photo_circle(
 ) -> str:
     """Brand Hub 2026-05-17 — capa 38 "Foto circular".
 
-    Fundo Paper. Foto recortada num circulo gigante ancorado no canto
-    superior direito (~70% da menor dimensao). Texto inferior esquerdo
-    com headline grande Navy + body. Sem foto: circulo vira Beige
-    solido, preservando a geometria."""
+    Fundo Paper. Foto recortada num circulo grande CENTRALIZADO no topo
+    do slide (~2200px de diametro), com a imagem sempre centralizada
+    dentro do circulo (background-position: center center). Texto
+    inferior esquerdo com headline grande Navy + body. Sem foto:
+    circulo vira Beige solido, preservando a geometria."""
     body_html = (
         f'<p class="capa-body">{_h(body)}</p>' if body else ""
     )
     circle_style = (
-        f"background-image: url('{foto_capa_url}'); background-size: cover; background-position: center;"
+        f"background-image: url('{foto_capa_url}'); background-size: cover; background-position: center center;"
         if foto_capa_url
         else f"background: {_SC_BEIGE};"
     )
@@ -2616,10 +2617,13 @@ def _capa_photo_circle(
   }}
   .photo-circle {{
     position: absolute;
-    top: -480px; right: -480px;
-    width: 2500px; height: 2500px;
+    top: 420px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2200px; height: 2200px;
     border-radius: 50%;
     {circle_style}
+    box-shadow: 0 60px 120px rgba(24,32,40,0.18);
     z-index: 1;
   }}
   .logo-top {{
@@ -2635,14 +2639,14 @@ def _capa_photo_circle(
     left: 180px;
     right: 180px;
     bottom: 320px;
-    max-width: 1700px;
+    text-align: center;
     z-index: 3;
   }}
   .capa-titulo {{
     font-family: {font_display};
     font-weight: 800;
-    font-size: 240px;
-    line-height: 0.94;
+    font-size: 200px;
+    line-height: 0.96;
     letter-spacing: -0.025em;
     color: {_SC_NAVY};
     text-wrap: balance;
@@ -2650,16 +2654,18 @@ def _capa_photo_circle(
   .capa-body {{
     font-family: {font_body};
     font-weight: 400;
-    font-size: 78px;
+    font-size: 72px;
     line-height: 1.30;
     color: {_SC_NAVY};
     opacity: 0.82;
-    margin-top: 60px;
-    max-width: 24ch;
+    margin-top: 50px;
+    max-width: 28ch;
+    margin-left: auto; margin-right: auto;
   }}
   .handle {{
     position: absolute;
-    bottom: 100px; left: 180px;
+    bottom: 100px; left: 50%;
+    transform: translateX(-50%);
     font-family: {font_body};
     font-size: 64px;
     font-weight: 600;
@@ -3779,10 +3785,12 @@ def _capa_cinema(
 ) -> str:
     """Brand Hub 2026-05-17 — capa 39 "Cinema".
 
-    Fundo Navy + faixa horizontal central (~45% altura) com a foto
-    em formato cinemascope ancorada no centro. Headline branca acima
-    da faixa, body Cyan abaixo. Sem foto: faixa central vira Beige
-    solida."""
+    Fundo Navy + faixa horizontal central (40% altura, perfeitamente
+    centralizada vertical: 30%-70%) com a foto em formato cinemascope.
+    A imagem fica sempre centralizada dentro da faixa (background-
+    position: center center, background-size: cover). Headline branca
+    acima da faixa, body Cyan abaixo. Sem foto: faixa central vira
+    Beige solida."""
     body_html = (
         f'<p class="capa-body">{_h(body)}</p>' if body else ""
     )
@@ -3810,7 +3818,7 @@ def _capa_cinema(
     left: 0; right: 0;
     top: 30%; height: 40%;
     background-size: cover;
-    background-position: center;
+    background-position: center center;
     background-repeat: no-repeat;
     z-index: 1;
   }}
@@ -6334,51 +6342,33 @@ def _capa_calendar(
 # vier vazia, eh aceitavel cair pra uma variante minimalista sem foto
 # (ver _capa_editorial_question como referencia).
 COVER_ARCHETYPES_SC = {
-    # SEM foto
-    "editorial-question": _capa_editorial_question,
-    "stat-slap": _capa_stat_slap,
+    # SEM foto (7) — selecionados pela Juliana 2026-05-18
     "numbered-guide": _capa_numbered_guide,
     "manifesto": _capa_manifesto,
     "pattern-explosion": _capa_pattern_explosion,
-    "headline-only": _capa_headline_only,
-    "pull-quote": _capa_pull_quote,
-    "glow-hero": _capa_glow_hero,
-    "versus": _capa_versus,
     "sticky-note": _capa_sticky_note,
-    "mythbuster": _capa_mythbuster,
     "brackets": _capa_brackets,
     "type-tower": _capa_type_tower,
-    "split-color": _capa_split_color,
-    "grid-stats": _capa_grid_stats,
-    "highlight": _capa_highlight,
-    "stamp": _capa_stamp,
-    "bullet-list": _capa_bullet_list,
-    "wallpaper": _capa_wallpaper,
-    "underline": _capa_underline,
-    "timeline": _capa_timeline,
-    "conversation": _capa_conversation,
-    "receipt": _capa_receipt,
     "corner-tape": _capa_corner_tape,
-    "ribbon": _capa_ribbon,
-    "polaroid-stack": _capa_polaroid_stack,
-    "maxi-quote": _capa_maxi_quote,
-    "calendar": _capa_calendar,
-    # COM foto (consomem foto_capa_url da etapa 3)
+    # COM foto (10) — consomem foto_capa_url da etapa 3
     "dark-premium": _capa_dark_premium,
     "magazine-cover": _capa_magazine_cover,
     "split-portrait": _capa_split_portrait,
     "hero-portrait": _capa_hero_portrait,
-    "avatar-quote": _capa_avatar_quote,
     "photo-circle": _capa_photo_circle,
     "photo-banner": _capa_photo_banner,
-    "floating-card": _capa_floating_card,
     "photo-blur": _capa_photo_blur,
     "cinema": _capa_cinema,
     "polaroid": _capa_polaroid,
     "portrait-frame": _capa_portrait_frame,
-    "photo-strip": _capa_photo_strip,
-    "photo-grid": _capa_photo_grid,
 }
+# Arquetipos removidos da selecao (funcoes _capa_* mantidas no arquivo
+# por enquanto pra preservar git history e permitir voltar facil; limpeza
+# do dead code fica pra commit dedicado): editorial-question, stat-slap,
+# pull-quote, headline-only, glow-hero, versus, mythbuster, split-color,
+# grid-stats, highlight, stamp, bullet-list, wallpaper, underline,
+# timeline, conversation, receipt, ribbon, maxi-quote, calendar,
+# polaroid-stack, avatar-quote, floating-card, photo-strip, photo-grid.
 
 
 def _slide_html(
