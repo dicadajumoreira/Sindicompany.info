@@ -42,7 +42,7 @@ export interface AssetNode {
 function leaf(
   slug: string,
   label: string,
-  opts: { legacyBucket?: string; slotsDefault?: number } = {},
+  opts: { legacyBucket?: string; slotsDefault?: number; description?: string } = {},
 ): AssetNode {
   return { slug, label, ...opts };
 }
@@ -122,24 +122,24 @@ export const ASSET_HIERARCHY: AssetNode[] = [
           "Cada leaf começa com 6 slots; estende via “+ Novo slot”.",
         children: [
           // SEM foto (7) — alinhado com CARROSSEL_COVER_ARCHETYPES
-          leaf("numbered-guide", "Numbered guide", { slotsDefault: 6 }),
-          leaf("manifesto", "Manifesto", { slotsDefault: 6 }),
-          leaf("pattern-explosion", "Pattern explosion", { slotsDefault: 6 }),
-          leaf("sticky-note", "Sticky note", { slotsDefault: 6 }),
-          leaf("brackets", "Brackets", { slotsDefault: 6 }),
-          leaf("type-tower", "Type tower", { slotsDefault: 6 }),
-          leaf("corner-tape", "Corner tape", { slotsDefault: 6 }),
+          leaf("numbered-guide", "Numbered guide", { slotsDefault: 6, description: "Split número Navy / headline" }),
+          leaf("manifesto", "Manifesto", { slotsDefault: 6, description: "Italic gigante sobre fundo Cyan" }),
+          leaf("pattern-explosion", "Pattern explosion", { slotsDefault: 6, description: "Pattern topo + card Paper na base" }),
+          leaf("sticky-note", "Sticky note", { slotsDefault: 6, description: "Card Beige tipo post-it rotacionado" }),
+          leaf("brackets", "Brackets", { slotsDefault: 6, description: "Colchetes Beige gigantes envolvendo headline" }),
+          leaf("type-tower", "Type tower", { slotsDefault: 6, description: "Palavras empilhadas em tamanhos crescentes" }),
+          leaf("corner-tape", "Corner tape", { slotsDefault: 6, description: "Fitas Cyan diagonais nos 4 cantos + headline centralizada" }),
           // COM foto (10) — consomem a foto da etapa 3 do /carrossel/novo
-          leaf("dark-premium", "Dark Premium", { slotsDefault: 6 }),
-          leaf("magazine-cover", "Magazine cover", { slotsDefault: 6 }),
-          leaf("split-portrait", "Split portrait", { slotsDefault: 6 }),
-          leaf("hero-portrait", "Hero portrait", { slotsDefault: 6 }),
-          leaf("photo-circle", "Foto circular", { slotsDefault: 6 }),
-          leaf("photo-banner", "Photo banner", { slotsDefault: 6 }),
-          leaf("photo-blur", "Photo blur", { slotsDefault: 6 }),
-          leaf("cinema", "Cinema", { slotsDefault: 6 }),
-          leaf("polaroid", "Polaroid", { slotsDefault: 6 }),
-          leaf("portrait-frame", "Portrait frame", { slotsDefault: 6 }),
+          leaf("dark-premium", "Dark Premium", { slotsDefault: 6, description: "Foto full + gradient Navy" }),
+          leaf("magazine-cover", "Magazine cover", { slotsDefault: 6, description: "Masthead + foto + faixa Paper" }),
+          leaf("split-portrait", "Split portrait", { slotsDefault: 6, description: "Foto 45% esquerda + texto 55% Paper" }),
+          leaf("hero-portrait", "Hero portrait", { slotsDefault: 6, description: "Foto full + tag mono + box Beige" }),
+          leaf("photo-circle", "Foto circular", { slotsDefault: 6, description: "Círculo grande centralizado + texto abaixo" }),
+          leaf("photo-banner", "Photo banner", { slotsDefault: 6, description: "Foto top 60% + Paper bottom com headline" }),
+          leaf("photo-blur", "Photo blur", { slotsDefault: 6, description: "Foto desfocada como background + headline crisp" }),
+          leaf("cinema", "Cinema", { slotsDefault: 6, description: "Foto em faixa cinemascope central" }),
+          leaf("polaroid", "Polaroid", { slotsDefault: 6, description: "Foto em moldura polaroid rotacionada com sombra" }),
+          leaf("portrait-frame", "Portrait frame", { slotsDefault: 6, description: "Foto em quadro Beige com inner border Navy" }),
         ],
       },
       {
