@@ -97,13 +97,15 @@ export async function AssetExplorer({ brand, path, uploadIntent }: AssetExplorer
   // Tem children = BRANCH (mostra subcategorias)
   if (node.children && node.children.length > 0) {
     return (
-      <BranchView
-        brand={brand}
-        brandLabel={brandLabel}
-        brandRoute={brandRoute}
-        path={path}
-        node={node}
-      />
+      // await aqui — BranchView precisa fetch thumbnails dos child-leaves
+      // pra mostrar preview do 1o upload de cada slug.
+      await BranchView({
+        brand,
+        brandLabel,
+        brandRoute,
+        path,
+        node,
+      })
     );
   }
 
@@ -191,7 +193,8 @@ function HubView({ brand }: { brand: AssetBrand }) {
 // ─────────────────────────────────────────────────────────────────────
 // BRANCH — node intermediário, mostra subcategorias clicáveis
 // ─────────────────────────────────────────────────────────────────────
-function BranchView({
+async function BranchView({
+  brand,
   brandLabel,
   brandRoute,
   path,
@@ -203,6 +206,21 @@ function BranchView({
   path: string[];
   node: AssetNode;
 }) {
+  const children = node.children ?? [];
+
+  // Pra cada child que é LEAF, busca o 1o arquivo uploadado pra usar como
+  // preview do card. Folders (com children proprios) nao tem thumbnail.
+  // 17 listings paralelos pro caso de Capas — Supabase responde rapido.
+  const previews = await Promise.all(
+    children.map(async (child) => {
+      if (child.children) return null;
+      const bucket = bucketForLeaf(brand, [...path, child.slug], child);
+      const basename = basenameForLeaf(child);
+      const urls = await listLeafSlotUrls(bucket, basename, child.slotsDefault);
+      return urls.find((u): u is string => Boolean(u)) ?? null;
+    }),
+  );
+
   return (
     <DashboardShell>
       <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
@@ -219,22 +237,50 @@ function BranchView({
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(node.children ?? []).map((child) => (
-            <Link
-              key={child.slug}
-              href={`${brandRoute}/${path.join("/")}/${child.slug}`}
-              className="rounded-lg border border-onix-100 bg-white p-4 hover:border-mint-400 hover:shadow-sm transition group"
-            >
-              <h2 className="text-sm font-semibold text-onix-900 group-hover:text-mint-700 mb-1">
-                {child.label}
-              </h2>
-              <div className="text-[10px] text-onix-500 uppercase tracking-wider">
-                {child.children?.length
-                  ? `${child.children.length} subcategorias`
-                  : "Asset slots"}
-              </div>
-            </Link>
-          ))}
+          {children.map((child, i) => {
+            const isLeaf = !child.children;
+            const previewUrl = previews[i];
+            return (
+              <Link
+                key={child.slug}
+                href={`${brandRoute}/${path.join("/")}/${child.slug}`}
+                className="rounded-lg border border-onix-100 bg-white overflow-hidden hover:border-mint-400 hover:shadow-sm transition group flex flex-col"
+              >
+                {isLeaf && (
+                  <div className="aspect-square bg-onix-50 border-b border-onix-100 flex items-center justify-center overflow-hidden">
+                    {previewUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={previewUrl}
+                        alt={child.label}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="text-[10px] text-onix-400 uppercase tracking-wider px-3 text-center">
+                        Sem upload ainda
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="p-4">
+                  <h2 className="text-sm font-semibold text-onix-900 group-hover:text-mint-700 mb-1">
+                    {child.label}
+                  </h2>
+                  {child.description && (
+                    <p className="text-xs text-g60 mb-2 line-clamp-2">
+                      {child.description}
+                    </p>
+                  )}
+                  <div className="text-[10px] text-onix-500 uppercase tracking-wider">
+                    {child.children?.length
+                      ? `${child.children.length} subcategorias`
+                      : "Asset slots"}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </main>
     </DashboardShell>
