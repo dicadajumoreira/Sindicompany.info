@@ -37,6 +37,8 @@ export type CarrosselCoverArchetype =
   | "glow-hero"
   | "versus"
   | "sticky-note"
+  | "mythbuster"
+  | "brackets"
   | "dark-premium"
   | "magazine-cover"
   | "split-portrait"
@@ -44,7 +46,9 @@ export type CarrosselCoverArchetype =
   | "avatar-quote"
   | "photo-circle"
   | "photo-banner"
-  | "floating-card";
+  | "floating-card"
+  | "photo-blur"
+  | "cinema";
 
 export const CARROSSEL_COVER_ARCHETYPES: {
   id: CarrosselCoverArchetype;
@@ -63,6 +67,8 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "glow-hero", label: "Glow hero", hasPhoto: false, hint: "Símbolo + glows duplos sobre Navy" },
   { id: "versus", label: "Versus", hasPhoto: false, hint: 'Errado vs Certo (body no formato "errado | certo")' },
   { id: "sticky-note", label: "Sticky note", hasPhoto: false, hint: "Card Beige tipo post-it rotacionado" },
+  { id: "mythbuster", label: "Mito × Verdade", hasPhoto: false, hint: 'Mito + Verdade com labels (body "mito | verdade")' },
+  { id: "brackets", label: "Brackets", hasPhoto: false, hint: "Colchetes Beige gigantes envolvendo headline" },
   // COM foto (etapa 3)
   { id: "dark-premium", label: "Dark Premium", hasPhoto: true, hint: "Foto full + gradient Navy" },
   { id: "magazine-cover", label: "Magazine cover", hasPhoto: true, hint: "Masthead + foto + faixa Paper" },
@@ -72,6 +78,8 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "photo-circle", label: "Foto circular", hasPhoto: true, hint: "Círculo gigante TR + texto BL" },
   { id: "photo-banner", label: "Photo banner", hasPhoto: true, hint: "Foto top 60% + Paper bottom com headline" },
   { id: "floating-card", label: "Floating card", hasPhoto: true, hint: "Foto em card centralizado sobre Navy" },
+  { id: "photo-blur", label: "Photo blur", hasPhoto: true, hint: "Foto desfocada como background + headline crisp" },
+  { id: "cinema", label: "Cinema", hasPhoto: true, hint: "Foto em faixa cinemascope central + headline acima" },
 ];
 
 const COVER_ARCHETYPE_IDS = new Set(CARROSSEL_COVER_ARCHETYPES.map((a) => a.id));
