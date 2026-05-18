@@ -187,6 +187,92 @@ export function isValidFlowTemplate(s: string): s is CarrosselFlowTemplate {
   return FLOW_TEMPLATE_IDS.has(s as CarrosselFlowTemplate);
 }
 
+// Templates de CTA — define o FECHAMENTO do carrossel (ultimo slide).
+// Cada CTA tem uma intencao de acao distinta. Quando preenchido em
+// carrosseis.cta_template, sobrescreve o CTA default embedado em
+// FORMATO_INSTRUCOES da engine. Slug bate 1:1 com os leaves em
+// social-media/ctas/ do asset-hierarchy.
+export type CarrosselCtaTemplate =
+  | "comente"
+  | "compartilhe"
+  | "salve"
+  | "segue"
+  | "whatsapp"
+  | "link";
+
+export const CARROSSEL_CTA_TEMPLATES: {
+  id: CarrosselCtaTemplate;
+  label: string;
+  hint: string;
+  instruction: string;
+}[] = [
+  {
+    id: "comente",
+    label: "Comente",
+    hint: "Convida pra debate binário",
+    instruction:
+      "CTA DE COMENTARIO: pergunta binaria que obriga posicionamento " +
+      "(ex: 'Comenta SIM ou NAO', 'CONCORDO ou DISCORDO', 'MORADOR CERTO " +
+      "ou SINDICO CERTO'). Sucesso = numero de comentarios, nao alcance.",
+  },
+  {
+    id: "compartilhe",
+    label: "Compartilhe",
+    hint: "Convida pra marcar/enviar",
+    instruction:
+      "CTA DE COMPARTILHAMENTO: convida a marcar alguem ou enviar pra " +
+      "grupo (ex: 'Manda pro morador certo', 'Marca alguem que precisa " +
+      "ver isso', 'Envia no grupo do condominio'). Use quando o conteudo " +
+      "for util pra circulo proximo.",
+  },
+  {
+    id: "salve",
+    label: "Salve",
+    hint: "Convida pra guardar pra consulta",
+    instruction:
+      "CTA DE SALVAMENTO: convida a salvar pra consulta futura (ex: " +
+      "'Salva esse post', 'Voce vai precisar', 'Guarda esse checklist'). " +
+      "Use quando o conteudo for referencia pratica (tutorial, checklist, " +
+      "dado, manual).",
+  },
+  {
+    id: "segue",
+    label: "Segue",
+    hint: "Convida pra seguir o perfil",
+    instruction:
+      "CTA DE SEGUIR: convida a seguir o perfil pra mais conteudo do mesmo " +
+      "tema (ex: 'Segue pra mais sobre condominio', 'Te entrego mais 1 por " +
+      "semana'). Use com moderacao — so quando o perfil ainda nao foi " +
+      "introduzido ou quando o tema e nicho.",
+  },
+  {
+    id: "whatsapp",
+    label: "WhatsApp",
+    hint: "Convida pra abrir conversa",
+    instruction:
+      "CTA DE WHATSAPP: convida a iniciar conversa direta (ex: 'Chama no " +
+      "WhatsApp', 'Manda 'OI' no direct e a gente resolve'). Use quando o " +
+      "objetivo for converter em atendimento/venda. Adapte o tom: " +
+      "sindicompany e direto, by e consultivo, consvicta e boutique.",
+  },
+  {
+    id: "link",
+    label: "Link",
+    hint: "Convida pra clicar no link da bio",
+    instruction:
+      "CTA DE LINK: convida a acessar o link da bio/perfil pra material " +
+      "completo (ex: 'Link na bio pra baixar o checklist completo', 'No " +
+      "perfil voce encontra o template'). Use quando houver oferta " +
+      "ancorada (PDF, formulario, calculadora).",
+  },
+];
+
+const CTA_TEMPLATE_IDS = new Set(CARROSSEL_CTA_TEMPLATES.map((c) => c.id));
+
+export function isValidCtaTemplate(s: string): s is CarrosselCtaTemplate {
+  return CTA_TEMPLATE_IDS.has(s as CarrosselCtaTemplate);
+}
+
 export interface Carrossel {
   id: string;
   brand: CarrosselBrand;
