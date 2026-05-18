@@ -41,6 +41,9 @@ export type CarrosselCoverArchetype =
   | "brackets"
   | "type-tower"
   | "split-color"
+  | "grid-stats"
+  | "highlight"
+  | "stamp"
   | "dark-premium"
   | "magazine-cover"
   | "split-portrait"
@@ -52,7 +55,8 @@ export type CarrosselCoverArchetype =
   | "photo-blur"
   | "cinema"
   | "polaroid"
-  | "portrait-frame";
+  | "portrait-frame"
+  | "photo-strip";
 
 export const CARROSSEL_COVER_ARCHETYPES: {
   id: CarrosselCoverArchetype;
@@ -75,6 +79,9 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "brackets", label: "Brackets", hasPhoto: false, hint: "Colchetes Beige gigantes envolvendo headline" },
   { id: "type-tower", label: "Type tower", hasPhoto: false, hint: "Palavras empilhadas em tamanhos crescentes" },
   { id: "split-color", label: "Split color", hasPhoto: false, hint: "Diagonal Beige/Navy com headline cruzando" },
+  { id: "grid-stats", label: "Grid stats", hasPhoto: false, hint: 'Grid 2×2 de números (body "n1: lab1; n2: lab2; …")' },
+  { id: "highlight", label: "Highlight", hasPhoto: false, hint: "Headline com palavra entre **asteriscos** vira marca-texto Cyan" },
+  { id: "stamp", label: "Stamp", hasPhoto: false, hint: "Selo vermelho diagonal sobre headline (body = palavra do selo)" },
   // COM foto (etapa 3)
   { id: "dark-premium", label: "Dark Premium", hasPhoto: true, hint: "Foto full + gradient Navy" },
   { id: "magazine-cover", label: "Magazine cover", hasPhoto: true, hint: "Masthead + foto + faixa Paper" },
@@ -88,6 +95,7 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "cinema", label: "Cinema", hasPhoto: true, hint: "Foto em faixa cinemascope central + headline acima" },
   { id: "polaroid", label: "Polaroid", hasPhoto: true, hint: "Foto em moldura polaroid rotacionada com sombra" },
   { id: "portrait-frame", label: "Portrait frame", hasPhoto: true, hint: "Foto em quadro Beige com inner border Navy" },
+  { id: "photo-strip", label: "Photo strip", hasPhoto: true, hint: "Foto em faixa horizontal estreita central + headline acima" },
 ];
 
 const COVER_ARCHETYPE_IDS = new Set(CARROSSEL_COVER_ARCHETYPES.map((a) => a.id));
