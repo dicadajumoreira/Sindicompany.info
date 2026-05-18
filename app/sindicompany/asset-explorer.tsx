@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isValidCoverArchetype } from "@/lib/sindicompany/carrosseis";
 import {
   ASSET_HIERARCHY,
   AssetBrand,
@@ -208,12 +209,41 @@ async function BranchView({
 }) {
   const children = node.children ?? [];
 
-  // Pra cada child que é LEAF, busca o 1o arquivo uploadado pra usar como
-  // preview do card. Folders (com children proprios) nao tem thumbnail.
-  // 17 listings paralelos pro caso de Capas — Supabase responde rapido.
+  // Quando o folder e Capas (children sao archetypes do carrossel), busca
+  // a capa real mais recente de cada archetype na tabela `carrosseis`
+  // (png_paths[0]). Isso pega as capas geradas via /carrossel/novo, que
+  // vivem em __carrosseis/<id>/slide-1.png e nao no bucket de assets.
+  const archetypeSlugs = children
+    .filter((c) => !c.children && isValidCoverArchetype(c.slug))
+    .map((c) => c.slug);
+  const carrosselCovers = new Map<string, string>();
+  if (archetypeSlugs.length > 0) {
+    try {
+      const sb = createAdminClient();
+      const { data } = await sb
+        .from("carrosseis")
+        .select("cover_archetype, png_paths, updated_at")
+        .in("cover_archetype", archetypeSlugs)
+        .not("png_paths", "is", null)
+        .order("updated_at", { ascending: false });
+      for (const row of data ?? []) {
+        const arch = row.cover_archetype as string | null;
+        const paths = row.png_paths as string[] | null;
+        if (!arch || !paths?.length || carrosselCovers.has(arch)) continue;
+        carrosselCovers.set(arch, paths[0]);
+      }
+    } catch {
+      // ignora — cai no fallback de bucket listing
+    }
+  }
+
+  // Pra cada child-LEAF: prefere capa real do carrossel; senao tenta o 1o
+  // upload manual do bucket de assets. Folders nao tem thumbnail.
   const previews = await Promise.all(
     children.map(async (child) => {
       if (child.children) return null;
+      const fromCarrossel = carrosselCovers.get(child.slug);
+      if (fromCarrossel) return fromCarrossel;
       const bucket = bucketForLeaf(brand, [...path, child.slug], child);
       const basename = basenameForLeaf(child);
       const urls = await listLeafSlotUrls(bucket, basename, child.slotsDefault);
