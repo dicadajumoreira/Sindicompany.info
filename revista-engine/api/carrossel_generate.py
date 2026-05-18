@@ -4855,6 +4855,471 @@ def _capa_photo_strip(
 """
 
 
+def _capa_bullet_list(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 19 "Bullet list".
+
+    Fundo Paper. Headline Navy grande no topo + lista de 3 a 5 bullets
+    com pilulas numeradas Cyan + texto Navy. Body usa convencao
+    'item1; item2; item3' (separados por ';'). Capa sem foto por
+    design."""
+    del foto_capa_url
+    raw = (body or "").strip()
+    items = [x.strip() for x in raw.split(";") if x.strip()]
+    if not items:
+        items = ["—"]
+    items = items[:5]
+    rows = []
+    for i, txt in enumerate(items, start=1):
+        rows.append(
+            '<div class="row">'
+            f'<span class="pill">{i:02d}</span>'
+            f'<span class="row-text">{_h(txt)}</span>'
+            "</div>"
+        )
+    rows_html = "\n".join(rows)
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .head {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 24%;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 180px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .rows {{
+    position: absolute;
+    left: 180px; right: 180px;
+    bottom: 320px;
+    display: flex; flex-direction: column; gap: 50px;
+  }}
+  .row {{
+    display: flex; align-items: center; gap: 50px;
+  }}
+  .pill {{
+    flex-shrink: 0;
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    background: {_SC_CYAN};
+    color: {_SC_NAVY};
+    display: flex; align-items: center; justify-content: center;
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 70px;
+    letter-spacing: -0.02em;
+  }}
+  .row-text {{
+    font-family: {font_display};
+    font-weight: 600;
+    font-size: 82px;
+    line-height: 1.18;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  {logo_top_img}
+  <div class="head"><h1 class="capa-titulo">{_h(titulo)}</h1></div>
+  <div class="rows">{rows_html}</div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_wallpaper(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 26 "Wallpaper".
+
+    Fundo Paper. Pattern Sindicompany (S_SVG) repetido em tile
+    cobrindo toda a tela em opacidade reduzida. Card Beige
+    centralizado vertical (~50% altura) com label Cyan no topo +
+    headline Navy grande + body Navy pequeno. Capa sem foto por
+    design."""
+    del foto_capa_url
+    body_html = (
+        f'<p class="card-body">{_h(body)}</p>' if body else ""
+    )
+    pattern_url = (
+        _logo_slot_data_url(2)
+        or _logo_slot_data_url(3)
+        or _logo_slot_data_url(1)
+        or ""
+    )
+    pattern_layer = (
+        f'<div class="pattern" style="background-image: url(\'{pattern_url}\');"></div>'
+        if pattern_url
+        else ''
+    )
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .pattern {{
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-repeat: repeat;
+    background-size: 320px 320px;
+    opacity: 0.16;
+    z-index: 0;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .card {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: {_SC_BEIGE};
+    padding: 140px 130px;
+    z-index: 3;
+    box-shadow: 0 60px 120px rgba(24,32,40,0.18);
+  }}
+  .card-label {{
+    display: inline-block;
+    padding: 18px 36px;
+    background: {_SC_CYAN};
+    color: {_SC_NAVY};
+    font-family: {font_body};
+    font-weight: 800;
+    font-size: 48px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }}
+  .card-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 200px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .card-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 72px;
+    line-height: 1.30;
+    color: {_SC_NAVY};
+    opacity: 0.80;
+    margin-top: 50px;
+    max-width: 26ch;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_NAVY};
+    letter-spacing: 0.04em;
+    z-index: 4;
+  }}
+</style></head>
+<body>
+  {pattern_layer}
+  {logo_top_img}
+  <div class="card">
+    <span class="card-label">Sindicompany</span>
+    <h1 class="card-titulo">{_h(titulo)}</h1>
+    {body_html}
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_underline(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 34 "Underline".
+
+    Fundo Paper. Headline Navy gigante com UMA palavra entre
+    **asteriscos** ganhando um underline grosso Cyan (12px) logo
+    abaixo. Diferente do highlight (que pinta marca-texto sobre a
+    palavra) este so destaca pelo sublinhado, com tipografia
+    inalterada. Capa sem foto por design.
+
+    Ex: 'Quem **mede** sempre melhora.' """
+    del foto_capa_url
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+    titulo_html = _h(titulo or "")
+    import re as _re
+    titulo_html = _re.sub(
+        r"\*\*([^*]+)\*\*",
+        r'<span class="u">\1</span>',
+        titulo_html,
+    )
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .content {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 260px;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .capa-titulo .u {{
+    /* Underline grosso Cyan, posicionado pra simular pinceladas
+       sob a palavra. Usa box-shadow inset pra dar peso visual. */
+    text-decoration: underline;
+    text-decoration-color: {_SC_CYAN};
+    text-decoration-thickness: 24px;
+    text-underline-offset: 12px;
+  }}
+  .footer {{
+    position: absolute;
+    left: 180px; right: 180px;
+    bottom: 220px;
+    z-index: 3;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 68px;
+    line-height: 1.30;
+    color: {_SC_NAVY};
+    opacity: 0.78;
+    max-width: 28ch;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 4;
+  }}
+</style></head>
+<body>
+  {logo_top_img}
+  <div class="content">
+    <h1 class="capa-titulo">{titulo_html}</h1>
+  </div>
+  <div class="footer">{body_html}</div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_photo_grid(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 36 "Photo grid".
+
+    Grid horizontal 50/50: foto na metade superior + Paper bloco
+    na metade inferior. Headline Navy bold + body Navy ancorados
+    no canto inferior esquerdo do bloco. Sem foto: metade superior
+    vira Beige solido."""
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+    if foto_capa_url:
+        photo_half = (
+            f'<div class="photo-half" style="background-image: url(\'{foto_capa_url}\')"></div>'
+        )
+    else:
+        photo_half = '<div class="photo-half photo-fallback"></div>'
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .photo-half {{
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 50%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0;
+  }}
+  .photo-fallback {{
+    background: {_SC_BEIGE};
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) invert(1);
+  }}
+  .text-half {{
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%; bottom: 0;
+    background: {_SC_PAPER};
+    padding: 160px 180px 220px;
+    z-index: 1;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 210px;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 74px;
+    line-height: 1.30;
+    color: {_SC_NAVY};
+    opacity: 0.78;
+    margin-top: 50px;
+    max-width: 28ch;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_NAVY};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  {photo_half}
+  {logo_top_img}
+  <div class="text-half">
+    <h1 class="capa-titulo">{_h(titulo)}</h1>
+    {body_html}
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
 # Registry dos arquetipos de capa do Brand Hub Sindicompany 2026-05-17.
 #
 # REGRA INDISPENSAVEL: todo arquetipo que tem variante COM FOTO deve
@@ -4890,6 +5355,9 @@ COVER_ARCHETYPES_SC = {
     "grid-stats": _capa_grid_stats,
     "highlight": _capa_highlight,
     "stamp": _capa_stamp,
+    "bullet-list": _capa_bullet_list,
+    "wallpaper": _capa_wallpaper,
+    "underline": _capa_underline,
     # COM foto (consomem foto_capa_url da etapa 3)
     "dark-premium": _capa_dark_premium,
     "magazine-cover": _capa_magazine_cover,
@@ -4904,6 +5372,7 @@ COVER_ARCHETYPES_SC = {
     "polaroid": _capa_polaroid,
     "portrait-frame": _capa_portrait_frame,
     "photo-strip": _capa_photo_strip,
+    "photo-grid": _capa_photo_grid,
 }
 
 
