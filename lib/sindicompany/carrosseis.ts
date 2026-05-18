@@ -51,6 +51,10 @@ export type CarrosselCoverArchetype =
   | "conversation"
   | "receipt"
   | "corner-tape"
+  | "ribbon"
+  | "polaroid-stack"
+  | "maxi-quote"
+  | "calendar"
   | "dark-premium"
   | "magazine-cover"
   | "split-portrait"
@@ -97,6 +101,10 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "conversation", label: "Conversation", hasPhoto: false, hint: 'Bolhas chat alternando in/out (body "msg1 | msg2 | …")' },
   { id: "receipt", label: "Receipt", hasPhoto: false, hint: 'Recibo Paper sobre Navy (body "item: valor; … total: R$ X")' },
   { id: "corner-tape", label: "Corner tape", hasPhoto: false, hint: "Fitas Cyan diagonais nos 4 cantos + headline centralizada" },
+  { id: "ribbon", label: "Ribbon", hasPhoto: false, hint: "Fita Cyan diagonal gigante com texto (body) + headline acima" },
+  { id: "polaroid-stack", label: "Polaroid stack", hasPhoto: false, hint: "3 polaroides empilhadas (Beige/Beige/Cyan) com rotações" },
+  { id: "maxi-quote", label: "Maxi quote", hasPhoto: false, hint: "Citação 2 linhas: Navy italic + Cyan italic sublinhado" },
+  { id: "calendar", label: "Calendar", hasPhoto: false, hint: 'Folha de calendário (body "MES | dia") + headline abaixo' },
   // COM foto (etapa 3)
   { id: "dark-premium", label: "Dark Premium", hasPhoto: true, hint: "Foto full + gradient Navy" },
   { id: "magazine-cover", label: "Magazine cover", hasPhoto: true, hint: "Masthead + foto + faixa Paper" },
