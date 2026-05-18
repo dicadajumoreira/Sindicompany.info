@@ -18,23 +18,27 @@ import { UploadLibraryButtonSindicompany } from "./assets/upload-library-button"
 import { NoLibraryNote } from "./no-library-note";
 
 const BUCKET = "condominios-fotos";
+const DEFAULT_SLOTS = 20;
 
 /** Lista URLs publicas dos arquivos de um bucket prefix.
- *  Detecta o maior slot ocupado e retorna array sparse. Tamanho >= 20
- *  pra ter slots vazios pro user fazer novo upload. */
+ *  Detecta o maior slot ocupado e retorna array sparse com
+ *  tamanho >= slotsDefault (configurado por leaf — Capas usa 6, restante
+ *  usa 20). Garante sempre slots vazios pro user fazer novo upload. */
 async function listLeafSlotUrls(
   bucketPrefix: string,
   basename: string,
+  slotsDefault: number = DEFAULT_SLOTS,
 ): Promise<(string | null)[]> {
+  const minSlots = Math.max(1, slotsDefault);
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase.storage
       .from(BUCKET)
       .list(bucketPrefix, { limit: 1000 });
-    if (error || !data) return Array(20).fill(null);
+    if (error || !data) return Array(minSlots).fill(null);
     const re = new RegExp(`^${basename}-(\\d{1,3})\\.(png|jpg|jpeg|webp|svg)$`, "i");
     const found = new Map<number, string>();
-    let maxSlot = 20;
+    let maxSlot = minSlots;
     for (const obj of data) {
       const m = obj.name.match(re);
       if (!m) continue;
@@ -53,7 +57,7 @@ async function listLeafSlotUrls(
     for (const [slot, url] of found.entries()) bySlot[slot - 1] = url;
     return bySlot;
   } catch {
-    return Array(20).fill(null);
+    return Array(minSlots).fill(null);
   }
 }
 
@@ -259,7 +263,7 @@ async function LeafView({
 }) {
   const bucket = bucketForLeaf(brand, path, node);
   const basename = basenameForLeaf(node);
-  const urls = await listLeafSlotUrls(bucket, basename);
+  const urls = await listLeafSlotUrls(bucket, basename, node.slotsDefault);
 
   // Server action thin wrapper que injeta bucket+basename antes do
   // upload intent generico fornecido pela rota.
