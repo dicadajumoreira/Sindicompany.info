@@ -5320,6 +5320,536 @@ def _capa_photo_grid(
 """
 
 
+def _capa_timeline(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 16 "Timeline".
+
+    Fundo Paper. Linha vertical Navy a esquerda, com 3 a 5 pontos
+    Cyan circulares numerados — cada um seguido de texto Navy ao
+    lado. Headline grande no topo. Body usa convencao
+    'etapa1; etapa2; etapa3' (separados por ';'). Capa sem foto."""
+    del foto_capa_url
+    raw = (body or "").strip()
+    items = [x.strip() for x in raw.split(";") if x.strip()]
+    if not items:
+        items = ["—"]
+    items = items[:5]
+    rows = []
+    for i, txt in enumerate(items, start=1):
+        rows.append(
+            '<div class="step">'
+            f'<div class="dot"><span>{i:02d}</span></div>'
+            f'<div class="step-text">{_h(txt)}</div>'
+            "</div>"
+        )
+    steps_html = "\n".join(rows)
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .head {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 22%;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 170px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .steps {{
+    position: absolute;
+    left: 220px; right: 180px;
+    bottom: 320px;
+    display: flex; flex-direction: column; gap: 60px;
+    /* Linha vertical Navy atrás dos pontos */
+  }}
+  .steps::before {{
+    content: "";
+    position: absolute;
+    top: 70px; bottom: 70px;
+    left: 65px;
+    width: 6px;
+    background: {_SC_NAVY};
+    opacity: 0.20;
+    z-index: 0;
+  }}
+  .step {{
+    display: flex; align-items: center; gap: 60px;
+    position: relative; z-index: 1;
+  }}
+  .dot {{
+    flex-shrink: 0;
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    background: {_SC_CYAN};
+    color: {_SC_NAVY};
+    display: flex; align-items: center; justify-content: center;
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 60px;
+    letter-spacing: -0.02em;
+    box-shadow: 0 0 0 14px {_SC_PAPER};
+  }}
+  .step-text {{
+    font-family: {font_display};
+    font-weight: 600;
+    font-size: 78px;
+    line-height: 1.18;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  {logo_top_img}
+  <div class="head"><h1 class="capa-titulo">{_h(titulo)}</h1></div>
+  <div class="steps">{steps_html}</div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_conversation(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 21 "Conversation".
+
+    Fundo Paper. Bolhas de chat estilo DM/WhatsApp empilhadas
+    verticalmente, alternando incoming (esquerda Beige) e outgoing
+    (direita Cyan). Headline opcional grande no topo. Body usa
+    convencao 'msg1 | msg2 | msg3 | msg4' (pipe separador, alterna
+    in/out). Capa sem foto por design."""
+    del foto_capa_url
+    raw = (body or "").strip()
+    msgs = [x.strip() for x in raw.split("|") if x.strip()]
+    if not msgs:
+        msgs = ["—"]
+    msgs = msgs[:6]
+    bubbles = []
+    for i, txt in enumerate(msgs):
+        side = "in" if i % 2 == 0 else "out"
+        bubbles.append(
+            f'<div class="bubble bubble-{side}">{_h(txt)}</div>'
+        )
+    chat_html = "\n".join(bubbles)
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .head {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 22%;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 150px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .chat {{
+    position: absolute;
+    left: 220px; right: 220px;
+    bottom: 320px;
+    display: flex; flex-direction: column; gap: 36px;
+  }}
+  .bubble {{
+    max-width: 78%;
+    padding: 50px 70px;
+    font-family: {font_body};
+    font-weight: 500;
+    font-size: 72px;
+    line-height: 1.20;
+    border-radius: 50px;
+    /* Cantos diferentes pra cada lado simulam tail real do chat */
+  }}
+  .bubble-in {{
+    background: {_SC_BEIGE};
+    color: {_SC_NAVY};
+    align-self: flex-start;
+    border-bottom-left-radius: 12px;
+  }}
+  .bubble-out {{
+    background: {_SC_CYAN};
+    color: {_SC_NAVY};
+    align-self: flex-end;
+    border-bottom-right-radius: 12px;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_NAVY};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  {logo_top_img}
+  <div class="head"><h1 class="capa-titulo">{_h(titulo)}</h1></div>
+  <div class="chat">{chat_html}</div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_receipt(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 29 "Receipt".
+
+    Fundo Paper. Bloco estreito centralizado tipo nota fiscal /
+    recibo (papel-bege com linhas) listando itens + valores. Titulo
+    no topo do recibo, linhas duplas, total na base. Body usa
+    convencao 'item1: valor1; item2: valor2; ...' (semicolons
+    separam linhas, dois-pontos separa descricao do valor). Capa
+    sem foto por design."""
+    del foto_capa_url
+    raw = (body or "").strip()
+    lines = []
+    total = ""
+    for chunk in raw.split(";"):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        if ":" in chunk:
+            n, v = chunk.split(":", 1)
+            lines.append((n.strip(), v.strip()))
+        else:
+            lines.append((chunk, ""))
+    if lines and lines[-1][0].lower().startswith("total"):
+        total = lines[-1][1]
+        lines = lines[:-1]
+    if not lines:
+        lines = [("—", "—")]
+    lines = lines[:6]
+    items_html = "\n".join(
+        f'<div class="rec-row"><span class="rec-name">{_h(n)}</span><span class="rec-dots"></span><span class="rec-val">{_h(v)}</span></div>'
+        for n, v in lines
+    )
+    total_block = (
+        f'<div class="rec-total"><span>Total</span><span class="rec-total-val">{_h(total)}</span></div>'
+        if total
+        else ""
+    )
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_NAVY};
+    color: #ffffff;
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) invert(1);
+  }}
+  .receipt {{
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    padding: 110px 90px 90px;
+    box-shadow: 0 80px 160px rgba(0,0,0,0.45);
+    /* Borda serrilhada inferior (ziguezague tipo papel rasgado) */
+    -webkit-mask-image:
+      linear-gradient(#000,#000),
+      conic-gradient(from -45deg at bottom, #0000 90deg, #000 0) 50% 100%/40px 20px repeat-x;
+  }}
+  .rec-title {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 110px;
+    line-height: 0.96;
+    color: {_SC_NAVY};
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }}
+  .rec-sub {{
+    font-family: {font_body};
+    font-weight: 600;
+    font-size: 36px;
+    color: {_SC_NAVY};
+    opacity: 0.65;
+    text-align: center;
+    margin-top: 14px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }}
+  .rec-divider {{
+    border-top: 4px dashed {_SC_NAVY};
+    opacity: 0.4;
+    margin: 60px 0;
+  }}
+  .rec-row {{
+    display: flex; align-items: flex-end; gap: 12px;
+    font-family: {font_body};
+    font-size: 56px;
+    font-weight: 500;
+    color: {_SC_NAVY};
+    margin-bottom: 30px;
+  }}
+  .rec-name {{ flex: 0 0 auto; }}
+  .rec-dots {{
+    flex: 1 1 auto;
+    border-bottom: 4px dotted {_SC_NAVY};
+    opacity: 0.35;
+    transform: translateY(-8px);
+  }}
+  .rec-val {{ flex: 0 0 auto; font-weight: 700; }}
+  .rec-total {{
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 84px;
+    color: {_SC_NAVY};
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 6px solid {_SC_NAVY};
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }}
+  .rec-total-val {{ color: {_SC_NAVY}; }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 50%;
+    transform: translateX(-50%);
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 4;
+  }}
+</style></head>
+<body>
+  {logo_top_img}
+  <div class="receipt">
+    <div class="rec-title">{_h(titulo)}</div>
+    <div class="rec-sub">Sindicompany · Recibo</div>
+    <div class="rec-divider"></div>
+    {items_html}
+    {total_block}
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_corner_tape(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 41 "Corner tape".
+
+    Fundo Paper com fitas adesivas Cyan diagonais nos 4 cantos
+    'prendendo' o papel. Headline Navy gigante centralizada + body
+    Navy mono abaixo. Estetica zine / mood board. Capa sem foto
+    por design."""
+    del foto_capa_url
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .tape {{
+    position: absolute;
+    width: 400px; height: 110px;
+    background: {_SC_CYAN};
+    opacity: 0.88;
+    box-shadow: 0 12px 30px rgba(24,32,40,0.18);
+    z-index: 2;
+  }}
+  .tape::before, .tape::after {{
+    /* Bordas serrilhadas das fitas (cantos rasgados) */
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 24px;
+    background:
+      linear-gradient(45deg, transparent 50%, {_SC_PAPER} 50%) top left/24px 24px no-repeat,
+      linear-gradient(-45deg, transparent 50%, {_SC_PAPER} 50%) bottom left/24px 24px no-repeat,
+      linear-gradient(135deg, transparent 50%, {_SC_PAPER} 50%) top right/24px 24px no-repeat,
+      linear-gradient(-135deg, transparent 50%, {_SC_PAPER} 50%) bottom right/24px 24px no-repeat;
+    background-color: transparent;
+  }}
+  .tape::before {{ left: -2px; }}
+  .tape::after  {{ right: -2px; transform: scaleX(-1); }}
+  .tape-tl {{ top: 80px;  left: -50px;  transform: rotate(-25deg); }}
+  .tape-tr {{ top: 80px;  right: -50px; transform: rotate(25deg);  }}
+  .tape-bl {{ bottom: 80px; left: -50px;  transform: rotate(25deg);  }}
+  .tape-br {{ bottom: 80px; right: -50px; transform: rotate(-25deg); }}
+  .logo-top {{
+    position: absolute;
+    top: 220px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .content {{
+    position: absolute;
+    left: 240px; right: 240px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    text-align: center;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 260px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 500;
+    font-size: 70px;
+    line-height: 1.30;
+    color: {_SC_NAVY};
+    opacity: 0.78;
+    margin-top: 60px;
+    max-width: 28ch;
+    margin-left: auto; margin-right: auto;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 180px; left: 50%;
+    transform: translateX(-50%);
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 4;
+  }}
+</style></head>
+<body>
+  <div class="tape tape-tl"></div>
+  <div class="tape tape-tr"></div>
+  <div class="tape tape-bl"></div>
+  <div class="tape tape-br"></div>
+  {logo_top_img}
+  <div class="content">
+    <h1 class="capa-titulo">{_h(titulo)}</h1>
+    {body_html}
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
 # Registry dos arquetipos de capa do Brand Hub Sindicompany 2026-05-17.
 #
 # REGRA INDISPENSAVEL: todo arquetipo que tem variante COM FOTO deve
@@ -5358,6 +5888,10 @@ COVER_ARCHETYPES_SC = {
     "bullet-list": _capa_bullet_list,
     "wallpaper": _capa_wallpaper,
     "underline": _capa_underline,
+    "timeline": _capa_timeline,
+    "conversation": _capa_conversation,
+    "receipt": _capa_receipt,
+    "corner-tape": _capa_corner_tape,
     # COM foto (consomem foto_capa_url da etapa 3)
     "dark-premium": _capa_dark_premium,
     "magazine-cover": _capa_magazine_cover,
