@@ -35,12 +35,16 @@ export type CarrosselCoverArchetype =
   | "pull-quote"
   | "headline-only"
   | "glow-hero"
+  | "versus"
+  | "sticky-note"
   | "dark-premium"
   | "magazine-cover"
   | "split-portrait"
   | "hero-portrait"
   | "avatar-quote"
-  | "photo-circle";
+  | "photo-circle"
+  | "photo-banner"
+  | "floating-card";
 
 export const CARROSSEL_COVER_ARCHETYPES: {
   id: CarrosselCoverArchetype;
@@ -57,6 +61,8 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "pull-quote", label: "Pull quote", hasPhoto: false, hint: "Aspas Beige gigantes + citação italic" },
   { id: "headline-only", label: "Headline-only", hasPhoto: false, hint: "Headline gigante sobre Beige" },
   { id: "glow-hero", label: "Glow hero", hasPhoto: false, hint: "Símbolo + glows duplos sobre Navy" },
+  { id: "versus", label: "Versus", hasPhoto: false, hint: 'Errado vs Certo (body no formato "errado | certo")' },
+  { id: "sticky-note", label: "Sticky note", hasPhoto: false, hint: "Card Beige tipo post-it rotacionado" },
   // COM foto (etapa 3)
   { id: "dark-premium", label: "Dark Premium", hasPhoto: true, hint: "Foto full + gradient Navy" },
   { id: "magazine-cover", label: "Magazine cover", hasPhoto: true, hint: "Masthead + foto + faixa Paper" },
@@ -64,6 +70,8 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "hero-portrait", label: "Hero portrait", hasPhoto: true, hint: "Foto full + tag mono + box Beige" },
   { id: "avatar-quote", label: "Avatar quote", hasPhoto: true, hint: "Avatar circular + citação italic" },
   { id: "photo-circle", label: "Foto circular", hasPhoto: true, hint: "Círculo gigante TR + texto BL" },
+  { id: "photo-banner", label: "Photo banner", hasPhoto: true, hint: "Foto top 60% + Paper bottom com headline" },
+  { id: "floating-card", label: "Floating card", hasPhoto: true, hint: "Foto em card centralizado sobre Navy" },
 ];
 
 const COVER_ARCHETYPE_IDS = new Set(CARROSSEL_COVER_ARCHETYPES.map((a) => a.id));
