@@ -47,6 +47,10 @@ export type CarrosselCoverArchetype =
   | "bullet-list"
   | "wallpaper"
   | "underline"
+  | "timeline"
+  | "conversation"
+  | "receipt"
+  | "corner-tape"
   | "dark-premium"
   | "magazine-cover"
   | "split-portrait"
@@ -89,6 +93,10 @@ export const CARROSSEL_COVER_ARCHETYPES: {
   { id: "bullet-list", label: "Bullet list", hasPhoto: false, hint: 'Pílulas Cyan numeradas + texto (body "item1; item2; …")' },
   { id: "wallpaper", label: "Wallpaper", hasPhoto: false, hint: "Tile de pattern + card Beige centralizado com label Cyan" },
   { id: "underline", label: "Underline", hasPhoto: false, hint: "Headline com **palavra** sublinhada com Cyan grosso" },
+  { id: "timeline", label: "Timeline", hasPhoto: false, hint: 'Linha vertical com pontos numerados (body "etapa1; etapa2; …")' },
+  { id: "conversation", label: "Conversation", hasPhoto: false, hint: 'Bolhas chat alternando in/out (body "msg1 | msg2 | …")' },
+  { id: "receipt", label: "Receipt", hasPhoto: false, hint: 'Recibo Paper sobre Navy (body "item: valor; … total: R$ X")' },
+  { id: "corner-tape", label: "Corner tape", hasPhoto: false, hint: "Fitas Cyan diagonais nos 4 cantos + headline centralizada" },
   // COM foto (etapa 3)
   { id: "dark-premium", label: "Dark Premium", hasPhoto: true, hint: "Foto full + gradient Navy" },
   { id: "magazine-cover", label: "Magazine cover", hasPhoto: true, hint: "Masthead + foto + faixa Paper" },
