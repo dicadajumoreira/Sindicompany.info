@@ -255,7 +255,11 @@ def _build_mosaic(results: list[tuple[str, Path]]) -> Path:
     """Monta grid 6 colunas x 7 linhas (42 = 6x7) com labels."""
     from PIL import Image, ImageDraw, ImageFont
 
-    cols, rows = 6, 7
+    # Grid dinamico em funcao da quantidade — minimiza cells vazios.
+    n = len(results)
+    import math as _m
+    cols = min(5, n)
+    rows = _m.ceil(n / cols)
     cell_w, cell_h = 614, 768  # thumb size
     label_h = 72
     pad = 24
