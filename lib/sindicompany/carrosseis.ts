@@ -78,6 +78,115 @@ export function isValidCoverArchetype(s: string): s is CarrosselCoverArchetype {
   return COVER_ARCHETYPE_IDS.has(s as CarrosselCoverArchetype);
 }
 
+// Templates de FLOW de carrossel — define a estrutura narrativa do post
+// inteiro (capa + slides internos + CTA). Espelha o dict FORMATO_INSTRUCOES
+// do revista-engine/api/carrossel_generate.py. O slug bate 1:1 com o valor
+// guardado em carrosseis.formato. 11 selecionados pela Juliana 2026-05-18.
+export type CarrosselFlowTemplate =
+  | "historia_real"
+  | "lista"
+  | "mito_verdade"
+  | "antes_depois"
+  | "dado_choca"
+  | "tutorial"
+  | "opiniao"
+  | "editorial"
+  | "manifesto"
+  | "data_report"
+  | "entrevista";
+
+export const CARROSSEL_FLOW_TEMPLATES: {
+  id: CarrosselFlowTemplate;
+  label: string;
+  hint: string;
+  slideCount: number;
+  structure: string;
+}[] = [
+  {
+    id: "historia_real",
+    label: "História real",
+    hint: "O que mais engaja e salva",
+    slideCount: 6,
+    structure: "Hook tenso → personagem → erro → virada → resultado com número → CTA SIM/NAO",
+  },
+  {
+    id: "lista",
+    label: "Lista",
+    hint: "5–7 itens numerados",
+    slideCount: 6,
+    structure: "Capa contando promessa → 1 item por slide (menos óbvio → mais surpreendente) → CTA debate",
+  },
+  {
+    id: "mito_verdade",
+    label: "Mito vs. Verdade",
+    hint: "Compara crenças com fatos",
+    slideCount: 6,
+    structure: "Capa pergunta → pares Mito↔Verdade (max 3) com lei/artigo → CTA debate",
+  },
+  {
+    id: "antes_depois",
+    label: "Antes / Depois",
+    hint: "Mostra transformação",
+    slideCount: 5,
+    structure: "Dado do depois → antes reconhecível → problema raiz → o que mudou → CTA binário",
+  },
+  {
+    id: "dado_choca",
+    label: "Dado que choca",
+    hint: "Estatística com peso",
+    slideCount: 5,
+    structure: "Só o número Black 900 → significado → quem está dentro → contraponto → CTA SIM/NÃO",
+  },
+  {
+    id: "tutorial",
+    label: "Tutorial rápido",
+    hint: "Passo a passo prático",
+    slideCount: 6,
+    structure: "Problema em pergunta → barreira → passos numerados com verbo → modelo copiável → CTA salvar",
+  },
+  {
+    id: "opiniao",
+    label: "Opinião forte",
+    hint: "Posição com argumento",
+    slideCount: 6,
+    structure: "Afirmação MAX 6 palavras → motivo → arg1 → contra-argumento + resposta → arg2 → CTA CONCORDO/DISCORDO",
+  },
+  {
+    id: "editorial",
+    label: "Editorial",
+    hint: "Tom analítico, voz de revista",
+    slideCount: 6,
+    structure: "Capa com tese → contexto histórico → análise dos fatos → tensão → conclusão argumentada → CTA reflexivo",
+  },
+  {
+    id: "manifesto",
+    label: "Manifesto",
+    hint: "Provoca e marca posição da marca",
+    slideCount: 5,
+    structure: "Frase-grito → o que rejeitamos → o que defendemos → por que agora → CTA de pertencimento",
+  },
+  {
+    id: "data_report",
+    label: "Data Report",
+    hint: "Dossiê com vários dados ancorados",
+    slideCount: 7,
+    structure: "Capa título do relatório → 4 dados em destaque (cada um com fonte) → tendência → CTA salvar/compartilhar",
+  },
+  {
+    id: "entrevista",
+    label: "Entrevista",
+    hint: "Quote real (ou composta) com fonte",
+    slideCount: 5,
+    structure: "Capa com nome+função → setup do tema → quote em destaque → comentário da marca → CTA debate",
+  },
+];
+
+const FLOW_TEMPLATE_IDS = new Set(CARROSSEL_FLOW_TEMPLATES.map((f) => f.id));
+
+export function isValidFlowTemplate(s: string): s is CarrosselFlowTemplate {
+  return FLOW_TEMPLATE_IDS.has(s as CarrosselFlowTemplate);
+}
+
 export interface Carrossel {
   id: string;
   brand: CarrosselBrand;

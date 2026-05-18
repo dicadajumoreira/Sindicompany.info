@@ -358,6 +358,14 @@ _CONSVICTA_ICON_DEFAULTS = {
     "historia_real": "09-morador",
     "antes_depois": "dif-reducao-custo",
     "opiniao": "29-comunicado",
+    # 4 novos flows (Brand Hub 2026-05-18) — defaults coerentes com a tese
+    # de cada flow. Editorial usa relatorio, Manifesto usa um simbolo
+    # institucional, Data Report usa o icone financeiro, Entrevista usa o
+    # icone do morador (proxy de "pessoa").
+    "editorial": "02-relatorio",
+    "manifesto": "37-edificio",
+    "data_report": "60-relatorio-financeiro",
+    "entrevista": "09-morador",
 }
 
 
@@ -952,6 +960,46 @@ FORMATO_INSTRUCOES = {
         "2 o problema que motivou (dado/situacao). 3 argumento 1. 4 o contra-argumento + resposta. "
         "5 argumento 2 e consequencia pratica. ultimo CTA 'Concorda ou discorda? Comenta CONCORDO ou DISCORDO'."
     ),
+    "editorial": (
+        "FORMATO: EDITORIAL (analise com voz de revista, tom denso e maduro).\n"
+        "- Distinto do 'opiniao': editorial argumenta com CONTEXTO HISTORICO/JURIDICO, nao com provocacao curta. Tom analitico.\n"
+        "- Cada slide constroi argumento; ZERO bullet point, ZERO 'top 5'.\n"
+        "- Cita lei/precedente/numero concreto pelo menos em 2 slides.\n"
+        "ESTRUTURA: 1(capa) a tese central como manchete. "
+        "2 o contexto historico/regulatorio do tema. 3 a analise do que esta em jogo. "
+        "4 a tensao (lados, dilemas, consequencias). 5 a conclusao argumentada da marca. "
+        "ultimo CTA reflexivo 'Voce ja tinha pensado por esse angulo? Comenta'."
+    ),
+    "manifesto": (
+        "FORMATO: MANIFESTO (provoca, marca posicao, cria pertencimento).\n"
+        "- Distinto do editorial: manifesto e CURTO, EMOCIONAL, POETICO. Frases que ficam.\n"
+        "- 1 ideia por slide. Nada de explicacao longa. O leitor sente, nao raciocina.\n"
+        "- Usa REPETICAO estrutural ('Nao e X. Nao e Y. E Z.').\n"
+        "ESTRUTURA: 1(capa) a frase-grito (MAX 6 palavras, gigante). "
+        "2 o que rejeitamos ('Nao aceitamos X'). 3 o que defendemos ('A gente acredita em Y'). "
+        "4 por que AGORA (urgencia ou virada de mercado). "
+        "ultimo CTA de pertencimento 'Voce esta com a gente nessa? Comenta JUNTO'."
+    ),
+    "data_report": (
+        "FORMATO: DATA REPORT (dossie com varios dados ancorados em fonte real).\n"
+        "- Distinto do 'dado_choca' (que e UM dado): aqui sao 3-4 dados que constroem panorama.\n"
+        "- TODO dado tem fonte identificavel (IBGE, SECOVI, STJ, SindicoNet, lei federal). Sem fonte real solida, NAO use.\n"
+        "- Numeros em destaque grafico, fonte sempre citada no slide e na legenda.\n"
+        "ESTRUTURA: 1(capa) titulo do relatorio (ex: 'Inadimplencia em 2025'). "
+        "2 dado 1 com fonte. 3 dado 2 com fonte. 4 dado 3 com fonte. "
+        "5 a tendencia/leitura (o que esses dados juntos contam). 6 implicacao pratica. "
+        "ultimo CTA 'Salva esse relatorio. Manda no grupo do condominio'."
+    ),
+    "entrevista": (
+        "FORMATO: ENTREVISTA (quote real ou composta com fonte/posicao identificada).\n"
+        "- O entrevistado e SEMPRE identificado por NOME + FUNCAO (ex: 'Carla, sindica em SP ha 8 anos'). Pode ser composto, NUNCA inventar pessoa publica real.\n"
+        "- Quote em destaque, body adjacente comenta/conecta com a marca.\n"
+        "- Maximo 1-2 quotes; nao virar coletanea.\n"
+        "ESTRUTURA: 1(capa) nome+funcao do entrevistado + um ganho ('Como Carla zerou inadimplencia em 9 meses'). "
+        "2 contexto do tema/dor da pessoa. 3 a quote em destaque (aspas, MAX 18 palavras). "
+        "4 comentario da marca conectando com o problema do leitor. "
+        "ultimo CTA 'Voce faria igual? Comenta SIM ou NAO'."
+    ),
 }
 
 
@@ -1188,6 +1236,10 @@ FORMATO_LABELS = {
     "dado_choca": "Dado que Choca",
     "tutorial": "Tutorial Rápido",
     "opiniao": "Opinião Forte",
+    "editorial": "Editorial",
+    "manifesto": "Manifesto",
+    "data_report": "Data Report",
+    "entrevista": "Entrevista",
 }
 
 

@@ -2,7 +2,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
-import { CARROSSEL_COVER_ARCHETYPES } from "@/lib/sindicompany/carrosseis";
+import {
+  CARROSSEL_COVER_ARCHETYPES,
+  CARROSSEL_FLOW_TEMPLATES,
+} from "@/lib/sindicompany/carrosseis";
 import { DashboardShell } from "../../shell";
 import { iniciarCarrosselAction } from "../actions";
 import { BrandTemaPicker } from "./brand-tema-picker";
@@ -287,15 +290,10 @@ const TEMAS_CONSVICTA = [
   "Outros",
 ];
 
-const FORMATOS = [
-  { id: "historia_real", label: "História real", hint: "O que mais engaja e salva" },
-  { id: "lista", label: "Lista", hint: "5–7 itens numerados" },
-  { id: "mito_verdade", label: "Mito vs. Verdade", hint: "Compara crenças com fatos" },
-  { id: "antes_depois", label: "Antes / Depois", hint: "Mostra transformação" },
-  { id: "dado_choca", label: "Dado que choca", hint: "Estatística com peso" },
-  { id: "tutorial", label: "Tutorial rápido", hint: "Passo a passo prático" },
-  { id: "opiniao", label: "Opinião forte", hint: "Posição com argumento" },
-];
+// FORMATOS agora vem do registry compartilhado CARROSSEL_FLOW_TEMPLATES
+// (lib/sindicompany/carrosseis.ts). 11 templates espelhados na engine
+// Python (FORMATO_INSTRUCOES) e no asset-hierarchy.
+const FORMATOS = CARROSSEL_FLOW_TEMPLATES;
 
 const inputCls =
   "block w-full rounded-md border border-onix-100 bg-white px-3 py-2 text-sm text-onix-900 focus:outline-none focus:ring-2 focus:ring-mint-300";
