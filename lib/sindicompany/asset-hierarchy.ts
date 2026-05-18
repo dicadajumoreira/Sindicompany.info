@@ -166,14 +166,18 @@ export const ASSET_HIERARCHY: AssetNode[] = [
       },
       {
         slug: "ctas",
-        label: "CTAs",
+        label: "CTAs (6 templates)",
+        description:
+          "6 templates de chamada pra ação que fecham o carrossel. Cada " +
+          "slug bate 1:1 com carrosseis.cta_template (a ser criada). " +
+          "Quando preenchido, sobrescreve o CTA default embedado no flow.",
         children: [
-          leaf("comente", "Comente"),
-          leaf("compartilhe", "Compartilhe"),
-          leaf("salve", "Salve"),
-          leaf("segue", "Segue"),
-          leaf("whatsapp", "WhatsApp"),
-          leaf("link", "Link"),
+          leaf("comente", "Comente", { description: "Pergunta binária que obriga posicionamento (SIM/NAO, CONCORDO/DISCORDO)" }),
+          leaf("compartilhe", "Compartilhe", { description: "Convida a marcar alguém ou enviar pra grupo do condomínio" }),
+          leaf("salve", "Salve", { description: "Convida a guardar pra consulta futura (checklist, dado, tutorial)" }),
+          leaf("segue", "Segue", { description: "Convida a seguir o perfil pra mais conteúdo do tema" }),
+          leaf("whatsapp", "WhatsApp", { description: "Convida a iniciar conversa direta — converte em atendimento" }),
+          leaf("link", "Link", { description: "Convida a acessar link da bio — oferta ancorada (PDF, formulário)" }),
         ],
       },
       {
