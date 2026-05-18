@@ -32,9 +32,18 @@ export interface AssetNode {
   /** Se setado, este leaf reusa um bucket legacy (ex: "logos", "patterns")
    *  em vez de derivar do path. Mantem assets ja uploadados acessiveis. */
   legacyBucket?: string;
+  /** Quantidade default de slots vazios pra mostrar no AssetSlotGrid
+   *  quando ainda nao ha upload. Sem isso, usa 20 (legado). Capas usam
+   *  6 porque raramente precisam de muitas variacoes; o botao "+ Novo
+   *  slot" continua estendendo dinamicamente quando precisar. */
+  slotsDefault?: number;
 }
 
-function leaf(slug: string, label: string, opts: { legacyBucket?: string } = {}): AssetNode {
+function leaf(
+  slug: string,
+  label: string,
+  opts: { legacyBucket?: string; slotsDefault?: number } = {},
+): AssetNode {
   return { slug, label, ...opts };
 }
 
@@ -107,38 +116,30 @@ export const ASSET_HIERARCHY: AssetNode[] = [
     children: [
       {
         slug: "capas",
-        label: "Capas (30 arquétipos)",
+        label: "Capas (17 arquétipos)",
+        description:
+          "17 capas selecionadas do Brand Hub. 7 sem foto + 10 com foto. " +
+          "Cada leaf começa com 6 slots; estende via “+ Novo slot”.",
         children: [
-          leaf("editorial-question", "Editorial Question"),
-          leaf("dark-premium", "Dark Premium"),
-          leaf("stat-slap", "Stat slap"),
-          leaf("numbered-guide", "Numbered guide"),
-          leaf("manifesto", "Manifesto"),
-          leaf("pattern-explosion", "Pattern explosion"),
-          leaf("magazine-cover", "Magazine cover"),
-          leaf("checklist", "Checklist"),
-          leaf("versus", "Versus"),
-          leaf("pull-quote", "Pull quote"),
-          leaf("split-portrait", "Split portrait"),
-          leaf("documento", "Documento"),
-          leaf("mosaic", "Mosaic"),
-          leaf("headline-only", "Headline-only"),
-          leaf("sticker-stack", "Sticker stack"),
-          leaf("save-the-date", "Save the date"),
-          leaf("indice", "Índice"),
-          leaf("qa", "Q&A"),
-          leaf("timeline", "Timeline"),
-          leaf("breaking-news", "Breaking news"),
-          leaf("comparativo", "Comparativo"),
-          leaf("carta", "Carta"),
-          leaf("glow-hero", "Glow hero"),
-          leaf("polaroids", "Polaroids"),
-          leaf("hero-portrait", "Hero portrait"),
-          leaf("antes-depois", "Antes/Depois"),
-          leaf("maxi-quote", "Maxi-quote"),
-          leaf("tres-stats", "Três stats"),
-          leaf("pattern-hero", "Pattern hero"),
-          leaf("word-grid", "Word grid"),
+          // SEM foto (7) — alinhado com CARROSSEL_COVER_ARCHETYPES
+          leaf("numbered-guide", "Numbered guide", { slotsDefault: 6 }),
+          leaf("manifesto", "Manifesto", { slotsDefault: 6 }),
+          leaf("pattern-explosion", "Pattern explosion", { slotsDefault: 6 }),
+          leaf("sticky-note", "Sticky note", { slotsDefault: 6 }),
+          leaf("brackets", "Brackets", { slotsDefault: 6 }),
+          leaf("type-tower", "Type tower", { slotsDefault: 6 }),
+          leaf("corner-tape", "Corner tape", { slotsDefault: 6 }),
+          // COM foto (10) — consomem a foto da etapa 3 do /carrossel/novo
+          leaf("dark-premium", "Dark Premium", { slotsDefault: 6 }),
+          leaf("magazine-cover", "Magazine cover", { slotsDefault: 6 }),
+          leaf("split-portrait", "Split portrait", { slotsDefault: 6 }),
+          leaf("hero-portrait", "Hero portrait", { slotsDefault: 6 }),
+          leaf("photo-circle", "Foto circular", { slotsDefault: 6 }),
+          leaf("photo-banner", "Photo banner", { slotsDefault: 6 }),
+          leaf("photo-blur", "Photo blur", { slotsDefault: 6 }),
+          leaf("cinema", "Cinema", { slotsDefault: 6 }),
+          leaf("polaroid", "Polaroid", { slotsDefault: 6 }),
+          leaf("portrait-frame", "Portrait frame", { slotsDefault: 6 }),
         ],
       },
       {
