@@ -4388,6 +4388,473 @@ def _capa_portrait_frame(
 """
 
 
+def _capa_grid_stats(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 15 "Grid stats".
+
+    Fundo Paper. Grid 2x2 com 4 numeros/percentuais gigantes Navy
+    + label curta abaixo. Titulo grande Navy ancorado acima do
+    grid. Body usa convencao 'n1: l1; n2: l2; n3: l3; n4: l4' —
+    cada par numero:label separado por ';', numero e label
+    separados por ':'. Capa sem foto por design."""
+    del foto_capa_url
+    raw = (body or "").strip()
+    pairs = []
+    for chunk in raw.split(";"):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        if ":" in chunk:
+            n, l = chunk.split(":", 1)
+            pairs.append((n.strip(), l.strip()))
+        else:
+            pairs.append((chunk, ""))
+    while len(pairs) < 4:
+        pairs.append(("—", ""))
+    pairs = pairs[:4]
+    # 4 quadrantes — cores alternam pra dar ritmo
+    colors = [_SC_NAVY, _SC_CYAN, _SC_NAVY, _SC_BEIGE]
+    cells = []
+    for i, (num, lab) in enumerate(pairs):
+        c = colors[i]
+        cells.append(
+            '<div class="cell">'
+            f'<div class="cell-num" style="color: {c};">{_h(num)}</div>'
+            f'<div class="cell-lab">{_h(lab)}</div>'
+            "</div>"
+        )
+    grid_html = "\n".join(cells)
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .head {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 22%;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 160px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .grid {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 44%;
+    bottom: 240px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 80px;
+  }}
+  .cell {{
+    display: flex; flex-direction: column;
+    justify-content: center;
+    border-top: 6px solid {_SC_NAVY};
+    padding-top: 30px;
+  }}
+  .cell-num {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 280px;
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+  }}
+  .cell-lab {{
+    font-family: {font_body};
+    font-weight: 600;
+    font-size: 56px;
+    line-height: 1.20;
+    color: {_SC_NAVY};
+    opacity: 0.78;
+    margin-top: 24px;
+    max-width: 20ch;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  {logo_top_img}
+  <div class="head"><h1 class="capa-titulo">{_h(titulo)}</h1></div>
+  <div class="grid">{grid_html}</div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_highlight(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 18 "Highlight".
+
+    Fundo Paper. Headline gigante com UMA palavra em destaque
+    sublinhado Cyan pintada como marca-texto. Convencao: a palavra
+    a destacar vem entre **asteriscos** dentro do titulo (markdown-
+    like). Body opcional Navy mono na base. Capa sem foto por design.
+
+    Ex: 'O sindico que **mede** sempre melhora' renderiza 'mede' com
+    fundo Cyan."""
+    del foto_capa_url
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+    # Substitui **palavra** por <span class="hl">palavra</span>
+    titulo_html = _h(titulo or "")
+    import re as _re
+    titulo_html = _re.sub(
+        r"\*\*([^*]+)\*\*",
+        r'<span class="hl">\1</span>',
+        titulo_html,
+    )
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .content {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 280px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .capa-titulo .hl {{
+    /* Marca-texto Cyan: gradient horizontal cobrindo ~60% da altura
+       da palavra, posicao alta pra parecer destacador real */
+    background: linear-gradient(180deg,
+      transparent 0%,
+      transparent 35%,
+      {_SC_CYAN} 35%,
+      {_SC_CYAN} 92%,
+      transparent 92%);
+    padding: 0 8px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }}
+  .footer {{
+    position: absolute;
+    left: 180px; right: 180px;
+    bottom: 220px;
+    z-index: 3;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 68px;
+    line-height: 1.30;
+    color: {_SC_NAVY};
+    opacity: 0.78;
+    max-width: 28ch;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 4;
+  }}
+</style></head>
+<body>
+  {logo_top_img}
+  <div class="content">
+    <h1 class="capa-titulo">{titulo_html}</h1>
+  </div>
+  <div class="footer">{body_html}</div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_stamp(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 30 "Stamp".
+
+    Fundo Paper. Headline Navy grande ancorada acima do meio. Selo
+    estilo carimbo vermelho diagonal (-18deg) sobre a headline,
+    com borda dupla e texto 'FATO' / 'VERDADE' centralizado.
+    Convencao: a palavra do selo vem no body (default 'FATO').
+    Capa sem foto por design."""
+    del foto_capa_url
+    stamp_word = (body or "Fato").strip().upper()
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .content {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 38%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 220px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .stamp-wrap {{
+    position: absolute;
+    bottom: 320px;
+    right: 240px;
+    transform: rotate(-18deg);
+    z-index: 4;
+    pointer-events: none;
+  }}
+  .stamp {{
+    border: 14px solid #C13F3F;
+    padding: 50px 90px;
+    color: #C13F3F;
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 220px;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.05);
+    opacity: 0.92;
+    /* Cantos quadrados + sombra interna sutil pra parecer carimbo */
+    box-shadow: inset 0 0 0 6px #C13F3F;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_NAVY};
+    letter-spacing: 0.04em;
+    z-index: 3;
+  }}
+</style></head>
+<body>
+  {logo_top_img}
+  <div class="content">
+    <h1 class="capa-titulo">{_h(titulo)}</h1>
+  </div>
+  <div class="stamp-wrap">
+    <div class="stamp">{_h(stamp_word)}</div>
+  </div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
+def _capa_photo_strip(
+    *,
+    titulo: str,
+    body: str,
+    handle: str,
+    logo_top_img: str,
+    head_fonts: str,
+    font_display: str,
+    font_body: str,
+    foto_capa_url: str = "",
+) -> str:
+    """Brand Hub 2026-05-17 — capa 35 "Photo strip".
+
+    Fundo Paper. Foto em strip horizontal estreito centralizado
+    (~22% da altura) ocupando full-bleed. Headline Navy bold
+    ancorada acima da strip, body Navy abaixo. Sem foto: strip
+    vira Beige solida."""
+    body_html = (
+        f'<p class="capa-body">{_h(body)}</p>' if body else ""
+    )
+    if foto_capa_url:
+        strip = (
+            f'<div class="strip" style="background-image: url(\'{foto_capa_url}\')"></div>'
+        )
+    else:
+        strip = '<div class="strip strip-fallback"></div>'
+    return f"""
+<!doctype html><html><head><meta charset="utf-8">
+{head_fonts}
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: {SLIDE_W}px; height: {SLIDE_H}px; }}
+  body {{
+    font-family: {font_body};
+    background: {_SC_PAPER};
+    color: {_SC_NAVY};
+    overflow: hidden;
+    position: relative;
+  }}
+  .strip {{
+    position: absolute;
+    left: 0; right: 0;
+    top: 39%; height: 22%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+  }}
+  .strip-fallback {{
+    background: {_SC_BEIGE};
+  }}
+  .logo-top {{
+    position: absolute;
+    top: 100px; left: 180px;
+    width: 700px; max-height: 220px;
+    object-fit: contain;
+    z-index: 5;
+    filter: brightness(0) saturate(100%);
+  }}
+  .head {{
+    position: absolute;
+    left: 180px; right: 180px;
+    top: 39%;
+    transform: translateY(-100%);
+    padding-bottom: 70px;
+  }}
+  .capa-titulo {{
+    font-family: {font_display};
+    font-weight: 800;
+    font-size: 200px;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: {_SC_NAVY};
+    text-wrap: balance;
+  }}
+  .footer {{
+    position: absolute;
+    left: 180px; right: 180px;
+    bottom: 220px;
+    z-index: 3;
+  }}
+  .capa-body {{
+    font-family: {font_body};
+    font-weight: 400;
+    font-size: 72px;
+    line-height: 1.30;
+    color: {_SC_NAVY};
+    opacity: 0.80;
+    max-width: 28ch;
+  }}
+  .handle {{
+    position: absolute;
+    bottom: 100px; left: 180px;
+    font-family: {font_body};
+    font-size: 64px;
+    font-weight: 600;
+    color: {_SC_CYAN};
+    letter-spacing: 0.04em;
+    z-index: 4;
+  }}
+</style></head>
+<body>
+  {strip}
+  {logo_top_img}
+  <div class="head"><h1 class="capa-titulo">{_h(titulo)}</h1></div>
+  <div class="footer">{body_html}</div>
+  <div class="handle">{handle}</div>
+</body></html>
+"""
+
+
 # Registry dos arquetipos de capa do Brand Hub Sindicompany 2026-05-17.
 #
 # REGRA INDISPENSAVEL: todo arquetipo que tem variante COM FOTO deve
@@ -4420,6 +4887,9 @@ COVER_ARCHETYPES_SC = {
     "brackets": _capa_brackets,
     "type-tower": _capa_type_tower,
     "split-color": _capa_split_color,
+    "grid-stats": _capa_grid_stats,
+    "highlight": _capa_highlight,
+    "stamp": _capa_stamp,
     # COM foto (consomem foto_capa_url da etapa 3)
     "dark-premium": _capa_dark_premium,
     "magazine-cover": _capa_magazine_cover,
@@ -4433,6 +4903,7 @@ COVER_ARCHETYPES_SC = {
     "cinema": _capa_cinema,
     "polaroid": _capa_polaroid,
     "portrait-frame": _capa_portrait_frame,
+    "photo-strip": _capa_photo_strip,
 }
 
 
