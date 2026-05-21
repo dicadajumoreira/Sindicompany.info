@@ -144,12 +144,12 @@ export const ASSET_HIERARCHY: AssetNode[] = [
       },
       {
         slug: "carrosseis",
-        label: "Carrosséis (11 templates)",
+        label: "Carrosséis (7 formatos)",
         description:
-          "11 templates de flow narrativo. Cada slug bate 1:1 com " +
-          "carrosseis.formato e com FORMATO_INSTRUCOES da engine Python. " +
-          "Preview de cada card lê png_paths[0] do último carrossel gerado " +
-          "com aquele formato.",
+          "Biblioteca de referência dos 7 formatos. Cada slug bate 1:1 " +
+          "com carrosseis.formato. Preview lê png_paths[0] do último " +
+          "carrossel gerado com aquele formato. A geração acontece em " +
+          "/sindicompany/carrossel/novo — aqui é só catálogo.",
         children: [
           leaf("historia_real", "História real", { description: "Hook tenso → personagem → erro → virada → resultado com número → CTA SIM/NAO" }),
           leaf("lista", "Lista", { description: "Capa promessa → 1 item por slide (menos óbvio → mais surpreendente) → CTA debate" }),
@@ -158,10 +158,6 @@ export const ASSET_HIERARCHY: AssetNode[] = [
           leaf("dado_choca", "Dado que choca", { description: "Só o número Black 900 → significado → quem está dentro → contraponto → CTA SIM/NAO" }),
           leaf("tutorial", "Tutorial rápido", { description: "Problema em pergunta → barreira → passos numerados com verbo → modelo copiável → CTA salvar" }),
           leaf("opiniao", "Opinião forte", { description: "Afirmação MAX 6 palavras → motivo → arg1 → contra-arg + resposta → arg2 → CTA CONCORDO/DISCORDO" }),
-          leaf("editorial", "Editorial", { description: "Tese central → contexto histórico → análise → tensão → conclusão argumentada → CTA reflexivo" }),
-          leaf("manifesto", "Manifesto", { description: "Frase-grito → o que rejeitamos → o que defendemos → por que agora → CTA pertencimento" }),
-          leaf("data_report", "Data Report", { description: "Título do relatório → 3-4 dados com fonte → tendência → implicação prática → CTA salvar" }),
-          leaf("entrevista", "Entrevista", { description: "Nome+função → contexto → quote em destaque → comentário da marca → CTA SIM/NAO" }),
         ],
       },
       {
