@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   isValidCoverArchetype,
-  isValidFlowTemplate,
+  isValidFormato,
 } from "@/lib/sindicompany/carrosseis";
 import {
   ASSET_HIERARCHY,
@@ -221,8 +221,8 @@ async function BranchView({
   const archetypeSlugs = children
     .filter((c) => !c.children && isValidCoverArchetype(c.slug))
     .map((c) => c.slug);
-  const flowSlugs = children
-    .filter((c) => !c.children && isValidFlowTemplate(c.slug))
+  const formatoSlugs = children
+    .filter((c) => !c.children && isValidFormato(c.slug))
     .map((c) => c.slug);
   const carrosselCovers = new Map<string, string>();
   if (archetypeSlugs.length > 0) {
@@ -244,21 +244,21 @@ async function BranchView({
       // ignora — cai no fallback de bucket listing
     }
   }
-  const flowPreviews = new Map<string, string>();
-  if (flowSlugs.length > 0) {
+  const formatoPreviews = new Map<string, string>();
+  if (formatoSlugs.length > 0) {
     try {
       const sb = createAdminClient();
       const { data } = await sb
         .from("carrosseis")
         .select("formato, png_paths, updated_at")
-        .in("formato", flowSlugs)
+        .in("formato", formatoSlugs)
         .not("png_paths", "is", null)
         .order("updated_at", { ascending: false });
       for (const row of data ?? []) {
         const fmt = row.formato as string | null;
         const paths = row.png_paths as string[] | null;
-        if (!fmt || !paths?.length || flowPreviews.has(fmt)) continue;
-        flowPreviews.set(fmt, paths[0]);
+        if (!fmt || !paths?.length || formatoPreviews.has(fmt)) continue;
+        formatoPreviews.set(fmt, paths[0]);
       }
     } catch {
       // ignora — cai no fallback de bucket listing
@@ -271,7 +271,7 @@ async function BranchView({
     children.map(async (child) => {
       if (child.children) return null;
       const fromCarrossel =
-        carrosselCovers.get(child.slug) ?? flowPreviews.get(child.slug);
+        carrosselCovers.get(child.slug) ?? formatoPreviews.get(child.slug);
       if (fromCarrossel) return fromCarrossel;
       const bucket = bucketForLeaf(brand, [...path, child.slug], child);
       const basename = basenameForLeaf(child);
@@ -299,19 +299,11 @@ async function BranchView({
           {children.map((child, i) => {
             const isLeaf = !child.children;
             const previewUrl = previews[i];
-            // Leaves cujo slug e um flow template viram atalhos pro
-            // /carrossel/novo com formato pre-selecionado. Demais leaves
-            // (capas, ctas, elementos) seguem indo pra tela de slots.
-            const isFlowTemplate = isLeaf && isValidFlowTemplate(child.slug);
-            // /carrossel/novo e unica pros 3 brands (vive sob /sindicompany).
-            // O brand do carrossel e escolhido la dentro, nao via URL.
-            const href = isFlowTemplate
-              ? `/sindicompany/carrossel/novo?formato=${child.slug}`
-              : `${brandRoute}/${path.join("/")}/${child.slug}`;
+            // Assets e biblioteca de referencia — NAO ponto de geracao.
+            // Carrosseis sao gerados em /sindicompany/carrossel/novo.
+            const href = `${brandRoute}/${path.join("/")}/${child.slug}`;
             const caption = child.children?.length
               ? `${child.children.length} subcategorias`
-              : isFlowTemplate
-              ? "Gerar carrossel →"
               : "Asset slots";
             return (
               <Link
@@ -331,7 +323,7 @@ async function BranchView({
                       />
                     ) : (
                       <div className="text-[10px] text-onix-400 uppercase tracking-wider px-3 text-center">
-                        {isFlowTemplate ? "Sem carrossel ainda" : "Sem upload ainda"}
+                        Sem upload ainda
                       </div>
                     )}
                   </div>
@@ -345,13 +337,7 @@ async function BranchView({
                       {child.description}
                     </p>
                   )}
-                  <div
-                    className={
-                      isFlowTemplate
-                        ? "text-[10px] text-mint-700 uppercase tracking-wider font-semibold"
-                        : "text-[10px] text-onix-500 uppercase tracking-wider"
-                    }
-                  >
+                  <div className="text-[10px] text-onix-500 uppercase tracking-wider">
                     {caption}
                   </div>
                 </div>

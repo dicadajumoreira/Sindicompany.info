@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/sindicompany/auth";
 import {
   CARROSSEL_COVER_ARCHETYPES,
-  CARROSSEL_FLOW_TEMPLATES,
+  CARROSSEL_FORMATOS,
 } from "@/lib/sindicompany/carrosseis";
 import { DashboardShell } from "../../shell";
 import { iniciarCarrosselAction } from "../actions";
@@ -290,10 +290,10 @@ const TEMAS_CONSVICTA = [
   "Outros",
 ];
 
-// FORMATOS agora vem do registry compartilhado CARROSSEL_FLOW_TEMPLATES
-// (lib/sindicompany/carrosseis.ts). 11 templates espelhados na engine
-// Python (FORMATO_INSTRUCOES) e no asset-hierarchy.
-const FORMATOS = CARROSSEL_FLOW_TEMPLATES;
+// FORMATOS vem do registry compartilhado CARROSSEL_FORMATOS
+// (lib/sindicompany/carrosseis.ts). 7 formatos com copy completo no
+// openai-text.ts e render no carrossel_generate.py.
+const FORMATOS = CARROSSEL_FORMATOS;
 
 const inputCls =
   "block w-full rounded-md border border-onix-100 bg-white px-3 py-2 text-sm text-onix-900 focus:outline-none focus:ring-2 focus:ring-mint-300";
